@@ -1,0 +1,15 @@
+service: api-collection
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: eu-north-1
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+functions:
+  numpy:
+    handler: handler.main
