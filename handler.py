@@ -1,7 +1,6 @@
 import json
 import psycopg2
 import os
-
 def ping(event, context):
     connection = None
     try:
