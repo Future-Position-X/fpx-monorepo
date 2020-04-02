@@ -25,3 +25,7 @@ node_modules/
 
 # vscode
 *.code-workspace
+
+# Secrets
+.env
+.env.*

@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "serverless-dotenv-plugin": "^2.3.2",
     "serverless-python-requirements": "^5.1.0"
   }
 }

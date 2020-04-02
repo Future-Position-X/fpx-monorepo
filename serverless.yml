@@ -4,12 +4,20 @@ provider:
   runtime: python3.8
   stage: dev
   region: eu-north-1
+
+  environment:
+    DATABASE_URI: ${env:DATABASE_URI}
+
 plugins:
   - serverless-python-requirements
-
+  - serverless-dotenv-plugin
 custom:
   pythonRequirements:
     dockerizePip: true
 functions:
-  numpy:
-    handler: handler.main
+  ping:
+    handler: handler.ping
+    events:
+      - http:
+          path: ping
+          method: get
