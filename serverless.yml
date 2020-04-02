@@ -6,7 +6,7 @@ provider:
   region: eu-north-1
 
   environment:
-    DATABASE_URL: ${env:DATABASE_URL}
+    DATABASE_URI: ${env:DATABASE_URI}
 
 plugins:
   - serverless-python-requirements

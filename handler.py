@@ -4,7 +4,7 @@ import os
 def ping(event, context):
     connection = None
     try:
-        connection = psycopg2.connect(os.environ.get('DATABASE_URL'))
+        connection = psycopg2.connect(os.environ.get('DATABASE_URI'))
         cursor = connection.cursor()
         sql = "SELECT * FROM collections"
         
