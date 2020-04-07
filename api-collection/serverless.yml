@@ -21,13 +21,13 @@ package:
     - node_modules/**
 functions:
   ping:
-    handler: src/app/handlers/handler.ping
+    handler: app.handlers.handler.ping
     events:
       - http:
           path: ping
           method: get
   collections-index:
-    handler: src/app/handlers/geo_collections.index
+    handler: app.handlers.geo_collections.index
     events:
       - http:
           path: collections

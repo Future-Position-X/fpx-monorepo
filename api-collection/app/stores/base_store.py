@@ -1,5 +1,4 @@
 import psycopg2
-from psycopg2.extras import RealDictCursor
 import os
 
 
@@ -15,9 +14,6 @@ class StoreException(Exception):
 
 # domains
 
-class Collection():
-    def __init__(self, name):
-        self.name = name
 
 
 # base store class
@@ -53,16 +49,3 @@ class Store():
                     self.conn.close()
                 except Exception as e:
                     raise StoreException(*e.args)
-
-
-class CollectionStore(Store):
-
-    def find_all(self):
-        try:
-            c = self.conn.cursor(cursor_factory=RealDictCursor)
-            # this needs an appropriate table
-            c.execute('SELECT * FROM collections')
-            return c.fetchall()
-
-        except Exception as e:
-            raise StoreException('error finding all collections', e)
