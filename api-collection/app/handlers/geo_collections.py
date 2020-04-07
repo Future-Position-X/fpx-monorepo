@@ -9,7 +9,7 @@ from app.stores.base_store import StoreException
 def index(event, context):
     try:
         with CollectionStore() as collection_store:
-            records = collection_store.find_all()
+            records = [c.as_dict() for c in collection_store.find_all()]
             collection_store.complete()
             response = {
                 "statusCode": 200,
