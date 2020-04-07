@@ -13,5 +13,6 @@ class BaseModel():
     def as_dict(self):
         attrs = {}
         for att in self.__slots__:
-            attrs[att] = getattr(self, att)
+            if hasattr(self, att):
+                attrs[att] = getattr(self, att)
         return attrs

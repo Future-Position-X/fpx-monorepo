@@ -32,3 +32,9 @@ functions:
       - http:
           path: collections
           method: get
+  items-index:
+    handler: app.handlers.geo_items.index
+    events:
+      - http:
+          path: items
+          method: get
