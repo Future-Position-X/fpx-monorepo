@@ -39,7 +39,6 @@ async function runServerlessDeploy() {
     await exeq(
         `echo Running sudo sls deploy ${ARGS}...`,
         'cd geo-api/',
-        `sudo LOL=LEL DATABASE_URI=${DATABASE_URI} env`,
         `sudo sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
         `sudo DATABASE_URI=${DATABASE_URI} sls deploy ${ARGS}`
     )
