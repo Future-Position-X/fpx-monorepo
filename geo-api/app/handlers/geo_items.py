@@ -8,7 +8,7 @@ from app.stores.base_store import StoreException
 from app.models.item import Item
 
 def index(event, context):
-    collection_uuid = event['pathParameters']['collection_uuid']
+    collection_uuid = event['pathParameters']['collection_uuid_or_name']
 
     with ItemStore() as item_store:
         records = [c.as_dict()
@@ -44,7 +44,7 @@ def get_collection_uuid_by_collection_name(collection_name):
 
 def create_by_collection_name_and_feature_collection(event, context):
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
-    collection_name = event['pathParameters']['collection_name']
+    collection_name = event['pathParameters']['collection_uuid_or_name']
     collection_uuid = get_collection_uuid_by_collection_name(collection_name)
     payload = event['body']
     feature_collection = rapidjson.loads(payload)
