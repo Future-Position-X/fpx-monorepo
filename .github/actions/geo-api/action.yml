@@ -14,7 +14,7 @@ inputs:
 
 runs:
   using: 'node12'
-  main: 'npm install; index.js'
+  main: 'index.js'
 
 branding:
   icon: 'fast-forward'
