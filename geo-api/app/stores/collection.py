@@ -11,3 +11,12 @@ class CollectionStore(Store):
         except Exception as e:
             print(e)
             raise StoreException('error finding all collections', e)
+
+    def get_uuid_by_name(self, name):
+        try:
+            c = self.cursor()
+            c.execute("SELECT uuid FROM collections WHERE name=%(name)s", {'name': name})
+            return c.fetchone()['uuid']
+        except Exception as e:
+            print(e)
+            raise StoreException('error finding named collection', e)
