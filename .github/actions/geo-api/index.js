@@ -1,7 +1,9 @@
-//  Packages
-var core = require('@actions/core')
 var execSync = require('child_process').execSync
 code = execSync('sudo npm install exeq --save')
+console.log(execSync('pwd'), execSync('ls -la'));
+
+//  Packages
+var core = require('@actions/core')
 var exeq = require('exeq')
 
 //  Environment Vars
