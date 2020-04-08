@@ -46,7 +46,7 @@ functions:
           path: collections/{collection_uuid_or_name}/items
           method: post
 
-  items-create-by-collection-name-and-feature-collection:
+  items-create-with-feature-collection:
     handler: app.handlers.geo_items.create_by_collection_name_and_feature_collection
     events:
       - http:
