@@ -7,13 +7,15 @@ provider:
   memorySize: 3008
   timeout: 30 # op
   environment:
-    DATABASE_URI: ${env:DATABASE_URI}
+    DATABASE_URI: ${self:custom.environment.DATABASE_URI}
 
 plugins:
   - serverless-python-requirements
   - serverless-offline
   - serverless-dotenv-plugin
 custom:
+  environment:
+    DATABASE_URI: ${env:DATABASE_URI}
   pythonRequirements:
     dockerizePip: true
 package:
