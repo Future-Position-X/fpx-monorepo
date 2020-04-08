@@ -37,18 +37,18 @@ functions:
     handler: app.handlers.geo_items.index
     events:
       - http:
-          path: collections/{collection_uuid}/items
+          path: collections/{collection_uuid_or_name}/items
           method: get
   items-create:
     handler: app.handlers.geo_items.create
     events:
       - http:
-          path: collections/{collection_uuid}/items
+          path: collections/{collection_uuid_or_name}/items
           method: post
 
   items-create-by-collection-name-and-feature-collection:
     handler: app.handlers.geo_items.create_by_collection_name_and_feature_collection
     events:
       - http:
-          path: collections/{collection_name}/items_by_feature_collection
+          path: collections/{collection_uuid_or_name}/items_by_feature_collection
           method: post
