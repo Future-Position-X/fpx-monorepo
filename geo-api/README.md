@@ -13,6 +13,9 @@ virtualenv venv --python=python3
 ### Install python requirements
 pip install -r requirements.txt
 
+### Run tests
+python -m pytest tests/
+
 ### Deploy
 serverless deploy
 
