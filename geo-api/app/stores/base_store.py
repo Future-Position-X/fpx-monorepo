@@ -2,13 +2,16 @@ import psycopg2
 import os
 from psycopg2.extras import RealDictCursor
 
+
 def get_connection():
     return psycopg2.connect(os.environ.get('DATABASE_URI'))
+
 
 class StoreException(Exception):
     def __init__(self, message, *errors):
         Exception.__init__(self, message)
         self.errors = errors
+
 
 class Store():
     def __init__(self):

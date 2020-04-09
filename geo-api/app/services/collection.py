@@ -1,4 +1,6 @@
 from app.stores.collection import CollectionStore
+
+
 def get_all_collections():
     with CollectionStore() as collection_store:
         collections = collection_store.find_all()
