@@ -7,8 +7,8 @@ name: Test geo-api
 on:
   pull_request:
     branches: [ master ]
-  paths:
-    - 'geo-api/*'
+    paths:
+      - 'geo-api/*'
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
