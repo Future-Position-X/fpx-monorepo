@@ -2,17 +2,13 @@ import os
 import rapidjson
 from rapidjson import DM_ISO8601
 
-from app.stores.collection import CollectionStore
-from app.stores.base_store import StoreException
-
+from app.services.collection import get_all_collections
 
 def index(event, context):
-    with CollectionStore() as collection_store:
-        records = [c.as_dict() for c in collection_store.find_all()]
-        collection_store.complete()
-        response = {
-            "statusCode": 200,
-            "body": rapidjson.dumps(records, datetime_mode=DM_ISO8601)
-        }
+    collections = get_all_collections()
+    response = {
+        "statusCode": 200,
+        "body": rapidjson.dumps([c.as_dict() for c in collections], datetime_mode=DM_ISO8601)
+    }
 
-        return response
+    return response
