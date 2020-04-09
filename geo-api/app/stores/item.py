@@ -1,6 +1,7 @@
 import rapidjson
-from app.stores.base_store import Store, StoreException
+from app.stores.base_store import Store
 from app.models.item import Item
+
 
 class ItemStore(Store):
     def insert(self, items):
@@ -34,13 +35,21 @@ class ItemStore(Store):
 
     def find_all(self):
         c = self.cursor()
-        c.execute('SELECT uuid, provider_uuid, collection_uuid, properties, ST_AsGeoJSON(geometry) as geometry FROM items LIMIT 100')
+        c.execute("""
+        SELECT uuid,
+            provider_uuid,
+            collection_uuid,
+            properties,
+            ST_AsGeoJSON(geometry) as geometry
+        FROM items
+        LIMIT 100
+        """)
         return [Item(**row) for row in c.fetchall()]
 
     def find_by_collection_uuid(self, collection_uuid):
         c = self.cursor()
         c.execute("""
-            SELECT uuid, 
+            SELECT uuid,
                 provider_uuid,
                 collection_uuid,
                 properties,

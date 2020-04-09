@@ -1,5 +1,6 @@
-from app.stores.base_store import Store, StoreException
+from app.stores.base_store import Store
 from app.models.collection import Collection
+
 
 class CollectionStore(Store):
 
