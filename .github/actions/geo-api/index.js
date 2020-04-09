@@ -26,7 +26,6 @@ async function installDocker() {
 async function installServerlessAndPlugins() {
     await exeq(
         'echo Installing Serverless and plugins...',
-        'cd geo-api/',
         'sudo npm i serverless -g',
         'sudo npm i serverless-python-requirements',
         'sudo npm i serverless-plugin-canary-deployments',
@@ -38,7 +37,6 @@ async function installServerlessAndPlugins() {
 async function runServerlessDeploy() {
     await exeq(
         `echo Running sudo sls deploy ${ARGS}...`,
-        'cd geo-api/',
         `sudo LOL=LEL DATABASE_URI=${DATABASE_URI} env`,
         `sudo sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
         `sudo DATABASE_URI=${DATABASE_URI} sls deploy ${ARGS}`

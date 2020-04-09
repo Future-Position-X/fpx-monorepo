@@ -1,15 +1,14 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Test geo-api
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
-
+  paths:
+    - 'geo-api/*'
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -28,27 +27,20 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      working-directory: ./geo-api
       run: |
-        cd geo-api
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Lint with flake8
+      working-directory: ./geo-api
       run: |
-        cd geo-api
         pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      working-directory: ./geo-api
       run: |
-        cd geo-api
         pip install pytest
         python -m pytest tests/
-    - name: Deploy
-      uses: ./.github/actions/geo-api
-      with:
-        args: '--stage dev'
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        database-uri: ${{ secrets.DATABASE_URI }}
