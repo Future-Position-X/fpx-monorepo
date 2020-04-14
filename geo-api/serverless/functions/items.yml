@@ -4,6 +4,13 @@ items-index:
     - http:
         path: collections/{collection_uuid_or_name}/items
         method: get
+items-index-as-geojson:
+  handler: app.handlers.geo_items.index_as_geojson
+  events:
+    - http:
+        path: collections/{collection_uuid_or_name}/items/geojson
+        method: get
+
 items-create:
   handler: app.handlers.geo_items.create
   events:
