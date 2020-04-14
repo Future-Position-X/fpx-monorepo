@@ -11,9 +11,9 @@ items-create:
         path: collections/{collection_uuid_or_name}/items
         method: post
 
-items-create-with-feature-collection:
-  handler: app.handlers.geo_items.create_by_collection_name_and_feature_collection
+items-create-from-geojson:
+  handler: app.handlers.geo_items.create_from_geojson
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items_by_feature_collection
+        path: collections/{collection_uuid_or_name}/items/geojson
         method: post
