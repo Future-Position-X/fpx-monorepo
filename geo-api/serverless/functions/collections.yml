@@ -1,0 +1,6 @@
+collections-index:
+  handler: app.handlers.geo_collections.index
+  events:
+    - http:
+        path: collections
+        method: get
