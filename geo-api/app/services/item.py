@@ -11,6 +11,13 @@ def get_items_by_collection_uuid(collection_uuid):
         return items
 
 
+def get_items_by_collection_uuid_as_geojson(collection_uuid):
+    with ItemStore() as item_store:
+        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid)
+        item_store.complete()
+        return items
+
+
 def get_items_by_collection_name(collection_name):
     collection_uuid = get_collection_uuid_by_collection_name(collection_name)
     with ItemStore() as item_store:

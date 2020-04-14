@@ -46,7 +46,7 @@ class ItemStore(Store):
         """)
         return [Item(**row) for row in c.fetchall()]
 
-    def find_by_collection_uuid(self, collection_uuid):
+    def find_by_collection_uuid(self, collection_uuid, offset=0, limit=20):
         c = self.cursor()
         c.execute("""
             SELECT uuid,
@@ -56,6 +56,39 @@ class ItemStore(Store):
                 ST_AsGeoJSON(geometry)::jsonb as geometry
             FROM items
             WHERE collection_uuid = %(collection_uuid)s
-            LIMIT 100
-            """, {"collection_uuid": collection_uuid})
+                OFFSET %(offset)d
+                LIMIT %(limit)d
+            """, {
+            "collection_uuid": collection_uuid,
+            "offset": offset,
+            "limit": limit
+        })
         return [Item(**row) for row in c.fetchall()]
+
+    def find_by_collection_uuid_as_geojson(self, collection_uuid, offset=0, limit=20):
+        c = self.cursor()
+        c.execute("""
+            SELECT jsonb_build_object(
+                'type', 'FeatureCollection',
+                'features', jsonb_agg(features.feature)) as geojson
+            FROM (
+                SELECT jsonb_build_object(
+                    'type', 'Feature',
+                    'id', uuid,
+                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
+                    'properties', properties
+            ) AS feature
+            FROM (
+                SELECT *
+                FROM public.items
+                WHERE collection_uuid = %(collection_uuid)s
+                OFFSET %(offset)s
+                LIMIT %(limit)s
+            )
+            inputs) features;
+            """, {
+                "collection_uuid": collection_uuid,
+                "offset": offset,
+                "limit": limit
+            })
+        return c.fetchone()['geojson']
