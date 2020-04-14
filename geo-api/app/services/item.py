@@ -27,15 +27,14 @@ def create_item(item):
 
 
 # Maybe this should be in it's own service that handles different formats
-def create_items_by_collection_name_from_feature_collection(feature_collection=None, collection_name=None, provider_uuid=None):
-    collection_uuid = get_collection_uuid_by_collection_name(collection_name)
+def create_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
     items = [
         Item(**{
             'provider_uuid': provider_uuid,
             'collection_uuid': collection_uuid,
             'geometry': feature['geometry'],
             'properties': feature['properties']
-        }) for feature in feature_collection['features']]
+        }) for feature in geojson['features']]
 
     with ItemStore() as item_store:
         uuids = item_store.insert(items)

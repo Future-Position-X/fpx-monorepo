@@ -1,23 +1,31 @@
 import rapidjson
 from rapidjson import DM_ISO8601
-
+from uuid import UUID
+from app.handlers import response
 from app.models.item import Item
 
+from app.services.collection import (
+    get_collection_uuid_by_collection_name
+)
 from app.services.item import (
     get_items_by_collection_uuid,
     create_item,
-    create_items_by_collection_name_from_feature_collection)
+    create_items_from_geojson)
+
+
+def get_collection_uuid_from_event(event):
+    collection_uuid_or_name = event['pathParameters']['collection_uuid_or_name']
+    try:
+        return str(UUID(collection_uuid_or_name, version=4))
+    except ValueError:
+        return get_collection_uuid_by_collection_name(collection_uuid_or_name)
 
 
 def index(event, context):
-    collection_uuid = event['pathParameters']['collection_uuid_or_name']
+    collection_uuid = get_collection_uuid_from_event(event)
     items = get_items_by_collection_uuid(collection_uuid)
 
-    response = {
-        "statusCode": 200,
-        "body": rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601)
-    }
-    return response
+    return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
 
 
 def create(event, context):
@@ -25,28 +33,20 @@ def create(event, context):
     item_hash = rapidjson.loads(payload)
     item = Item(**item_hash)
     uuid = create_item(item)
-    response = {
-        "statusCode": 201,
-        "body": uuid
-    }
-    return response
+
+    return response(201, uuid)
 
 
-def create_by_collection_name_and_feature_collection(event, context):
+def create_from_geojson(event, context):
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
-    collection_name = event['pathParameters']['collection_uuid_or_name']
+    collection_uuid = get_collection_uuid_from_event(event)
     payload = event['body']
-    feature_collection = rapidjson.loads(payload)
+    geojson = rapidjson.loads(payload)
 
-    uuids = create_items_by_collection_name_from_feature_collection(
-        feature_collection=feature_collection,
-        collection_name=collection_name,
+    uuids = create_items_from_geojson(
+        geojson=geojson,
+        collection_uuid=collection_uuid,
         provider_uuid=provider_uuid)
     print(uuids)
 
-    response = {
-        "statusCode": 201,
-        "body": rapidjson.dumps(uuids)
-    }
-
-    return response
+    return response(201, rapidjson.dumps(uuids))
