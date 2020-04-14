@@ -4,16 +4,17 @@ from app.models.item import Item
 from app.services.collection import get_collection_uuid_by_collection_name
 
 
-def get_items_by_collection_uuid(collection_uuid):
+def get_items_by_collection_uuid(collection_uuid, limit_offset):
     with ItemStore() as item_store:
-        items = item_store.find_by_collection_uuid(collection_uuid)
+        items = item_store.find_by_collection_uuid(
+            collection_uuid, **limit_offset)
         item_store.complete()
         return items
 
 
-def get_items_by_collection_uuid_as_geojson(collection_uuid):
+def get_items_by_collection_uuid_as_geojson(collection_uuid, limit_offset):
     with ItemStore() as item_store:
-        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid)
+        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, **limit_offset)
         item_store.complete()
         return items
 

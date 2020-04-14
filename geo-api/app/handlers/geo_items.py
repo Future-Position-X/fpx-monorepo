@@ -22,16 +22,29 @@ def get_collection_uuid_from_event(event):
         return get_collection_uuid_by_collection_name(collection_uuid_or_name)
 
 
+def get_limit_and_offset_from_event(event):
+    print(event)
+    offset = 0 if not event['queryStringParameters'].get('offset') else event['queryStringParameters']['offset']
+    limit = 20 if not event['queryStringParameters'].get('limit') else event['queryStringParameters']['limit']
+    return {
+        "offset": offset,
+        "limit": limit,
+    }
+
+
 def index(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    items = get_items_by_collection_uuid(collection_uuid)
+    limit_offset = get_limit_and_offset_from_event(event)
+    items = get_items_by_collection_uuid(collection_uuid, limit_offset)
 
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
 
 
 def index_as_geojson(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    geojson = get_items_by_collection_uuid_as_geojson(collection_uuid)
+    limit_offset = get_limit_and_offset_from_event(event)
+    geojson = get_items_by_collection_uuid_as_geojson(
+        collection_uuid, limit_offset)
 
     return response(200, rapidjson.dumps(geojson))
 
