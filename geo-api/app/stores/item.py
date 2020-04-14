@@ -33,6 +33,23 @@ class ItemStore(Store):
     def insert_one(self, item):
         return self.insert([item])[0]
 
+    def find_by_uuid_as_geojson(self, item_uuid):
+        c = self.cursor()
+        c.execute("""
+            SELECT jsonb_build_object(
+                'type', 'Feature',
+                'id', uuid,
+                'geometry', ST_AsGeoJSON(geometry)::jsonb,
+                'properties', properties
+            ) as geojson
+            FROM(
+                SELECT *
+                FROM public.items
+                WHERE uuid = %(item_uuid)s
+            ) row;
+        """, {"item_uuid": item_uuid})
+        return c.fetchone()['geojson']
+
     def find_all(self):
         c = self.cursor()
         c.execute("""
@@ -87,8 +104,8 @@ class ItemStore(Store):
             )
             inputs) features;
             """, {
-                "collection_uuid": collection_uuid,
-                "offset": offset,
-                "limit": limit
-            })
+            "collection_uuid": collection_uuid,
+            "offset": offset,
+            "limit": limit
+        })
         return c.fetchone()['geojson']

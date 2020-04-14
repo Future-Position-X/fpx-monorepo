@@ -10,6 +10,12 @@ items-index-as-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
+items-get:
+  handler: app.handlers.geo_items.get_as_geojson
+  events:
+    - http:
+        path: items/{item_uuid}/geojson
+        method: get
 
 items-create:
   handler: app.handlers.geo_items.create
