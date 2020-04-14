@@ -1,0 +1,6 @@
+ping:
+  handler: app.handlers.handler.ping
+  events:
+    - http:
+        path: ping
+        method: get

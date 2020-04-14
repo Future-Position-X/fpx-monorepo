@@ -21,34 +21,7 @@ package:
     - venv/**
     - node_modules/**
 functions:
-  ping:
-    handler: app.handlers.handler.ping
-    events:
-      - http:
-          path: ping
-          method: get
-  collections-index:
-    handler: app.handlers.geo_collections.index
-    events:
-      - http:
-          path: collections
-          method: get
-  items-index:
-    handler: app.handlers.geo_items.index
-    events:
-      - http:
-          path: collections/{collection_uuid_or_name}/items
-          method: get
-  items-create:
-    handler: app.handlers.geo_items.create
-    events:
-      - http:
-          path: collections/{collection_uuid_or_name}/items
-          method: post
+  - ${file(serverless/functions/collections.yml)}
+  - ${file(serverless/functions/items.yml)}
+  - ${file(serverless/functions/misc.yml)}
 
-  items-create-with-feature-collection:
-    handler: app.handlers.geo_items.create_by_collection_name_and_feature_collection
-    events:
-      - http:
-          path: collections/{collection_uuid_or_name}/items_by_feature_collection
-          method: post
