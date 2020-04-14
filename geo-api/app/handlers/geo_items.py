@@ -10,6 +10,7 @@ from app.services.collection import (
 from app.services.item import (
     get_items_by_collection_uuid,
     get_items_by_collection_uuid_as_geojson,
+    get_item_by_uuid_as_geojson,
     create_item,
     create_items_from_geojson)
 
@@ -38,6 +39,13 @@ def index(event, context):
     items = get_items_by_collection_uuid(collection_uuid, limit_offset)
 
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
+
+
+def get_as_geojson(event, context):
+    item_uuid = event['pathParameters']['item_uuid']
+    item = get_item_by_uuid_as_geojson(item_uuid)
+
+    return response(200, rapidjson.dumps(item))
 
 
 def index_as_geojson(event, context):
