@@ -1,3 +1,9 @@
+### Install awscli
+apt install awscli
+
+### Configure aws credentials
+aws configure
+
 ### Install serverlessframework
 npm install -g serverless
 
