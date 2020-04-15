@@ -12,6 +12,7 @@ from app.services.item import (
     get_items_by_collection_uuid_as_geojson,
     get_item_by_uuid_as_geojson,
     create_item,
+    delete_item,
     create_items_from_geojson)
 
 
@@ -64,6 +65,12 @@ def create(event, context):
     uuid = create_item(item)
 
     return response(201, uuid)
+
+
+def delete(event, context):
+    item_uuid = event['pathParameters']['item_uuid']
+    delete_item(item_uuid)
+    return response(204)
 
 
 def create_from_geojson(event, context):

@@ -4,18 +4,27 @@ items-index:
     - http:
         path: collections/{collection_uuid_or_name}/items
         method: get
+
 items-index-as-geojson:
   handler: app.handlers.geo_items.index_as_geojson
   events:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
+
 items-get:
   handler: app.handlers.geo_items.get_as_geojson
   events:
     - http:
         path: items/{item_uuid}/geojson
         method: get
+
+items-delete:
+  handler: app.handlers.geo_items.delete
+  events:
+    - http:
+        path: /items/{item_uuid}
+        method: delete
 
 items-create:
   handler: app.handlers.geo_items.create

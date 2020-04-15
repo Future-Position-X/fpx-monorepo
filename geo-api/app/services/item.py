@@ -42,6 +42,12 @@ def create_item(item):
         return uuid
 
 
+def delete_item(item_uuid):
+    with ItemStore() as item_store:
+        item_store.delete(item_uuid)
+        item_store.complete()
+
+
 # Maybe this should be in it's own service that handles different formats
 def create_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
     items = [
