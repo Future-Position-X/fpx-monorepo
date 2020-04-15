@@ -1,6 +1,7 @@
 import rapidjson
 from rapidjson import DM_ISO8601
 from uuid import UUID
+from shapely.geometry import Point
 from app.handlers import response
 from app.models.item import Item
 
@@ -10,6 +11,7 @@ from app.services.collection import (
 from app.services.item import (
     get_items_by_collection_uuid,
     get_items_by_collection_uuid_as_geojson,
+    get_items_within_radius_as_geojson,
     get_item_by_uuid_as_geojson,
     create_item,
     delete_item,
@@ -40,6 +42,19 @@ def index(event, context):
     items = get_items_by_collection_uuid(collection_uuid, limit_offset)
 
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
+
+
+def get_within_radius(event, context):
+    coordinates = event["queryStringParameters"]["coordinates"]
+    lng, lat = coordinates.split(",")
+    point_radius = {
+        "point": Point(float(lng), float(lat)),
+        "radius": float(event["queryStringParameters"]["radius"])
+    }
+    limit_offset = get_limit_and_offset_from_event(event)
+    items = get_items_within_radius_as_geojson(point_radius, limit_offset)
+
+    return response(200, rapidjson.dumps(items))
 
 
 def get_as_geojson(event, context):

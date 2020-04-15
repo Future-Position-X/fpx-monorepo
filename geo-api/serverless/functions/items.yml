@@ -12,6 +12,13 @@ items-index-as-geojson:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
 
+items-within-radius-as-geojson:
+  handler: app.handlers.geo_items.get_within_radius
+  events:
+    - http:
+        path: /items/within-radius
+        method: get
+
 items-get:
   handler: app.handlers.geo_items.get_as_geojson
   events:
