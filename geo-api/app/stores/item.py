@@ -118,3 +118,36 @@ class ItemStore(Store):
             "limit": limit
         })
         return c.fetchone()['geojson']
+
+    def find_within_radius_as_geojson(self, point=None, radius=None, offset=0, limit=20):
+        c = self.cursor()
+        c.execute("""
+            SELECT jsonb_build_object(
+                'type', 'FeatureCollection',
+                'features', jsonb_agg(features.feature)) as geojson
+            FROM (
+                SELECT jsonb_build_object(
+                    'type', 'Feature',
+                    'id', uuid,
+                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
+                    'properties', properties
+                ) AS feature
+                FROM (SELECT *
+                    FROM public.items
+                    WHERE ST_DWithin(
+                        geometry,
+                        %(point)s,
+                        %(radius)s,
+                        False
+                    )
+                    OFFSET %(offset)s
+                    LIMIT %(limit)s
+                ) inputs
+            ) features;
+            """, {
+            "point": point.wkt,
+            "radius": radius,
+            "offset": offset,
+            "limit": limit
+        })
+        return c.fetchone()['geojson']

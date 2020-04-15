@@ -27,6 +27,14 @@ def get_items_by_collection_uuid_as_geojson(collection_uuid, limit_offset):
         return items
 
 
+def get_items_within_radius_as_geojson(point_radius, limit_offset):
+    with ItemStore() as item_store:
+        items = item_store.find_within_radius_as_geojson(
+            **point_radius, **limit_offset)
+        item_store.complete()
+        return items
+
+
 def get_items_by_collection_name(collection_name):
     collection_uuid = get_collection_uuid_by_collection_name(collection_name)
     with ItemStore() as item_store:
