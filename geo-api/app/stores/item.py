@@ -30,6 +30,15 @@ class ItemStore(Store):
             ids.append(c.fetchone()["uuid"])
         return ids
 
+    def delete(self, item_uuid):
+        c = self.cursor()
+        c.execute("""
+        DELETE
+        FROM public.items
+        WHERE uuid = %(item_uuid)s
+        ;
+        """, {"item_uuid": item_uuid})
+
     def insert_one(self, item):
         return self.insert([item])[0]
 
