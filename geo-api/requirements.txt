@@ -4,3 +4,5 @@ python-rapidjson==0.9.1
 pytest==5.4.1
 pytest-mock==3.0.0
 Shapely==1.7.0
+Pillow==7.1.1
+requests==2.23.0
