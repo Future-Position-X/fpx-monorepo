@@ -1,14 +1,15 @@
-service: api-collection
+service: geo-api
 provider:
   name: aws
   runtime: python3.8
-  stage: dev
+  stage: ${opt:stage, self:custom.defaultStage}
   region: eu-north-1
+  profile: ${opt:profile, self:custom.stageVars.profile}
   memorySize: 3008
-  timeout: 30 # op
+  timeout: 30
   environment:
     MAPBOX_TOKEN: ${env:MAPBOX_TOKEN}
-    DATABASE_URL: ${env:DATABASE_URL}
+    DATABASE_URL: ${self:custom.stageVars.environment.DATABASE_URL}
 
 plugins:
   - serverless-python-requirements
@@ -18,6 +19,8 @@ plugins:
   - serverless-apigwy-binary
 
 custom:
+  defaultStage: dev
+  stageVars: ${file(serverless/config/${self:provider.stage}.yml)}
   pythonRequirements:
     dockerizePip: true
   apigwBinary:

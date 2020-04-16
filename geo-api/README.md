@@ -35,3 +35,8 @@ their intended value
 
 ### Invoke function
 `serverless invoke -f numpy --log`
+
+### Generate policy for serverless deploy
+`npm install -g yo`
+`npm install -y generator-serverless-policy`
+`yo serverless-policy`
