@@ -4,7 +4,7 @@ from psycopg2.extras import RealDictCursor
 
 
 def get_connection():
-    return psycopg2.connect(os.environ.get('DATABASE_URI'))
+    return psycopg2.connect(os.environ.get('DATABASE_URL'))
 
 
 class StoreException(Exception):
