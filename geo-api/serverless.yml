@@ -7,8 +7,8 @@ provider:
   memorySize: 3008
   timeout: 30 # op
   environment:
-    DATABASE_URI: ${env:DATABASE_URI}
     MAPBOX_TOKEN: ${env:MAPBOX_TOKEN}
+    DATABASE_URL: ${env:DATABASE_URL}
 
 plugins:
   - serverless-python-requirements

@@ -9,7 +9,7 @@ var exeq = require('exeq')
 var ARGS = core.getInput('args')
 var AWS_ACCESS_KEY_ID = core.getInput('aws-access-key-id')
 var AWS_SECRET_ACCESS_KEY = core.getInput('aws-secret-access-key')
-var DATABASE_URI = core.getInput('database-uri')
+var DATABASE_URL = core.getInput('database-url')
 
 //  Reinstalls Docker on Ubuntu
 async function installDocker() {
@@ -40,7 +40,7 @@ async function runServerlessDeploy() {
         `echo Running sudo sls deploy ${ARGS}...`,
         'cd geo-api/',
         `sudo sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
-        `sudo DATABASE_URI=${DATABASE_URI} sls deploy ${ARGS}`
+        `sudo DATABASE_URL=${DATABASE_URL} sls deploy ${ARGS}`
     )
 }
 
