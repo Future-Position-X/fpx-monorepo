@@ -12,6 +12,14 @@ items-index-as-geojson:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
 
+items-index-as-png:
+  handler: app.handlers.geo_items.index_as_png
+  events:
+    - http:
+        path: collections/{collection_uuid_or_name}/items/png
+        method: get
+        contentHandling: CONVERT_TO_BINARY
+
 items-within-radius-as-geojson:
   handler: app.handlers.geo_items.get_within_radius
   events:
@@ -25,6 +33,14 @@ items-get:
     - http:
         path: items/{item_uuid}/geojson
         method: get
+
+items-get-as-png:
+  handler: app.handlers.geo_items.get_as_png
+  events:
+    - http:
+        path: items/{item_uuid}/png
+        method: get
+        contentHandling: CONVERT_TO_BINARY
 
 items-delete:
   handler: app.handlers.geo_items.delete
