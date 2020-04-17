@@ -7,6 +7,11 @@ from . stitcher import stitch_mapbox_images
 TILE_SIZE = 256
 
 
+def render_feature(f, width, height, map_id, antialias=6):
+    fc = { "features": [f] }
+    return render_feature_collection(fc, width, height, map_id, antialias)
+
+
 def render_feature_collection(fc, width, height, map_id, antialias=6):
     bounds = get_bounds(fc)
     img_size = Size(width, height)
