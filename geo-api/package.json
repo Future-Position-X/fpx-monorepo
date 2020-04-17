@@ -13,6 +13,8 @@
     "serverless-python-requirements": "^5.1.0"
   },
   "devDependencies": {
+    "serverless-apigw-binary": "^0.4.4",
+    "serverless-apigwy-binary": "^1.0.0",
     "serverless-offline": "^6.1.4"
   }
 }
