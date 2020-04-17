@@ -3,7 +3,7 @@ import requests
 import io
 import os
 from PIL import Image
-from geo_types import Coords, Size
+from . geo_types import Coords, Size
 
 
 class ImageTile:
