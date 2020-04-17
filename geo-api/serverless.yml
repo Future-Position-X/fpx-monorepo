@@ -8,6 +8,7 @@ provider:
   timeout: 30 # op
   environment:
     DATABASE_URI: ${env:DATABASE_URI}
+    MAPBOX_TOKEN: ${env:MAPBOX_TOKEN}
 
 plugins:
   - serverless-python-requirements
