@@ -1,4 +1,5 @@
 import math
+import io
 from PIL import Image, ImageDraw, ImagePath
 from . geo_types import Coords, Bounds, Size
 from . stitcher import stitch_mapbox_images
@@ -36,8 +37,10 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
 
     img = img.resize((img_size.width, img_size.height), Image.LANCZOS)
     bg_img.paste(img, (0, 0), img)
-
-    return bg_img
+    buffer = io.BytesIO()
+    bg_img.save(buffer, "PNG")
+    buffer.seek(0)
+    return buffer.getvalue()
 
 
 def draw_polygon(draw_ctx, antialias, color, polygon, merc_center, zoom,
