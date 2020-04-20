@@ -8,14 +8,23 @@ provider:
   timeout: 30 # op
   environment:
     DATABASE_URI: ${env:DATABASE_URI}
+    MAPBOX_TOKEN: ${env:MAPBOX_TOKEN}
 
 plugins:
   - serverless-python-requirements
   - serverless-offline
   - serverless-dotenv-plugin
+  - serverless-apigw-binary
+  - serverless-apigwy-binary
+
 custom:
   pythonRequirements:
     dockerizePip: true
+  apigwBinary:
+    types:
+      - 'image/png'
+      - '*/*'
+
 package:
   exclude:
     - venv/**
