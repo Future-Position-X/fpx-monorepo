@@ -39,6 +39,21 @@ class ItemStore(Store):
         ;
         """, {"item_uuid": item_uuid})
 
+    
+    def put(self, item_uuid, item):
+        c = self.cursor()
+        c.execute("""
+        UPDATE public.items SET 
+        geometry = ST_GeomFromGeoJSON(%(geometry)s),
+        properties = %(properties)s 
+        WHERE uuid = %(item_uuid)s;
+        """, {
+            "geometry": rapidjson.dumps(item.geometry),
+            "properties": rapidjson.dumps(item.properties),
+            "item_uuid": item_uuid
+        })
+
+
     def insert_one(self, item):
         return self.insert([item])[0]
 

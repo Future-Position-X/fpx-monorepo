@@ -49,6 +49,13 @@ items-delete:
         path: /items/{item_uuid}
         method: delete
 
+items-put:
+  handler: app.handlers.geo_items.put
+  events:
+    - http:
+        path: /items/{item_uuid}
+        method: put
+
 items-create:
   handler: app.handlers.geo_items.create
   events:
