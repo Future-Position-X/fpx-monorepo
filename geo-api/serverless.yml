@@ -8,7 +8,7 @@ provider:
   memorySize: 3008
   timeout: 30
   environment:
-    MAPBOX_TOKEN: ${env:MAPBOX_TOKEN}
+    MAPBOX_TOKEN: ${self:custom.stageVars.environment.MAPBOX_TOKEN}
     DATABASE_URL: ${self:custom.stageVars.environment.DATABASE_URL}
 
 plugins:

@@ -1,3 +1,4 @@
 profile: geo-api-deploy-dev
 environment:
     DATABASE_URL: ${env:DATABASE_URL}
+    MAPBOX_TOKEN: ${env:MAPBOX_TOKEN}
