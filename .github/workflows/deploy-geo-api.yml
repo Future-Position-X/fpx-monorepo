@@ -24,7 +24,7 @@ jobs:
     - name: Deploy
       uses: ./.github/actions/geo-api
       with:
-        args: '--stage dev'
+        args: '--stage dev --profile default'
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
         database-url: ${{ secrets.DATABASE_URL_DEV }}
