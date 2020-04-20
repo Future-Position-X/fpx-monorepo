@@ -40,7 +40,7 @@ class ItemStore(Store):
         """, {"item_uuid": item_uuid})
 
     
-    def put(self, item_uuid, item):
+    def update(self, item_uuid, item):
         c = self.cursor()
         c.execute("""
         UPDATE public.items SET 

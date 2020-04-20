@@ -72,9 +72,9 @@ def delete_item(item_uuid):
         item_store.complete()
 
 
-def put_item(item_uuid, item):
+def update_item(item_uuid, item):
     with ItemStore() as item_store:
-        item_store.put(item_uuid, item)
+        item_store.update(item_uuid, item)
         item_store.complete()
 
 

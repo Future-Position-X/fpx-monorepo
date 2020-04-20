@@ -18,7 +18,7 @@ from app.services.item import (
     get_item_by_uuid_as_png,
     create_item,
     delete_item,
-    put_item,
+    update_item,
     create_items_from_geojson)
 
 
@@ -141,11 +141,11 @@ def delete(event, context):
     delete_item(item_uuid)
     return response(204)
 
-def put(event, context):
+def update(event, context):
     item_uuid = event['pathParameters']['item_uuid']
     item_hash = rapidjson.loads(event['body'])
     item = Item(**item_hash)
-    put_item(item_uuid, item)
+    update_item(item_uuid, item)
     return response(204)
 
 
