@@ -57,6 +57,15 @@ class ItemStore(Store):
     def insert_one(self, item):
         return self.insert([item])[0]
 
+    
+    def remove_items_by_provider_uuid(self, provider_uuid):
+        c = self.cursor()
+        c.execute("""
+        DELETE FROM public.items 
+        WHERE provider_uuid = %(provider_uuid)s;
+        """, {"provider_uuid": provider_uuid})
+
+
     def find_by_uuid_as_geojson(self, item_uuid):
         c = self.cursor()
         c.execute("""
