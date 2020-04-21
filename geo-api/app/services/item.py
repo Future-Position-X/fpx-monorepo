@@ -92,7 +92,22 @@ def create_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=
     with ItemStore() as item_store:
         item_store.remove_items_by_provider_uuid(provider_uuid)
         uuids = item_store.insert(items)
-        print(uuids)
+        item_store.complete()
+
+    return uuids
+
+
+def add_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
+    items = [
+        Item(**{
+            'provider_uuid': provider_uuid,
+            'collection_uuid': collection_uuid,
+            'geometry': feature['geometry'],
+            'properties': feature['properties']
+        }) for feature in geojson['features']]
+
+    with ItemStore() as item_store:
+        uuids = item_store.insert(items)
         item_store.complete()
 
     return uuids

@@ -69,3 +69,10 @@ items-create-from-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: post
+
+items-add-from-geojson:
+  handler: app.handlers.geo_items.add_from_geojson
+  events:
+    - http:
+        path: collections/{collection_uuid_or_name}/items/geojson
+        method: put
