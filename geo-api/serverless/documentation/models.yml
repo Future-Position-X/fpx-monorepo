@@ -1,0 +1,33 @@
+-
+  name: "Collection"
+  description: "This is an Collection object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+-
+  name: "ArrayOfCollections"
+  description: "Array of Collection objects"
+  contentType: "application/json"
+  schema:
+    type: "array"
+    items:
+      $ref: "{{model: Collection}}"
+-
+  name: "Item"
+  description: "This is an Item object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      uuid:
+        type: "string"
+      provider_uuid:
+        type: "string"
+      collection_uuid:
+        type: "string"
+      properties:
+        type: "object"
+        additionalProperties: true

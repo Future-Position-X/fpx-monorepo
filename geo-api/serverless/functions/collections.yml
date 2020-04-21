@@ -4,3 +4,13 @@ collections-index:
     - http:
         path: collections
         method: get
+        documentation:
+          summary: "Collection index"
+          description: "All accessable Collections"
+          methodResponses:
+            -
+              statusCode: "200"
+              responseBody:
+                description: "Array of Collections"
+              responseModels:
+                "application/json": "ArrayOfCollections"

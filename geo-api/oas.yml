@@ -1,0 +1,65 @@
+---
+swagger: "2.0"
+info:
+  description: "GIA geo api"
+  version: "2020-04-21T14:23:23Z"
+  title: "dev-geo-api"
+  contact:
+    name: "Magnus Engström"
+    url: "http://fpx.se"
+    email: "magnus.engstrom@fpx.se"
+host: "6u888su1il.execute-api.eu-north-1.amazonaws.com"
+basePath: "/dev"
+schemes:
+- "https"
+paths:
+  /collections:
+    get:
+      summary: "Collection index"
+      description: "All accessable Collections"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Collection"
+  /collections/{collection_uuid_or_name}/items:
+    get:
+      responses: {}
+    post:
+      responses: {}
+  /collections/{collection_uuid_or_name}/items/geojson:
+    get:
+      responses: {}
+    post:
+      responses: {}
+    put:
+      responses: {}
+  /collections/{collection_uuid_or_name}/items/png:
+    get:
+      responses: {}
+  /items/within-radius:
+    get:
+      responses: {}
+  /items/{item_uuid}:
+    put:
+      responses: {}
+    delete:
+      responses: {}
+  /items/{item_uuid}/geojson:
+    get:
+      responses: {}
+  /items/{item_uuid}/png:
+    get:
+      responses: {}
+  /ping:
+    get:
+      responses: {}
+definitions:
+  Collection:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+    description: "This is an Collection object"
