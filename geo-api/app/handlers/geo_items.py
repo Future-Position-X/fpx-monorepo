@@ -59,6 +59,15 @@ def get_visualizer_params_from_event(event):
     }
 
 
+def get_filter_from_event(event):
+    filter = None
+
+    if event['queryStringParameters'] is not None:
+        filter = event['queryStringParameters'].get('filter', None)
+
+    return filter
+
+
 def index(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
     limit_offset = get_limit_and_offset_from_event(event)
@@ -106,8 +115,9 @@ def get_as_png(event, context):
 def index_as_geojson(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
     limit_offset = get_limit_and_offset_from_event(event)
+    filter = get_filter_from_event(event)
     geojson = get_items_by_collection_uuid_as_geojson(
-        collection_uuid, limit_offset)
+        collection_uuid, filter, limit_offset)
 
     return response(200, rapidjson.dumps(geojson))
 

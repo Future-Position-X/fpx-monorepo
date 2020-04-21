@@ -3,6 +3,24 @@ from app.stores.base_store import Store
 from app.models.item import Item
 
 
+def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
+        params = filter.split(",")
+
+        for i, p in enumerate(params):
+            tokens = p.split("=")
+            name = "name_" + str(i)
+            value = "value_" + str(i)
+
+            where_clause += " properties->>%(" + name + ")s = %(" + value + ")s"
+            execute_dict[name] = tokens[0]
+            execute_dict[value] = tokens[1]
+            
+            if i < (len(params) - 1):
+                where_clause += " AND"
+
+        return where_clause
+
+
 class ItemStore(Store):
     def insert(self, items):
         c = self.cursor()
@@ -111,8 +129,21 @@ class ItemStore(Store):
         })
         return [Item(**row) for row in c.fetchall()]
 
-    def find_by_collection_uuid_as_geojson(self, collection_uuid, offset=0, limit=20):
+
+    def find_by_collection_uuid_as_geojson(self, collection_uuid, filter=None, offset=0, limit=20):
         c = self.cursor()
+        where = "collection_uuid = %(collection_uuid)s"
+        
+        exec_dict = {
+            "collection_uuid": collection_uuid,
+            "offset": offset,
+            "limit": limit
+        }
+
+        if filter is not None:
+            where += " AND "
+            where = append_property_filter_to_where_clause(where, filter, exec_dict)
+
         c.execute("""
             SELECT jsonb_build_object(
                 'type', 'FeatureCollection',
@@ -127,16 +158,13 @@ class ItemStore(Store):
             FROM (
                 SELECT *
                 FROM public.items
-                WHERE collection_uuid = %(collection_uuid)s
+                """ + "WHERE " + where +
+                """
                 OFFSET %(offset)s
                 LIMIT %(limit)s
             )
             inputs) features;
-            """, {
-            "collection_uuid": collection_uuid,
-            "offset": offset,
-            "limit": limit
-        })
+            """, exec_dict)
         return c.fetchone()['geojson']
 
     def find_within_radius_as_geojson(self, point=None, radius=None, offset=0, limit=20):

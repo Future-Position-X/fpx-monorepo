@@ -29,9 +29,9 @@ def get_items_by_collection_uuid(collection_uuid, limit_offset):
         return items
 
 
-def get_items_by_collection_uuid_as_geojson(collection_uuid, limit_offset):
+def get_items_by_collection_uuid_as_geojson(collection_uuid, filter, limit_offset):
     with ItemStore() as item_store:
-        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, **limit_offset)
+        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, filter, **limit_offset)
         item_store.complete()
         return items
 
