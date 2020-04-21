@@ -19,7 +19,9 @@ from app.services.item import (
     create_item,
     delete_item,
     update_item,
-    create_items_from_geojson)
+    add_items_from_geojson,
+    create_items_from_geojson
+    )
 
 
 def get_collection_uuid_from_event(event):
@@ -150,6 +152,20 @@ def update(event, context):
     return response(204)
 
 
+def add_from_geojson(event, context):
+    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
+    collection_uuid = get_collection_uuid_from_event(event)
+    payload = event['body']
+    geojson = rapidjson.loads(payload)
+
+    uuids = add_items_from_geojson(
+        geojson=geojson,
+        collection_uuid=collection_uuid,
+        provider_uuid=provider_uuid)
+
+    return response(201, rapidjson.dumps(uuids))
+
+
 def create_from_geojson(event, context):
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
     collection_uuid = get_collection_uuid_from_event(event)
@@ -160,6 +176,5 @@ def create_from_geojson(event, context):
         geojson=geojson,
         collection_uuid=collection_uuid,
         provider_uuid=provider_uuid)
-    print(uuids)
 
     return response(201, rapidjson.dumps(uuids))
