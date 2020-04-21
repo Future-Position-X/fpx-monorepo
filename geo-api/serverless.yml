@@ -17,6 +17,7 @@ plugins:
   - serverless-dotenv-plugin
   - serverless-apigw-binary
   - serverless-apigwy-binary
+  - serverless-aws-documentation
 
 custom:
   defaultStage: dev
@@ -27,6 +28,9 @@ custom:
     types:
       - 'image/png'
       - '*/*'
+  documentation:
+    api: ${file(serverless/documentation/api.yml)}
+    models: ${file(serverless/documentation/models.yml)}
 
 package:
   exclude:
