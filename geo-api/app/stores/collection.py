@@ -3,6 +3,22 @@ from app.models.collection import Collection
 
 
 class CollectionStore(Store):
+    def insert(self, collection):
+        c = self.cursor()
+        c.execute("""
+            INSERT INTO collections(
+                provider_uuid,
+                name
+            ) VALUES (
+                %(provider_uuid)s,
+                %(name)s
+            )
+            RETURNING uuid;
+            """, {
+            "provider_uuid": collection.provider_uuid,
+            "name": collection.name
+        })
+        return c.fetchone()["uuid"]
 
     def find_all(self):
         c = self.cursor()

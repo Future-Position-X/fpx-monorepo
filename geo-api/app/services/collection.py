@@ -1,6 +1,13 @@
 from app.stores.collection import CollectionStore
 
 
+def create_collection(collection):
+    with CollectionStore() as collection_store:
+        uuid = collection_store.insert(collection)
+        collection_store.complete()
+        return uuid
+
+
 def get_all_collections():
     with CollectionStore() as collection_store:
         collections = collection_store.find_all()
