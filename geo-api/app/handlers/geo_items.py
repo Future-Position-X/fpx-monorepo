@@ -141,6 +141,7 @@ def delete(event, context):
     delete_item(item_uuid)
     return response(204)
 
+
 def update(event, context):
     item_uuid = event['pathParameters']['item_uuid']
     item_hash = rapidjson.loads(event['body'])

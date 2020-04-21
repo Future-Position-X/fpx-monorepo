@@ -39,13 +39,12 @@ class ItemStore(Store):
         ;
         """, {"item_uuid": item_uuid})
 
-    
     def update(self, item_uuid, item):
         c = self.cursor()
         c.execute("""
-        UPDATE public.items SET 
+        UPDATE public.items SET
         geometry = ST_GeomFromGeoJSON(%(geometry)s),
-        properties = %(properties)s 
+        properties = %(properties)s
         WHERE uuid = %(item_uuid)s;
         """, {
             "geometry": rapidjson.dumps(item.geometry),
@@ -53,18 +52,15 @@ class ItemStore(Store):
             "item_uuid": item_uuid
         })
 
-
     def insert_one(self, item):
         return self.insert([item])[0]
 
-    
     def remove_items_by_provider_uuid(self, provider_uuid):
         c = self.cursor()
         c.execute("""
-        DELETE FROM public.items 
+        DELETE FROM public.items
         WHERE provider_uuid = %(provider_uuid)s;
         """, {"provider_uuid": provider_uuid})
-
 
     def find_by_uuid_as_geojson(self, item_uuid):
         c = self.cursor()

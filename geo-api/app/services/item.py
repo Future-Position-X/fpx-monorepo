@@ -17,7 +17,7 @@ def get_item_by_uuid_as_png(item_uuid, width, height, map_id):
     with ItemStore() as item_store:
         item = item_store.find_by_uuid_as_geojson(item_uuid)
         item_store.complete()
-    
+
     return render_feature(item, width, height, map_id)
 
 
@@ -35,11 +35,12 @@ def get_items_by_collection_uuid_as_geojson(collection_uuid, limit_offset):
         item_store.complete()
         return items
 
+
 def get_items_by_collection_uuid_as_png(collection_uuid, limit_offset, width, height, map_id):
     with ItemStore() as item_store:
         items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, **limit_offset)
         item_store.complete()
-        
+
     return render_feature_collection(items, width, height, map_id)
 
 
