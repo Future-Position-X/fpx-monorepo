@@ -2,6 +2,10 @@ collection_uuid_or_name:
   name: "collection_uuid_or_name"
   description: "collection uuid or collection name"
   required: true
+collection_uuid:
+  name: "collection_uuid"
+  description: "collection uuid"
+  required: true
 item_uuid:
   name: "item_uuid"
   description: "Item uuid"

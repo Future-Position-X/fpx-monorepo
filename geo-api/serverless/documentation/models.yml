@@ -20,6 +20,32 @@
       updated_at:
         type: "string"
 -
+  name: "CreateCollection"
+  description: "This is an Collection object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      provider_uuid:
+        type: "string"
+      name:
+        type: "string"
+      is_public:
+        type: "boolean"
+-
+  name: "UpdateCollection"
+  description: "This is an Collection object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      provider_uuid:
+        type: "string"
+      name:
+        type: "string"
+      is_public:
+        type: "boolean"
+-
   name: "Collections"
   description: "Array of Collection objects"
   contentType: "application/json"

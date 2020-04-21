@@ -23,6 +23,16 @@ collections-delete:
     - http:
         path: collections/{collection_uuid}
         method: delete
+        cors: true
+        documentation:
+          summary: "Delete collection"
+          description: "Delete collection"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 collections-update:
   handler: app.handlers.geo_collections.update
@@ -30,3 +40,32 @@ collections-update:
     - http:
         path: collections/{collection_uuid}
         method: put
+        cors: true
+        documentation:
+          summary: "Update collection"
+          description: "Update collection"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
+          requestModels:
+            "application/json": "UpdateCollection"
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
+collections-create:
+  handler: app.handlers.geo_collections.create
+  events:
+    - http:
+        path: collections
+        method: post
+        cors: true
+        documentation:
+          summary: "Collection index"
+          description: "All accessable Collections"
+          requestModels:
+            "application/json": "CreateCollection"
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):uuid}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
