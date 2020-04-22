@@ -11,6 +11,6 @@ collections-index:
             -
               statusCode: "200"
               responseBody:
-                description: "Array of Collections"
+                description: "Collections"
               responseModels:
-                "application/json": "ArrayOfCollections"
+                "application/json": "Collections"

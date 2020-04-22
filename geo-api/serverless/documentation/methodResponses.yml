@@ -1,0 +1,45 @@
+uuid: 
+  statusCode: "201"
+  responseBody:
+    description: "Uuid"
+  responseModels:
+    "application/json": "Uuid"
+uuids: 
+  statusCode: "201"
+  responseBody:
+    description: "Uuids"
+  responseModels:
+    "application/json": "Uuids"
+item: 
+  statusCode: "200"
+  responseBody:
+    description: "Item"
+  responseModels:
+    "application/json": "Item"
+items:
+  statusCode: "200"
+  responseBody:
+    description: "Items"
+  responseModels:
+    "application/json": "Items"
+
+featureCollection:
+  statusCode: "200"
+  responseBody:
+    description: "FeatureCollection"
+  responseModels:
+    "application/json": "FeatureCollection"
+imagePng:
+  statusCode: "200"
+  responseBody:
+    description: "Png image"
+  responseModels:
+    "image/png": "ImagePng"
+error404:
+  statusCode: "404"
+  responseBody:
+    description: "resource not found"
+error500:
+  statusCode: "500"
+  responseBody:
+    description: "internal server error"
