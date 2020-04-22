@@ -18,6 +18,7 @@ plugins:
   - serverless-apigw-binary
   - serverless-apigwy-binary
   - serverless-aws-documentation
+  - serverless-finch
 
 custom:
   defaultStage: dev
@@ -31,11 +32,14 @@ custom:
   documentation:
     api: ${file(serverless/documentation/api.yml)}
     models: ${file(serverless/documentation/models.yml)}
-
+  client:
+    bucketName: ${self:service}-${self:provider.stage}-static
+    distributionFolder: static
 package:
   exclude:
     - venv/**
     - node_modules/**
+    - client/**
 functions:
   - ${file(serverless/functions/collections.yml)}
   - ${file(serverless/functions/items.yml)}
