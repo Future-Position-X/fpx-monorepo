@@ -38,10 +38,10 @@ async function installServerlessAndPlugins() {
 //  Runs Serverless deploy including any provided args
 async function runServerlessDeploy() {
     await exeq(
-        `echo Running sudo sls deploy ${ARGS}...`,
+        `echo Running sudo ./deploy.sh ${ARGS}...`,
         'cd geo-api/',
         `sudo sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
-        `sudo DATABASE_URL=${DATABASE_URL} MAPBOX_TOKEN=${MAPBOX_TOKEN} sls deploy ${ARGS}`
+        `sudo DATABASE_URL=${DATABASE_URL} MAPBOX_TOKEN=${MAPBOX_TOKEN} ./deploy.sh ${ARGS}`
     )
 }
 
