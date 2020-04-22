@@ -32,13 +32,22 @@ def get_collection_uuid_from_event(event):
         return get_collection_uuid_by_collection_name(collection_uuid_or_name)
 
 
-def get_limit_and_offset_from_event(event):
-    print(event)
-    offset = 0 if not event['queryStringParameters'].get('offset') else event['queryStringParameters']['offset']
-    limit = 20 if not event['queryStringParameters'].get('limit') else event['queryStringParameters']['limit']
+def get_filters_from_event(event):
+    offset = 0
+    limit = 20
+    property_filter = None
+
+    params = event['queryStringParameters']
+
+    if params is not None:
+        offset = int(params.get('offset', offset))
+        limit =  int(params.get('limit', limit))
+        property_filter = params.get('property_filter', property_filter)
+
     return {
         "offset": offset,
         "limit": limit,
+        "property_filter": property_filter
     }
 
 
@@ -59,20 +68,10 @@ def get_visualizer_params_from_event(event):
     }
 
 
-def get_filter_from_event(event):
-    filter = None
-
-    if event['queryStringParameters'] is not None:
-        filter = event['queryStringParameters'].get('filter', None)
-
-    return filter
-
-
 def index(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    filter = get_filter_from_event(event)
-    limit_offset = get_limit_and_offset_from_event(event)
-    items = get_items_by_collection_uuid(collection_uuid, filter, limit_offset)
+    filters = get_filters_from_event(event)
+    items = get_items_by_collection_uuid(collection_uuid, filters)
 
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
 
@@ -84,8 +83,8 @@ def get_within_radius(event, context):
         "point": Point(float(lng), float(lat)),
         "radius": float(event["queryStringParameters"]["radius"])
     }
-    limit_offset = get_limit_and_offset_from_event(event)
-    items = get_items_within_radius_as_geojson(point_radius, limit_offset)
+    filters = get_filters_from_event(event)
+    items = get_items_within_radius_as_geojson(point_radius, filters)
 
     return response(200, rapidjson.dumps(items))
 
@@ -115,20 +114,18 @@ def get_as_png(event, context):
 
 def index_as_geojson(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    limit_offset = get_limit_and_offset_from_event(event)
-    filter = get_filter_from_event(event)
-    geojson = get_items_by_collection_uuid_as_geojson(
-        collection_uuid, filter, limit_offset)
+    filters = get_filters_from_event(event)
+    geojson = get_items_by_collection_uuid_as_geojson(collection_uuid, filters)
 
     return response(200, rapidjson.dumps(geojson))
 
 
 def index_as_png(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    limit_offset = get_limit_and_offset_from_event(event)
-    params = get_visualizer_params_from_event(event)
+    filters = get_filters_from_event(event)
+    vis_params = get_visualizer_params_from_event(event)
     png_bytes = get_items_by_collection_uuid_as_png(
-        collection_uuid, limit_offset, params['width'], params['height'], params['map_id'])
+        collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
 
     return {
         "statusCode": 200,
