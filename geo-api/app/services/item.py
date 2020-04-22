@@ -111,3 +111,15 @@ def add_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=Non
         item_store.complete()
 
     return uuids
+
+
+def update_items_from_geojson(feature_collection):
+    with ItemStore() as item_store:
+        for f in feature_collection['features']:
+            item_store.update(f['id'],
+                Item(**{
+                    'geometry': f['geometry'],
+                    'properties': f['properties']
+                }))
+
+            item_store.complete()

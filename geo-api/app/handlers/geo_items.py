@@ -20,7 +20,8 @@ from app.services.item import (
     delete_item,
     update_item,
     add_items_from_geojson,
-    create_items_from_geojson
+    create_items_from_geojson,
+    update_items_from_geojson
     )
 
 
@@ -189,3 +190,8 @@ def create_from_geojson(event, context):
         provider_uuid=provider_uuid)
 
     return response(201, rapidjson.dumps(uuids))
+
+def update_from_geojson(event, context):
+    feature_collection = rapidjson.loads(event['body'])
+    update_items_from_geojson(feature_collection)
+    return response(204)

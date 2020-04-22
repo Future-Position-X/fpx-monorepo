@@ -76,3 +76,10 @@ items-add-from-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: put
+
+items-update-from-geojson:
+  handler: app.handlers.geo_items.update_from_geojson
+  events:
+    - http:
+        path: items/geojson
+        method: put
