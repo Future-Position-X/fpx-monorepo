@@ -5,6 +5,7 @@ from uuid import UUID
 from shapely.geometry import Point
 from app.handlers import response
 from app.models.item import Item
+from distutils.util import strtobool
 
 from app.services.collection import (
     get_collection_uuid_by_collection_name
@@ -36,6 +37,7 @@ def get_filters_from_event(event):
     offset = 0
     limit = 20
     property_filter = None
+    valid = False
 
     params = event['queryStringParameters']
 
@@ -43,11 +45,13 @@ def get_filters_from_event(event):
         offset = int(params.get('offset', offset))
         limit =  int(params.get('limit', limit))
         property_filter = params.get('property_filter', property_filter)
+        valid = bool(strtobool(params.get('valid', valid)))
 
     return {
         "offset": offset,
         "limit": limit,
-        "property_filter": property_filter
+        "property_filter": property_filter,
+        "valid": valid
     }
 
 

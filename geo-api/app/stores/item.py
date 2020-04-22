@@ -114,6 +114,9 @@ class ItemStore(Store):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
 
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
+
         exec_dict = {
             "collection_uuid": collection_uuid,
             "offset": filters["offset"],
@@ -142,6 +145,9 @@ class ItemStore(Store):
     def find_by_collection_uuid_as_geojson(self, collection_uuid, filters):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
+
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
         
         exec_dict = {
             "collection_uuid": collection_uuid,
