@@ -39,7 +39,7 @@ package:
   exclude:
     - venv/**
     - node_modules/**
-    - client/**
+    - static/**
 functions:
   - ${file(serverless/functions/collections.yml)}
   - ${file(serverless/functions/items.yml)}
