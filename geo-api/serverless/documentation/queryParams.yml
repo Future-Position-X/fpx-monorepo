@@ -1,0 +1,12 @@
+limit:
+  name: "limit"
+  description: "limit"
+offset:
+  name: "offset"
+  description: "offset"
+radius:
+  name: "radius"
+  description: "Radius in meter"
+coordinates:
+  name: "coordinates"
+  description: "Point coordinates, ie. coordinates=lng,lat"

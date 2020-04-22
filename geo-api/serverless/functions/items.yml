@@ -4,6 +4,18 @@ items-index:
     - http:
         path: collections/{collection_uuid_or_name}/items
         method: get
+        documentation:
+          summary: "Get items belonging to a collection"
+          description: "All accessable items belonging to collection"
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):items}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-index-as-geojson:
   handler: app.handlers.geo_items.index_as_geojson
@@ -11,6 +23,19 @@ items-index-as-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
+        documentation:
+          summary: "Get items belonging to a collection as geojson FeatureCollection"
+          description: "All accessable items belonging to collection as geojson FeatureCollection"
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):featureCollection}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
 
 items-index-as-png:
   handler: app.handlers.geo_items.index_as_png
@@ -19,6 +44,19 @@ items-index-as-png:
         path: collections/{collection_uuid_or_name}/items/png
         method: get
         contentHandling: CONVERT_TO_BINARY
+        documentation:
+          summary: "Get items belonging to a collection rendered on a png image"
+          description: "Get items belonging to a collection rendered on a png image"
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):imagePng}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
 
 items-within-radius-as-geojson:
   handler: app.handlers.geo_items.get_within_radius
@@ -26,6 +64,18 @@ items-within-radius-as-geojson:
     - http:
         path: /items/within-radius
         method: get
+        documentation:
+          summary: "Get items within radius in meters of point as geojson FeatureCollection"
+          description: "Get items within radius in meters of point as geojson FeatureCollection."
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+            - ${file(serverless/documentation/queryParams.yml):radius}
+            - ${file(serverless/documentation/queryParams.yml):coordinates}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):featureCollection}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-get:
   handler: app.handlers.geo_items.get_as_geojson
@@ -33,6 +83,15 @@ items-get:
     - http:
         path: items/{item_uuid}/geojson
         method: get
+        documentation:
+          summary: "Get item as geojson FeatureCollection"
+          description: "Get item as geojson FeatureCollection."
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):item_uuid}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):featureCollection}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-get-as-png:
   handler: app.handlers.geo_items.get_as_png
@@ -41,6 +100,15 @@ items-get-as-png:
         path: items/{item_uuid}/png
         method: get
         contentHandling: CONVERT_TO_BINARY
+        documentation:
+          summary: "Get item as png image"
+          description: "Get item as png image"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):item_uuid}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):imagePng}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-delete:
   handler: app.handlers.geo_items.delete
@@ -48,6 +116,15 @@ items-delete:
     - http:
         path: /items/{item_uuid}
         method: delete
+        documentation:
+          summary: "Delete item"
+          description: "Delete item"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):item_uuid}
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-update:
   handler: app.handlers.geo_items.update
@@ -55,13 +132,34 @@ items-update:
     - http:
         path: /items/{item_uuid}
         method: put
-
+        documentation:
+          summary: "Update item"
+          description: "Update item"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):item_uuid}
+          requestModels:
+            "application/json": "UpdateItem"
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 items-create:
   handler: app.handlers.geo_items.create
   events:
     - http:
         path: collections/{collection_uuid_or_name}/items
         method: post
+        documentation:
+          summary: "Create item"
+          description: "Create item"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          requestModels:
+            "application/json": "CreateItem"
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):uuid}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-create-from-geojson:
   handler: app.handlers.geo_items.create_from_geojson
@@ -69,6 +167,18 @@ items-create-from-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: post
+        documentation:
+          summary: "Remove all items in collection and add those in geojson FeatureCollection"
+          description: "Remove all items in collection and add those in geojson FeatureCollection"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          requestModels:
+            "application/json": "FeatureCollection"
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):uuids}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
 
 items-add-from-geojson:
   handler: app.handlers.geo_items.add_from_geojson
@@ -76,3 +186,14 @@ items-add-from-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: put
+        documentation:
+          summary: "Add items to collection from geojson FeatureCollection"
+          description: "Add items to collection from geojson FeatureCollection"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          requestModels:
+            "application/json": "FeatureCollection"
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):uuids}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
