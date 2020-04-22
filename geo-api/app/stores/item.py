@@ -110,8 +110,20 @@ class ItemStore(Store):
         """)
         return [Item(**row) for row in c.fetchall()]
 
-    def find_by_collection_uuid(self, collection_uuid, offset=0, limit=20):
+    def find_by_collection_uuid(self, collection_uuid, filter=None, offset=0, limit=20):
         c = self.cursor()
+        where = "collection_uuid = %(collection_uuid)s"
+
+        exec_dict = {
+            "collection_uuid": collection_uuid,
+            "offset": offset,
+            "limit": limit
+        }
+
+        if filter is not None:
+            where += " AND "
+            where = append_property_filter_to_where_clause(where, filter, exec_dict)
+
         c.execute("""
             SELECT uuid,
                 provider_uuid,
@@ -119,14 +131,10 @@ class ItemStore(Store):
                 properties,
                 ST_AsGeoJSON(geometry)::jsonb as geometry
             FROM items
-            WHERE collection_uuid = %(collection_uuid)s
-                OFFSET %(offset)d
-                LIMIT %(limit)d
-            """, {
-            "collection_uuid": collection_uuid,
-            "offset": offset,
-            "limit": limit
-        })
+            WHERE """ + where + """
+                OFFSET %(offset)s
+                LIMIT %(limit)s
+            """, exec_dict)
         return [Item(**row) for row in c.fetchall()]
 
 
@@ -158,10 +166,9 @@ class ItemStore(Store):
             FROM (
                 SELECT *
                 FROM public.items
-                """ + "WHERE " + where +
-                """
-                OFFSET %(offset)s
-                LIMIT %(limit)s
+                WHERE """ + where + """
+                    OFFSET %(offset)s
+                    LIMIT %(limit)s
             )
             inputs) features;
             """, exec_dict)

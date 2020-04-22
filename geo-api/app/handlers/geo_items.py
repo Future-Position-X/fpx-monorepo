@@ -70,8 +70,9 @@ def get_filter_from_event(event):
 
 def index(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
+    filter = get_filter_from_event(event)
     limit_offset = get_limit_and_offset_from_event(event)
-    items = get_items_by_collection_uuid(collection_uuid, limit_offset)
+    items = get_items_by_collection_uuid(collection_uuid, filter, limit_offset)
 
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
 
