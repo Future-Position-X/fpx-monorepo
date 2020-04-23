@@ -5,6 +5,7 @@ items-index:
         path: collections/{collection_uuid_or_name}/items
         method: get
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Get items belonging to a collection"
           description: "All accessable items belonging to collection"
@@ -25,6 +26,7 @@ items-index-as-geojson:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Get items belonging to a collection as geojson FeatureCollection"
           description: "All accessable items belonging to collection as geojson FeatureCollection"
@@ -47,6 +49,7 @@ items-index-as-png:
         method: get
         cors: true
         contentHandling: CONVERT_TO_BINARY
+        authorizer: authorizer
         documentation:
           summary: "Get items belonging to a collection rendered on a png image"
           description: "Get items belonging to a collection rendered on a png image"
@@ -68,6 +71,7 @@ items-within-radius-as-geojson:
         path: /items/within-radius
         method: get
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Get items within radius in meters of point as geojson FeatureCollection"
           description: "Get items within radius in meters of point as geojson FeatureCollection."
@@ -88,6 +92,7 @@ items-get:
         path: items/{item_uuid}/geojson
         method: get
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Get item as geojson FeatureCollection"
           description: "Get item as geojson FeatureCollection."
@@ -105,6 +110,7 @@ items-get-as-png:
         path: items/{item_uuid}/png
         method: get
         cors: true
+        authorizer: authorizer
         contentHandling: CONVERT_TO_BINARY
         documentation:
           summary: "Get item as png image"
@@ -123,6 +129,7 @@ items-delete:
         path: /items/{item_uuid}
         method: delete
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Delete item"
           description: "Delete item"
@@ -140,6 +147,7 @@ items-update:
         path: /items/{item_uuid}
         method: put
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Update item"
           description: "Update item"
@@ -158,6 +166,7 @@ items-create:
         path: collections/{collection_uuid_or_name}/items
         method: post
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Create item"
           description: "Create item"
@@ -177,6 +186,7 @@ items-create-from-geojson:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: post
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Remove all items in collection and add those in geojson FeatureCollection"
           description: "Remove all items in collection and add those in geojson FeatureCollection"
@@ -197,6 +207,7 @@ items-add-from-geojson:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: put
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Add items to collection from geojson FeatureCollection"
           description: "Add items to collection from geojson FeatureCollection"

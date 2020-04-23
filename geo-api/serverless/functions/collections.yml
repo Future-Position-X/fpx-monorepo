@@ -5,6 +5,7 @@ collections-index:
         path: collections
         method: get
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Collection index"
           description: "All accessable Collections"
