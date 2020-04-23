@@ -4,3 +4,10 @@ collections-index:
     - http:
         path: collections
         method: get
+
+collections-delete:
+  handler: app.handlers.geo_collections.delete
+  events:
+    - http:
+        path: collections/{collection_uuid}
+        method: delete
