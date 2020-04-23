@@ -161,3 +161,9 @@
     type: "array"
     items:
       $ref: "{{model: Uuid}}"
+-
+  name: "String"
+  description: "a String"
+  contentType: "application/json"
+  schema:
+    type: "string"
