@@ -4,3 +4,11 @@ ping:
     - http:
         path: ping
         method: get
+          documentation:
+          summary: "Ping endpoint to check if up"
+          description: "Ping endpoint to check if up"
+          methodResponses:
+            -
+              statusCode: "200"
+              responseBody:
+                description: "Pong"
