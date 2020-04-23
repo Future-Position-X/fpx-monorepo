@@ -32,6 +32,7 @@ custom:
   documentation:
     api: ${file(serverless/documentation/api.yml)}
     models: ${file(serverless/documentation/models.yml)}
+
   client:
     bucketName: ${self:service}-${self:provider.stage}-static
     distributionFolder: static

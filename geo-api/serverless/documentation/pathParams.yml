@@ -1,6 +1,8 @@
 collection_uuid_or_name:
   name: "collection_uuid_or_name"
   description: "collection uuid or collection name"
+  required: true
 item_uuid:
   name: "item_uuid"
   description: "Item uuid"
+  required: true
