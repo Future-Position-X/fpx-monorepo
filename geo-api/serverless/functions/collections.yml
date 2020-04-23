@@ -11,3 +11,10 @@ collections-delete:
     - http:
         path: collections/{collection_uuid}
         method: delete
+
+collections-update:
+  handler: app.handlers.geo_collections.update
+  events:
+    - http:
+        path: collections/{collection_uuid}
+        method: put

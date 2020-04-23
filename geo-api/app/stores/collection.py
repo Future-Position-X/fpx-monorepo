@@ -23,3 +23,16 @@ class CollectionStore(Store):
         DELETE FROM public.collections
         WHERE uuid = %(collection_uuid)s
         """, {'collection_uuid': collection_uuid})
+
+    def update(self, collection_uuid, collection):
+        c = self.cursor()
+        c.execute("""
+        UPDATE public.collections SET
+        name = %(name)s,
+        is_public = %(is_public)s
+        WHERE uuid = %(collection_uuid)s;
+        """, {
+            "name": collection.name,
+            "is_public": collection.is_public,
+            "collection_uuid": collection_uuid
+        })

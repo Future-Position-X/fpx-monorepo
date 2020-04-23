@@ -17,5 +17,11 @@ def get_collection_uuid_by_collection_name(collection_name):
 
 def delete_collection_by_uuid(collection_uuid):
     with CollectionStore() as collection_store:
-        uuid = collection_store.delete(collection_uuid)
+        collection_store.delete(collection_uuid)
+        collection_store.complete()
+
+
+def update_collection_by_uuid(collection_uuid, collection):
+    with CollectionStore() as collection_store:
+        collection_store.update(collection_uuid, collection)
         collection_store.complete()
