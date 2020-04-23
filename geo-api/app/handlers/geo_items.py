@@ -193,6 +193,8 @@ def generate_walking_paths(event, context):
     return response(201, rapidjson.dumps(uuids))
 
 def add_from_geojson(event, context):
+    # user_id = event['requestContext']['authorizer']['principalId']
+    # Get provider_uuid from user_id
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
     collection_uuid = get_collection_uuid_from_event(event)
     payload = event['body']
@@ -207,6 +209,8 @@ def add_from_geojson(event, context):
 
 
 def create_from_geojson(event, context):
+    # user_id = event['requestContext']['authorizer']['principalId']
+    # Get provider_uuid from user_id
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
     collection_uuid = get_collection_uuid_from_event(event)
     payload = event['body']

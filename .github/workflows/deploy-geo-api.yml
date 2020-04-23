@@ -29,3 +29,4 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
         database-url: ${{ secrets.DATABASE_URL_DEV }}
         mapbox-token: ${{ secrets.MAPBOX_TOKEN_DEV }}
+        jwt-secret: ${{ secrets.JWT_SECRET_DEV }}
