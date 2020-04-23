@@ -103,10 +103,20 @@
         enum: [Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon]
       coordinates:
         type: "array"
+        items:
+          $ref: "{{model: Point2D}}"
       properties:
         type: "object"
         additionalProperties: true
-
+-
+  name: "Point2D"
+  contentType: "application/json"
+  schema:
+    type: array
+    maxItems: 2
+    minItems: 2
+    items:
+      type: number
 -
   name: "Feature"
   description: "This is an Feature object"

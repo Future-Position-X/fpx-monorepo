@@ -38,5 +38,25 @@ profile=${profile:-geo-api-deploy-dev}
 
 serverless deploy --stage $stage --profile $profile
 serverless downloadDocumentation  --stage $stage --profile $profile --outputFileName=static/swagger/oas.json
-sed -i "s/\"title\" : \"$stage-geo-api\",/\"title\" : \"geo-api-$stage\",/g" static/swagger/oas.json
+
+python <<EOF
+print("Fixing openapi spec")
+import json
+with open('static/swagger/oas.json') as json_file:
+    data = json.load(json_file)
+
+# Fix title, aws ignores what's been set by serverless
+data['info']['title'] = "geo-api-$stage"
+
+# Remove all options request as they fail to validate due to pathParams
+for path in data['paths'].keys():
+    if "options" in data['paths'][path]:
+        del data['paths'][path]['options']
+
+with open('static/swagger/oas.json', 'w') as outfile:
+    json.dump(data, outfile)
+
+print("Fixed openapi spec")
+EOF
+
 serverless client deploy --stage $stage --profile $profile --no-confirm
