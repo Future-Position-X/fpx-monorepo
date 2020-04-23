@@ -4,6 +4,7 @@ collections-index:
     - http:
         path: collections
         method: get
+        cors: true
         documentation:
           summary: "Collection index"
           description: "All accessable Collections"

@@ -4,6 +4,7 @@ items-index:
     - http:
         path: collections/{collection_uuid_or_name}/items
         method: get
+        cors: true
         documentation:
           summary: "Get items belonging to a collection"
           description: "All accessable items belonging to collection"
@@ -23,6 +24,7 @@ items-index-as-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: get
+        cors: true
         documentation:
           summary: "Get items belonging to a collection as geojson FeatureCollection"
           description: "All accessable items belonging to collection as geojson FeatureCollection"
@@ -43,6 +45,7 @@ items-index-as-png:
     - http:
         path: collections/{collection_uuid_or_name}/items/png
         method: get
+        cors: true
         contentHandling: CONVERT_TO_BINARY
         documentation:
           summary: "Get items belonging to a collection rendered on a png image"
@@ -64,6 +67,7 @@ items-within-radius-as-geojson:
     - http:
         path: /items/within-radius
         method: get
+        cors: true
         documentation:
           summary: "Get items within radius in meters of point as geojson FeatureCollection"
           description: "Get items within radius in meters of point as geojson FeatureCollection."
@@ -83,6 +87,7 @@ items-get:
     - http:
         path: items/{item_uuid}/geojson
         method: get
+        cors: true
         documentation:
           summary: "Get item as geojson FeatureCollection"
           description: "Get item as geojson FeatureCollection."
@@ -99,6 +104,7 @@ items-get-as-png:
     - http:
         path: items/{item_uuid}/png
         method: get
+        cors: true
         contentHandling: CONVERT_TO_BINARY
         documentation:
           summary: "Get item as png image"
@@ -116,6 +122,7 @@ items-delete:
     - http:
         path: /items/{item_uuid}
         method: delete
+        cors: true
         documentation:
           summary: "Delete item"
           description: "Delete item"
@@ -132,6 +139,7 @@ items-update:
     - http:
         path: /items/{item_uuid}
         method: put
+        cors: true
         documentation:
           summary: "Update item"
           description: "Update item"
@@ -149,6 +157,7 @@ items-create:
     - http:
         path: collections/{collection_uuid_or_name}/items
         method: post
+        cors: true
         documentation:
           summary: "Create item"
           description: "Create item"
@@ -167,6 +176,7 @@ items-create-from-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: post
+        cors: true
         documentation:
           summary: "Remove all items in collection and add those in geojson FeatureCollection"
           description: "Remove all items in collection and add those in geojson FeatureCollection"
@@ -186,6 +196,7 @@ items-add-from-geojson:
     - http:
         path: collections/{collection_uuid_or_name}/items/geojson
         method: put
+        cors: true
         documentation:
           summary: "Add items to collection from geojson FeatureCollection"
           description: "Add items to collection from geojson FeatureCollection"
