@@ -110,3 +110,9 @@ def add_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=Non
         item_store.complete()
 
     return uuids
+
+
+def delete_items_by_collection_uuid(collection_uuid):
+    with ItemStore() as item_store:
+        item_store.delete_items(collection_uuid)
+        item_store.complete()

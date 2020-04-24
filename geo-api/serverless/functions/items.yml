@@ -133,6 +133,23 @@ items-delete:
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
 
+items-delete-all:
+  handler: app.handlers.geo_items.delete_items
+  events:
+    - http:
+        path: /collections/{collection_uuid_or_name}/items
+        method: delete
+        cors: true
+        documentation:
+          summary: "Delete all items"
+          description: "Delete all items"
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
 items-update:
   handler: app.handlers.geo_items.update
   events:
