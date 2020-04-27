@@ -10,6 +10,7 @@ provider:
   environment:
     MAPBOX_TOKEN: ${self:custom.stageVars.environment.MAPBOX_TOKEN}
     DATABASE_URL: ${self:custom.stageVars.environment.DATABASE_URL}
+    JWT_SECRET: ${self:custom.stageVars.environment.JWT_SECRET}
 
 plugins:
   - serverless-python-requirements

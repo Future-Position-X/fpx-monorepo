@@ -9,9 +9,6 @@ var exeq = require('exeq')
 var ARGS = core.getInput('args')
 var AWS_ACCESS_KEY_ID = core.getInput('aws-access-key-id')
 var AWS_SECRET_ACCESS_KEY = core.getInput('aws-secret-access-key')
-var DATABASE_URL = core.getInput('database-url')
-var MAPBOX_TOKEN = core.getInput('mapbox-token')
-var JWT_SECRET = core.getInput('jwt-secret')
 
 //  Reinstalls Docker on Ubuntu
 async function installDocker() {
@@ -41,8 +38,8 @@ async function runServerlessDeploy() {
     await exeq(
         `echo Running sudo ./deploy.sh ${ARGS}...`,
         'cd geo-api/',
-        `sudo sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
-        `sudo DATABASE_URL=${DATABASE_URL} MAPBOX_TOKEN=${MAPBOX_TOKEN} JWT_SECRET=${JWT_SECRET} ./deploy.sh ${ARGS}`
+        `sudo -E sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
+        `sudo -E ./deploy.sh ${ARGS}`
     )
 }
 
