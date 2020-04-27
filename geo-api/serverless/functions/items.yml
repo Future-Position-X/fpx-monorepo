@@ -2,7 +2,7 @@ items-index:
   handler: app.handlers.geo_items.index
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items
+        path: collections/{collection_uuid}/items
         method: get
         cors: true
         authorizer: authorizer
@@ -13,7 +13,24 @@ items-index:
             - ${file(serverless/documentation/queryParams.yml):limit}
             - ${file(serverless/documentation/queryParams.yml):offset}
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):items}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+    - http:
+        path: collections/by_name/{collection_name}/items
+        method: get
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Get items belonging to a collection"
+          description: "All accessable items belonging to collection"
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_name}
           methodResponses:
             - ${file(serverless/documentation/methodResponses.yml):items}
             - ${file(serverless/documentation/methodResponses.yml):error404}
@@ -23,7 +40,7 @@ items-index-as-geojson:
   handler: app.handlers.geo_items.index_as_geojson
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items/geojson
+        path: collections/{collection_uuid}/items/geojson
         method: get
         cors: true
         authorizer: authorizer
@@ -34,18 +51,34 @@ items-index-as-geojson:
             - ${file(serverless/documentation/queryParams.yml):limit}
             - ${file(serverless/documentation/queryParams.yml):offset}
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):featureCollection}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+    - http:
+        path: collections/by_name/{collection_name}/items/geojson
+        method: get
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Get items belonging to a collection as geojson FeatureCollection"
+          description: "All accessable items belonging to collection as geojson FeatureCollection"
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_name}
           methodResponses:
             - ${file(serverless/documentation/methodResponses.yml):featureCollection}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
 
-
 items-index-as-png:
   handler: app.handlers.geo_items.index_as_png
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items/png
+        path: collections/{collection_uuid}/items/png
         method: get
         cors: true
         contentHandling: CONVERT_TO_BINARY
@@ -57,12 +90,29 @@ items-index-as-png:
             - ${file(serverless/documentation/queryParams.yml):limit}
             - ${file(serverless/documentation/queryParams.yml):offset}
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
           methodResponses:
             - ${file(serverless/documentation/methodResponses.yml):imagePng}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
-
+    - http:
+        path: collections/by_name/{collection_name}/items/png
+        method: get
+        cors: true
+        contentHandling: CONVERT_TO_BINARY
+        authorizer: authorizer
+        documentation:
+          summary: "Get items belonging to a collection rendered on a png image"
+          description: "Get items belonging to a collection rendered on a png image"
+          queryParams:
+            - ${file(serverless/documentation/queryParams.yml):limit}
+            - ${file(serverless/documentation/queryParams.yml):offset}
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_name}
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):imagePng}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
 
 items-within-radius-as-geojson:
   handler: app.handlers.geo_items.get_within_radius
@@ -180,7 +230,7 @@ items-create:
   handler: app.handlers.geo_items.create
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items
+        path: collections/{collection_uuid}/items
         method: post
         cors: true
         authorizer: authorizer
@@ -188,7 +238,7 @@ items-create:
           summary: "Create item"
           description: "Create item"
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
           requestModels:
             "application/json": "CreateItem"
           methodResponses:
@@ -200,7 +250,7 @@ items-create-from-geojson:
   handler: app.handlers.geo_items.create_from_geojson
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items/geojson
+        path: collections/{collection_uuid}/items/geojson
         method: post
         cors: true
         authorizer: authorizer
@@ -208,7 +258,7 @@ items-create-from-geojson:
           summary: "Remove all items in collection and add those in geojson FeatureCollection"
           description: "Remove all items in collection and add those in geojson FeatureCollection"
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
           requestModels:
             "application/json": "FeatureCollection"
           methodResponses:
@@ -221,7 +271,7 @@ items-add-from-geojson:
   handler: app.handlers.geo_items.add_from_geojson
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items/geojson
+        path: collections/{collection_uuid}/items/geojson
         method: put
         cors: true
         authorizer: authorizer
@@ -229,7 +279,7 @@ items-add-from-geojson:
           summary: "Add items to collection from geojson FeatureCollection"
           description: "Add items to collection from geojson FeatureCollection"
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
           requestModels:
             "application/json": "FeatureCollection"
           methodResponses:
@@ -248,7 +298,7 @@ walking-paths-generate:
   handler: app.handlers.geo_items.generate_walking_paths
   events:
     - http:
-        path: collections/{collection_uuid_or_name}/items/ai/generate/walkingpaths
+        path: collections/{collection_uuid}/items/ai/generate/walkingpaths
         method: post
         summary: Generate random walking paths using starting points from collection and polygons from another collection as environment."
         description: "Generate random walking paths using starting points from collection and polygons from another collection as environment."
@@ -258,4 +308,4 @@ walking-paths-generate:
           - ${file(serverless/documentation/queryParams.yml):starting_points_collection_uuid}
           - ${file(serverless/documentation/queryParams.yml):environment_collection_uuid}
         pathParams:
-          - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+          - ${file(serverless/documentation/pathParams.yml):collection_uuid}
