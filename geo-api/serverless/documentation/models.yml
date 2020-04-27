@@ -1,0 +1,179 @@
+-
+  name: "Collection"
+  description: "This is an Collection object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      uuid:
+        type: "string"
+      provider_uuid:
+        type: "string"
+      name:
+        type: "string"
+      is_public:
+        type: "boolean"
+      revision:
+        type: "number"
+      created_at:
+        type: "string"
+      updated_at:
+        type: "string"
+-
+  name: "Collections"
+  description: "Array of Collection objects"
+  contentType: "application/json"
+  schema:
+    type: "array"
+    items:
+      $ref: "{{model: Collection}}"
+-
+  name: "UpdateItem"
+  description: "This is an Item object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      provider_uuid:
+        type: "string"
+      collection_uuid:      
+        type: "string"
+      geometry:
+        type: string
+      properties:
+        type: "object"
+        additionalProperties: true
+-
+  name: "CreateItem"
+  description: "This is an Item object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      provider_uuid:
+        type: "string"
+      collection_uuid:      
+        type: "string"
+      geometry:
+        type: string
+      properties:
+        type: "object"
+        additionalProperties: true
+-
+  name: "Item"
+  description: "This is an Item object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      uuid:
+        type: "string"
+      provider_uuid:
+        type: "string"
+      collection_uuid:      
+        type: "string"
+      geometry:
+        type: string
+      properties:
+        type: "object"
+        additionalProperties: true
+      revision:
+        type: "number"
+      created_at:
+        type: "string"
+      updated_at:
+        type: "string"
+-
+  name: "Items"
+  description: "Array of Item objects"
+  contentType: "application/json"
+  schema:
+    type: "array"
+    items:
+      $ref: "{{model: Item}}"
+-
+  name: "Geometry"
+  description: "This is an Geometry object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      type:
+        type: string
+        enum: [Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon]
+      coordinates:
+        type: "array"
+        items:
+          $ref: "{{model: Point2D}}"
+      properties:
+        type: "object"
+        additionalProperties: true
+-
+  name: "Point2D"
+  contentType: "application/json"
+  schema:
+    type: array
+    maxItems: 2
+    minItems: 2
+    items:
+      type: number
+-
+  name: "Feature"
+  description: "This is an Feature object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      type:
+        type: "string"
+        enum: [Feature]
+      geometry:
+        $ref: "{{model: Geometry}}"
+      properties:
+        type: "object"
+        additionalProperties: true
+-
+  name: "FeatureCollection"
+  description: "GeoJSON FeatureCollection"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+        enum: [FeatureCollection]
+      features:
+        type: "array"
+        items:
+          $ref: "{{model: Feature}}"
+
+-
+  name: "ImagePng"
+  description: "Image in png format"
+  contentType: "image/png"
+  schema:
+    type: "string"
+    format: binary
+
+-
+  name: "Uuid"
+  description: "Uuid"
+  contentType: "application/json"
+  schema:
+    type: "string"
+-
+  name: "Uuids"
+  description: "Uuids"
+  contentType: "application/json"
+  schema:
+    type: "array"
+    items:
+      $ref: "{{model: Uuid}}"
+-
+  name: "String"
+  description: "a String"
+  contentType: "application/json"
+  schema:
+    type: "string"

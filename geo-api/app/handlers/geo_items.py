@@ -5,6 +5,7 @@ from uuid import UUID
 from shapely.geometry import Point
 from app.handlers import response
 from app.models.item import Item
+from distutils.util import strtobool
 
 from app.services.collection import (
     get_collection_uuid_by_collection_name
@@ -24,6 +25,9 @@ from app.services.item import (
     update_items_from_geojson
     )
 
+from app.services.ai import (
+    generate_paths_from_points
+)
 
 def get_collection_uuid_from_event(event):
     collection_uuid_or_name = event['pathParameters']['collection_uuid_or_name']
@@ -33,13 +37,25 @@ def get_collection_uuid_from_event(event):
         return get_collection_uuid_by_collection_name(collection_uuid_or_name)
 
 
-def get_limit_and_offset_from_event(event):
-    print(event)
-    offset = 0 if not event['queryStringParameters'].get('offset') else event['queryStringParameters']['offset']
-    limit = 20 if not event['queryStringParameters'].get('limit') else event['queryStringParameters']['limit']
+def get_filters_from_event(event):
+    offset = 0
+    limit = 20
+    property_filter = None
+    valid = False
+
+    params = event['queryStringParameters']
+
+    if params is not None:
+        offset = int(params.get('offset', offset))
+        limit =  int(params.get('limit', limit))
+        property_filter = params.get('property_filter', property_filter)
+        valid = bool(strtobool(params.get('valid', valid)))
+
     return {
         "offset": offset,
         "limit": limit,
+        "property_filter": property_filter,
+        "valid": valid
     }
 
 
@@ -60,20 +76,10 @@ def get_visualizer_params_from_event(event):
     }
 
 
-def get_filter_from_event(event):
-    filter = None
-
-    if event['queryStringParameters'] is not None:
-        filter = event['queryStringParameters'].get('filter', None)
-
-    return filter
-
-
 def index(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    filter = get_filter_from_event(event)
-    limit_offset = get_limit_and_offset_from_event(event)
-    items = get_items_by_collection_uuid(collection_uuid, filter, limit_offset)
+    filters = get_filters_from_event(event)
+    items = get_items_by_collection_uuid(collection_uuid, filters)
 
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
 
@@ -85,8 +91,8 @@ def get_within_radius(event, context):
         "point": Point(float(lng), float(lat)),
         "radius": float(event["queryStringParameters"]["radius"])
     }
-    limit_offset = get_limit_and_offset_from_event(event)
-    items = get_items_within_radius_as_geojson(point_radius, limit_offset)
+    filters = get_filters_from_event(event)
+    items = get_items_within_radius_as_geojson(point_radius, filters)
 
     return response(200, rapidjson.dumps(items))
 
@@ -116,20 +122,18 @@ def get_as_png(event, context):
 
 def index_as_geojson(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    limit_offset = get_limit_and_offset_from_event(event)
-    filter = get_filter_from_event(event)
-    geojson = get_items_by_collection_uuid_as_geojson(
-        collection_uuid, filter, limit_offset)
+    filters = get_filters_from_event(event)
+    geojson = get_items_by_collection_uuid_as_geojson(collection_uuid, filters)
 
     return response(200, rapidjson.dumps(geojson))
 
 
 def index_as_png(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
-    limit_offset = get_limit_and_offset_from_event(event)
-    params = get_visualizer_params_from_event(event)
+    filters = get_filters_from_event(event)
+    vis_params = get_visualizer_params_from_event(event)
     png_bytes = get_items_by_collection_uuid_as_png(
-        collection_uuid, limit_offset, params['width'], params['height'], params['map_id'])
+        collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
 
     return {
         "statusCode": 200,
@@ -163,6 +167,29 @@ def update(event, context):
     update_item(item_uuid, item)
     return response(204)
 
+def generate_walking_paths(event, context):
+    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
+    collection_uuid = get_collection_uuid_from_event(event)
+    filters = {
+        "offset": 0,
+        "limit": 1000,
+        "property_filter": None,
+        "valid": False
+    }
+    steps = min(int(event['queryStringParameters']['steps']), 200)
+    n_agents = min(int(event['queryStringParameters']['agents']), 50) 
+    starting_points_collection_uuid = event['queryStringParameters']['starting_points_collection_uuid']
+    environment_collection_uuid = event['queryStringParameters']['environment_collection_uuid']
+    uuids = generate_paths_from_points(
+        starting_points_collection_uuid, 
+        environment_collection_uuid, 
+        collection_uuid,
+        n_agents, 
+        steps, 
+        provider_uuid,
+        filters
+    )
+    return response(201, rapidjson.dumps(uuids))
 
 def add_from_geojson(event, context):
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
