@@ -10,3 +10,15 @@ radius:
 coordinates:
   name: "coordinates"
   description: "Point coordinates, ie. coordinates=lng,lat"
+steps:
+  name: "steps"
+  description: "Steps the agents will try to move in the environment"
+agents:
+  name: "agents"
+  description: "Number of agents to spawn in the simulation."
+starting_points_collection_uuid:
+  name: "starting_points_collection_uuid"
+  description: "Collection to be used for starting points."
+environment_collection_uuid:
+  name: "environment_collection_uuid"
+  description: "Collection to be used for environment."

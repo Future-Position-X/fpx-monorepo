@@ -208,3 +208,19 @@ items-add-from-geojson:
             - ${file(serverless/documentation/methodResponses.yml):uuids}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
+
+walking-paths-generate:
+  handler: app.handlers.geo_items.generate_walking_paths
+  events:
+    - http:
+        path: collections/{collection_uuid_or_name}/items/ai/generate/walkingpaths
+        method: post
+        summary: Generate random walking paths using starting points from collection and polygons from another collection as environment."
+        description: "Generate random walking paths using starting points from collection and polygons from another collection as environment."
+        queryParams:
+          - ${file(serverless/documentation/queryParams.yml):steps}
+          - ${file(serverless/documentation/queryParams.yml):agents}
+          - ${file(serverless/documentation/queryParams.yml):starting_points_collection_uuid}
+          - ${file(serverless/documentation/queryParams.yml):environment_collection_uuid}
+        pathParams:
+          - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
