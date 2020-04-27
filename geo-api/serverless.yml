@@ -41,8 +41,8 @@ package:
     - node_modules/**
     - static/**
 functions:
-  #- ${file(serverless/functions/collections.yml)}
-  #- ${file(serverless/functions/items.yml)}
+  - ${file(serverless/functions/collections.yml)}
+  - ${file(serverless/functions/items.yml)}
   - ${file(serverless/functions/misc.yml)}
 
 resources:
