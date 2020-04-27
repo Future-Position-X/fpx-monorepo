@@ -11,6 +11,15 @@ inputs:
   aws-secret-access-key:
     description: 'Your aws secret access key'
     required: true
+  database-url:
+    description: 'Your database url'
+    required: true
+  mapbox-token:
+    description: 'Your mapbox token'
+    required: true
+  jwt-secret:
+    description: 'Your jwt secret'
+    required: true
 
 runs:
   using: 'node12'
