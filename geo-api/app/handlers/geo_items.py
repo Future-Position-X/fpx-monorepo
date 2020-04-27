@@ -22,9 +22,13 @@ from app.services.item import (
     update_item,
     add_items_from_geojson,
     create_items_from_geojson,
+    update_items_from_geojson,
     delete_items_by_collection_uuid
     )
 
+from app.services.ai import (
+    generate_paths_from_points
+)
 
 def get_collection_uuid_from_event(event):
     collection_uuid_or_name = event['pathParameters']['collection_uuid_or_name']
@@ -164,6 +168,29 @@ def update(event, context):
     update_item(item_uuid, item)
     return response(204)
 
+def generate_walking_paths(event, context):
+    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
+    collection_uuid = get_collection_uuid_from_event(event)
+    filters = {
+        "offset": 0,
+        "limit": 1000,
+        "property_filter": None,
+        "valid": False
+    }
+    steps = min(int(event['queryStringParameters']['steps']), 200)
+    n_agents = min(int(event['queryStringParameters']['agents']), 50) 
+    starting_points_collection_uuid = event['queryStringParameters']['starting_points_collection_uuid']
+    environment_collection_uuid = event['queryStringParameters']['environment_collection_uuid']
+    uuids = generate_paths_from_points(
+        starting_points_collection_uuid, 
+        environment_collection_uuid, 
+        collection_uuid,
+        n_agents, 
+        steps, 
+        provider_uuid,
+        filters
+    )
+    return response(201, rapidjson.dumps(uuids))
 
 def add_from_geojson(event, context):
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
@@ -191,6 +218,12 @@ def create_from_geojson(event, context):
         provider_uuid=provider_uuid)
 
     return response(201, rapidjson.dumps(uuids))
+
+ 
+def update_from_geojson(event, context):
+    feature_collection = rapidjson.loads(event['body'])
+    update_items_from_geojson(feature_collection)
+    return response(204)
 
 
 def delete_items(event, context):
