@@ -24,6 +24,7 @@ collections-delete:
         path: collections/{collection_uuid}
         method: delete
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Delete collection"
           description: "Delete collection"
@@ -41,6 +42,7 @@ collections-update:
         path: collections/{collection_uuid}
         method: put
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Update collection"
           description: "Update collection"
@@ -60,6 +62,7 @@ collections-create:
         path: collections
         method: post
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Collection index"
           description: "All accessable Collections"

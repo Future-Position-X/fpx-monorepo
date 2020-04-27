@@ -197,6 +197,7 @@ items-delete-all:
         path: /collections/{collection_uuid}/items
         method: delete
         cors: true
+        authorizer: authorizer
         documentation:
           summary: "Delete all items"
           description: "Delete all items"
@@ -293,6 +294,8 @@ items-update-from-geojson:
     - http:
         path: items/geojson
         method: put
+        cors: true
+        authorizer: authorizer
 
 walking-paths-generate:
   handler: app.handlers.geo_items.generate_walking_paths
@@ -300,6 +303,8 @@ walking-paths-generate:
     - http:
         path: collections/{collection_uuid}/items/ai/generate/walkingpaths
         method: post
+        cors: true
+        authorizer: authorizer
         summary: Generate random walking paths using starting points from collection and polygons from another collection as environment."
         description: "Generate random walking paths using starting points from collection and polygons from another collection as environment."
         queryParams:
