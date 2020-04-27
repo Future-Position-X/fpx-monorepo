@@ -208,6 +208,13 @@ items-add-from-geojson:
             - ${file(serverless/documentation/methodResponses.yml):uuids}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
+            
+items-update-from-geojson:
+  handler: app.handlers.geo_items.update_from_geojson
+  events:
+    - http:
+        path: items/geojson
+        method: put
 
 walking-paths-generate:
   handler: app.handlers.geo_items.generate_walking_paths
