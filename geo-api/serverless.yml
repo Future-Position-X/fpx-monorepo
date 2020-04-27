@@ -20,6 +20,8 @@ plugins:
   - serverless-apigwy-binary
   - serverless-aws-documentation
   - serverless-finch
+  - serverless-domain-manager
+
 custom:
   defaultStage: dev
   stageVars: ${file(serverless/config/${self:provider.stage}.yml)}
@@ -32,7 +34,13 @@ custom:
   documentation:
     api: ${file(serverless/documentation/api.yml)}
     models: ${file(serverless/documentation/models.yml)}
-
+  customDomain:
+    domainName: dev.gia.fpx.se
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+    certificateName: 'dev.gia.fpx.se'
+    
   client:
     bucketName: ${self:service}-${self:provider.stage}-static
     distributionFolder: static
@@ -48,21 +56,4 @@ functions:
 
 resources:
   Resources:
-    GatewayResponseDefault4XX:
-      Type: 'AWS::ApiGateway::GatewayResponse'
-      Properties:
-        ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
-        ResponseType: DEFAULT_4XX
-        RestApiId:
-          Ref: 'ApiGatewayRestApi'
-    GatewayResponseDefault5XX:
-      Type: 'AWS::ApiGateway::GatewayResponse'
-      Properties:
-        ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
-        ResponseType: DEFAULT_5XX
-        RestApiId:
-          Ref: 'ApiGatewayRestApi'
+    ${file(serverless/resources/gatewayResponses.yml)}
