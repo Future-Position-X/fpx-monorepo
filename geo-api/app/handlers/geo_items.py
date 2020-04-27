@@ -22,7 +22,8 @@ from app.services.item import (
     update_item,
     add_items_from_geojson,
     create_items_from_geojson,
-    update_items_from_geojson
+    update_items_from_geojson,
+    delete_items_by_collection_uuid
     )
 
 from app.services.ai import (
@@ -218,7 +219,14 @@ def create_from_geojson(event, context):
 
     return response(201, rapidjson.dumps(uuids))
 
+ 
 def update_from_geojson(event, context):
     feature_collection = rapidjson.loads(event['body'])
     update_items_from_geojson(feature_collection)
+    return response(204)
+
+
+def delete_items(event, context):
+    collection_uuid = get_collection_uuid_from_event(event)
+    delete_items_by_collection_uuid(collection_uuid)
     return response(204)

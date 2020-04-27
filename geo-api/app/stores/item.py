@@ -80,6 +80,13 @@ class ItemStore(Store):
         WHERE provider_uuid = %(provider_uuid)s;
         """, {"provider_uuid": provider_uuid})
 
+    def delete_items(self, collection_uuid):
+        c = self.cursor()
+        c.execute("""
+        DELETE FROM public.items
+        WHERE collection_uuid = %(collection_uuid)s;
+        """, {"collection_uuid": collection_uuid})
+
     def find_by_uuid_as_geojson(self, item_uuid):
         c = self.cursor()
         c.execute("""

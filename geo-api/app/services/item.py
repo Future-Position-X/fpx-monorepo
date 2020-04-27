@@ -121,4 +121,10 @@ def update_items_from_geojson(feature_collection):
                     'properties': f['properties']
                 }))
 
-            item_store.complete()
+        item_store.complete()
+
+
+def delete_items_by_collection_uuid(collection_uuid):
+    with ItemStore() as item_store:
+        item_store.delete_items(collection_uuid)
+        item_store.complete()
