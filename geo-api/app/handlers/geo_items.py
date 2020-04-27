@@ -31,11 +31,12 @@ from app.services.ai import (
 )
 
 def get_collection_uuid_from_event(event):
-    collection_uuid_or_name = event['pathParameters']['collection_uuid_or_name']
+    collection_uuid = event['pathParameters'].get('collection_uuid')
     try:
-        return str(UUID(collection_uuid_or_name, version=4))
+        return str(UUID(collection_uuid, version=4))
     except ValueError:
-        return get_collection_uuid_by_collection_name(collection_uuid_or_name)
+        collection_name = event['pathParameters'].get('collection_name')
+        return get_collection_uuid_by_collection_name(collection_name)
 
 
 def get_filters_from_event(event):
