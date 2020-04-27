@@ -194,14 +194,14 @@ items-delete-all:
   handler: app.handlers.geo_items.delete_items
   events:
     - http:
-        path: /collections/{collection_uuid_or_name}/items
+        path: /collections/{collection_uuid}/items
         method: delete
         cors: true
         documentation:
           summary: "Delete all items"
           description: "Delete all items"
           pathParams:
-            - ${file(serverless/documentation/pathParams.yml):collection_uuid_or_name}
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
           methodResponses:
             - statusCode: "204"
             - ${file(serverless/documentation/methodResponses.yml):error404}
