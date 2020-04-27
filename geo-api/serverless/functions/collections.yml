@@ -15,3 +15,17 @@ collections-index:
                 description: "Collections"
               responseModels:
                 "application/json": "Collections"
+
+collections-delete:
+  handler: app.handlers.geo_collections.delete
+  events:
+    - http:
+        path: collections/{collection_uuid}
+        method: delete
+
+collections-update:
+  handler: app.handlers.geo_collections.update
+  events:
+    - http:
+        path: collections/{collection_uuid}
+        method: put
