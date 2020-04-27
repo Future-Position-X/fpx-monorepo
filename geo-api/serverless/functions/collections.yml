@@ -4,6 +4,17 @@ collections-index:
     - http:
         path: collections
         method: get
+        cors: true
+        documentation:
+          summary: "Collection index"
+          description: "All accessable Collections"
+          methodResponses:
+            -
+              statusCode: "200"
+              responseBody:
+                description: "Collections"
+              responseModels:
+                "application/json": "Collections"
 
 collections-delete:
   handler: app.handlers.geo_collections.delete

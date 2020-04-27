@@ -110,19 +110,23 @@ class ItemStore(Store):
         """)
         return [Item(**row) for row in c.fetchall()]
 
-    def find_by_collection_uuid(self, collection_uuid, filter=None, offset=0, limit=20):
+    def find_by_collection_uuid(self, collection_uuid, filters):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
 
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
+
         exec_dict = {
             "collection_uuid": collection_uuid,
-            "offset": offset,
-            "limit": limit
+            "offset": filters["offset"],
+            "limit": filters["limit"]
         }
 
-        if filter is not None:
+        if filters["property_filter"] is not None:
             where += " AND "
-            where = append_property_filter_to_where_clause(where, filter, exec_dict)
+            where = append_property_filter_to_where_clause(
+                where, filters["property_filter"], exec_dict)
 
         c.execute("""
             SELECT uuid,
@@ -138,19 +142,23 @@ class ItemStore(Store):
         return [Item(**row) for row in c.fetchall()]
 
 
-    def find_by_collection_uuid_as_geojson(self, collection_uuid, filter=None, offset=0, limit=20):
+    def find_by_collection_uuid_as_geojson(self, collection_uuid, filters):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
+
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
         
         exec_dict = {
             "collection_uuid": collection_uuid,
-            "offset": offset,
-            "limit": limit
+            "offset": filters["offset"],
+            "limit": filters["limit"]
         }
 
-        if filter is not None:
+        if filters["property_filter"] is not None:
             where += " AND "
-            where = append_property_filter_to_where_clause(where, filter, exec_dict)
+            where = append_property_filter_to_where_clause(
+                where, filters["property_filter"], exec_dict)
 
         c.execute("""
             SELECT jsonb_build_object(
@@ -174,7 +182,7 @@ class ItemStore(Store):
             """, exec_dict)
         return c.fetchone()['geojson']
 
-    def find_within_radius_as_geojson(self, point=None, radius=None, offset=0, limit=20):
+    def find_within_radius_as_geojson(self, filters, point=None, radius=None):
         c = self.cursor()
         c.execute("""
             SELECT jsonb_build_object(
@@ -202,7 +210,7 @@ class ItemStore(Store):
             """, {
             "point": point.wkt,
             "radius": radius,
-            "offset": offset,
-            "limit": limit
+            "offset": filters["offset"],
+            "limit": filters["limit"]
         })
         return c.fetchone()['geojson']

@@ -17,6 +17,8 @@ plugins:
   - serverless-dotenv-plugin
   - serverless-apigw-binary
   - serverless-apigwy-binary
+  - serverless-aws-documentation
+  - serverless-finch
 
 custom:
   defaultStage: dev
@@ -27,13 +29,40 @@ custom:
     types:
       - 'image/png'
       - '*/*'
+  documentation:
+    api: ${file(serverless/documentation/api.yml)}
+    models: ${file(serverless/documentation/models.yml)}
 
+  client:
+    bucketName: ${self:service}-${self:provider.stage}-static
+    distributionFolder: static
 package:
   exclude:
     - venv/**
     - node_modules/**
+    - static/**
 functions:
   - ${file(serverless/functions/collections.yml)}
   - ${file(serverless/functions/items.yml)}
   - ${file(serverless/functions/misc.yml)}
 
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
