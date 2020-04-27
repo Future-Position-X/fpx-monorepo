@@ -6,9 +6,22 @@ import os
 
 
 def authorize(event, context):
+    authHeader = event['authorizationToken']
+    if authHeader is None:
+        return
+
+    authParts = authHeader.split(' ')
+    if len(authParts) != 2:
+        return
+
+    if authParts[0].lower() != 'bearer':
+        return
+
+    token = authParts[1]
+
     try:
         decoded = jwt.decode(
-            event['authorizationToken'],
+            token,
             os.environ.get('JWT_SECRET'),
             audience='https://api.gavleinnovationarena.se',
             algorithms=['HS256'])
