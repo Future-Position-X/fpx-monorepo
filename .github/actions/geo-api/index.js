@@ -37,14 +37,14 @@ async function installServerlessAndPlugins() {
 async function runServerlessDeploy() {
     await exeq(
         `echo Running sudo ./deploy.sh ${ARGS}...`,
-        `cd geo-api/`,
         `sudo -E ls -la "$HOME"`,
         `echo "Running sls config credentials"`,
         `sudo -E sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
         `sudo -E ls -la "$HOME/.aws"`,
         `cat "$HOME/.aws/credentials"`,
         `echo "Running ./deploy.sh"`,
-        //`sudo -E ./deploy.sh ${ARGS}`
+        `cd geo-api/`,
+        `sudo -E ./deploy.sh ${ARGS}`
     )
 }
 
