@@ -149,6 +149,47 @@ class ItemStore(Store):
         return [Item(**row) for row in c.fetchall()]
 
 
+    def find_by_collection_name(self, collection_name, current_provider_uuid, filters):
+        c = self.cursor()
+        
+        where = """
+        collections.name = %(collection_name)s
+        AND (
+            collections.is_public=true
+            OR collections.provider_uuid = %(current_provider_uuid)s
+            )"""
+
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
+
+        exec_dict = {
+            "collection_name": collection_name,
+            "current_provider_uuid": current_provider_uuid,
+            "offset": filters["offset"],
+            "limit": filters["limit"]
+        }
+
+        if filters["property_filter"] is not None:
+            where += " AND "
+            where = append_property_filter_to_where_clause(
+                where, filters["property_filter"], exec_dict)
+
+        c.execute("""
+            SELECT items.uuid,
+                items.provider_uuid,
+                items.collection_uuid,
+                items.properties,
+                ST_AsGeoJSON(items.geometry)::jsonb as geometry
+            FROM items
+            LEFT JOIN
+                collections on collections.uuid = items.collection_uuid
+            WHERE """ + where + """
+                OFFSET %(offset)s
+                LIMIT %(limit)s
+            """, exec_dict)
+        return [Item(**row) for row in c.fetchall()]
+
+
     def find_by_collection_uuid_as_geojson(self, collection_uuid, filters):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
@@ -181,6 +222,59 @@ class ItemStore(Store):
             FROM (
                 SELECT *
                 FROM public.items
+                WHERE """ + where + """
+                    OFFSET %(offset)s
+                    LIMIT %(limit)s
+            )
+            inputs) features;
+            """, exec_dict)
+        return c.fetchone()['geojson']
+
+    def find_by_collection_name_as_geojson(self, collection_name, current_provider_uuid, filters):
+        c = self.cursor()
+
+        where = """
+        collections.name = %(collection_name)s
+        AND (
+            collections.is_public=true
+            OR collections.provider_uuid = %(current_provider_uuid)s
+            )"""
+
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
+        
+        exec_dict = {
+            "collection_name": collection_name,
+            "current_provider_uuid": current_provider_uuid,
+            "offset": filters["offset"],
+            "limit": filters["limit"]
+        }
+
+        if filters["property_filter"] is not None:
+            where += " AND "
+            where = append_property_filter_to_where_clause(
+                where, filters["property_filter"], exec_dict)
+
+        c.execute("""
+            SELECT jsonb_build_object(
+                'type', 'FeatureCollection',
+                'features', jsonb_agg(features.feature)) as geojson
+            FROM (
+                SELECT jsonb_build_object(
+                    'type', 'Feature',
+                    'id', uuid,
+                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
+                    'properties', properties
+            ) AS feature
+            FROM (
+                SELECT items.uuid,
+                items.provider_uuid,
+                items.collection_uuid,
+                items.properties,
+                items.geometry
+                FROM items
+                LEFT JOIN
+                    collections on collections.uuid = items.collection_uuid
                 WHERE """ + where + """
                     OFFSET %(offset)s
                     LIMIT %(limit)s

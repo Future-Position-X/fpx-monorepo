@@ -28,6 +28,12 @@ def get_items_by_collection_uuid(collection_uuid, filters):
         return items
 
 
+def get_items_by_collection_name(collection_name, current_provider_uuid, filters):
+    with ItemStore() as item_store:
+        items = item_store.find_by_collection_name(collection_name, current_provider_uuid, filters)
+        item_store.complete()
+        return items
+
 def get_items_by_collection_uuid_as_geojson(collection_uuid, filters):
     with ItemStore() as item_store:
         items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, filters)
@@ -43,6 +49,14 @@ def get_items_by_collection_uuid_as_png(collection_uuid, filters, width, height,
     return render_feature_collection(items, width, height, map_id)
 
 
+def get_items_by_collection_name_as_png(collection_name, current_provider_uuid, filters, width, height, map_id):
+    with ItemStore() as item_store:
+        items = item_store.find_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters)
+        item_store.complete()
+
+    return render_feature_collection(items, width, height, map_id)
+
+
 def get_items_within_radius_as_geojson(point_radius, filters):
     with ItemStore() as item_store:
         items = item_store.find_within_radius_as_geojson(
@@ -51,13 +65,11 @@ def get_items_within_radius_as_geojson(point_radius, filters):
         return items
 
 
-def get_items_by_collection_name(collection_name):
-    collection_uuid = get_collection_uuid_by_collection_name(collection_name)
+def get_items_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters):
     with ItemStore() as item_store:
-        items = item_store.find_by_collection_uuid(collection_uuid)
+        geojson = item_store.find_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters)
         item_store.complete()
-        return items
-
+        return geojson
 
 def create_item(item):
     with ItemStore() as item_store:

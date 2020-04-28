@@ -18,6 +18,10 @@ items-index:
             - ${file(serverless/documentation/methodResponses.yml):items}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
+
+items-index-by-name:
+  handler: app.handlers.geo_items.index_by_name
+  events:
     - http:
         path: collections/by_name/{collection_name}/items
         method: get
@@ -56,6 +60,10 @@ items-index-as-geojson:
             - ${file(serverless/documentation/methodResponses.yml):featureCollection}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
+
+items-index-as-geojson-by-name:
+  handler: app.handlers.geo_items.index_as_geojson_by_name
+  events:
     - http:
         path: collections/by_name/{collection_name}/items/geojson
         method: get
@@ -95,6 +103,10 @@ items-index-as-png:
             - ${file(serverless/documentation/methodResponses.yml):imagePng}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
+
+items-index-as-png-by-name:
+  handler: app.handlers.geo_items.index_as_png_by_name
+  events:
     - http:
         path: collections/by_name/{collection_name}/items/png
         method: get

@@ -14,6 +14,9 @@ from app.services.item import (
     get_items_by_collection_uuid,
     get_items_by_collection_uuid_as_geojson,
     get_items_by_collection_uuid_as_png,
+    get_items_by_collection_name,
+    get_items_by_collection_name_as_geojson,
+    get_items_by_collection_name_as_png,
     get_items_within_radius_as_geojson,
     get_item_by_uuid_as_geojson,
     get_item_by_uuid_as_png,
@@ -86,6 +89,13 @@ def index(event, context):
     return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
 
 
+def index_by_name(event, context):
+    collection_name = event['pathParameters']['collection_name']
+    filters = get_filters_from_event(event)
+    items = get_items_by_collection_name(collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters)
+
+    return response(200, rapidjson.dumps([i.as_dict() for i in items]))
+
 def get_within_radius(event, context):
     coordinates = event["queryStringParameters"]["coordinates"]
     lng, lat = coordinates.split(",")
@@ -130,12 +140,37 @@ def index_as_geojson(event, context):
     return response(200, rapidjson.dumps(geojson))
 
 
+def index_as_geojson_by_name(event, context):
+    collection_name = event['pathParameters']['collection_name']
+    filters = get_filters_from_event(event)
+    geojson = get_items_by_collection_name_as_geojson(collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters)
+
+    return response(200, rapidjson.dumps(geojson))
+
+
 def index_as_png(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
     filters = get_filters_from_event(event)
     vis_params = get_visualizer_params_from_event(event)
     png_bytes = get_items_by_collection_uuid_as_png(
         collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
+
+    return {
+        "statusCode": 200,
+        "body": base64.b64encode(png_bytes),
+        "isBase64Encoded": "true",
+        "headers": {
+            "Content-Type": "image/png"
+        }
+    }
+
+
+def index_as_png_by_name(event, context):
+    collection_name = event['pathParameters']['collection_name']
+    filters = get_filters_from_event(event)
+    vis_params = get_visualizer_params_from_event(event)
+    png_bytes = get_items_by_collection_name_as_png(
+        collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
 
     return {
         "statusCode": 200,
