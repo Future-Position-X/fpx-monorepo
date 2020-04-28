@@ -41,7 +41,7 @@ custom:
     certificateName: '${self:provider.stage}.gia.fpx.se'
     
   client:
-    bucketName: ${self:service}-${self:provider.stage}-static
+    bucketName: docs.${self:provider.stage}.gia.fpx.se
     distributionFolder: static
 package:
   exclude:
