@@ -33,13 +33,10 @@ from app.services.ai import (
     generate_paths_from_points
 )
 
+
 def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
-    try:
-        return str(UUID(collection_uuid, version=4))
-    except TypeError:
-        collection_name = event['pathParameters'].get('collection_name')
-        return get_collection_uuid_by_collection_name(collection_name)
+    return collection_uuid
 
 
 def get_filters_from_event(event):
