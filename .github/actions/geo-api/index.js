@@ -44,7 +44,7 @@ async function runServerlessDeploy() {
         `sudo -E ls -la "$HOME/.aws"`,
         `cat "$HOME/.aws/credentials"`,
         `echo "Running ./deploy.sh"`,
-        `sudo -E ./deploy.sh ${ARGS}`
+        //`sudo -E ./deploy.sh ${ARGS}`
     )
 }
 
