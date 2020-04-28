@@ -35,11 +35,11 @@ custom:
     api: ${file(serverless/documentation/api.yml)}
     models: ${file(serverless/documentation/models.yml)}
   customDomain:
-    domainName: dev.gia.fpx.se
+    domainName: ${self:provider.stage}.gia.fpx.se
     basePath: ''
     stage: ${self:provider.stage}
     createRoute53Record: true
-    certificateName: 'dev.gia.fpx.se'
+    certificateName: '${self:provider.stage}.gia.fpx.se'
     
   client:
     bucketName: ${self:service}-${self:provider.stage}-static
