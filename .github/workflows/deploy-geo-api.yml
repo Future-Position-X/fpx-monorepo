@@ -27,8 +27,3 @@ jobs:
         args: '--stage dev --profile default'
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
-      env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL_DEV }}
-        MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN_DEV }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET_DEV }}
-        

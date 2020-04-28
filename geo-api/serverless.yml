@@ -8,14 +8,13 @@ provider:
   memorySize: 3008
   timeout: 30
   environment:
-    MAPBOX_TOKEN: ${self:custom.stageVars.environment.MAPBOX_TOKEN}
     DATABASE_URL: ${self:custom.stageVars.environment.DATABASE_URL}
     JWT_SECRET: ${self:custom.stageVars.environment.JWT_SECRET}
+    MAPBOX_TOKEN: ${self:custom.stageVars.environment.MAPBOX_TOKEN}
 
 plugins:
   - serverless-python-requirements
   - serverless-offline
-  - serverless-dotenv-plugin
   - serverless-apigw-binary
   - serverless-apigwy-binary
   - serverless-aws-documentation

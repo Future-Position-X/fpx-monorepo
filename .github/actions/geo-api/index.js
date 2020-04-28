@@ -38,8 +38,8 @@ async function runServerlessDeploy() {
     await exeq(
         `echo Running sudo ./deploy.sh ${ARGS}...`,
         'cd geo-api/',
-        `sudo -E sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
-        `sudo -E ./deploy.sh ${ARGS}`
+        `sudo sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
+        `sudo ./deploy.sh ${ARGS}`
     )
 }
 
