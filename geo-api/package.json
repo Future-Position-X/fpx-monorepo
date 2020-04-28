@@ -17,6 +17,7 @@
     "serverless-apigw-binary": "^0.4.4",
     "serverless-apigwy-binary": "^1.0.0",
     "serverless-aws-documentation": "^1.1.0",
+    "serverless-binary-cors": "0.0.1",
     "serverless-domain-manager": "^3.3.2",
     "serverless-offline": "^6.1.4"
   }

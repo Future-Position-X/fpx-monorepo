@@ -4,8 +4,8 @@ ping:
     - http:
         path: ping
         method: get
+        #authorizer: authorizer
         cors: true
-        authorizer: authorizer
         documentation:
           summary: "Ping endpoint to check if up"
           description: "Ping endpoint to check if up"
