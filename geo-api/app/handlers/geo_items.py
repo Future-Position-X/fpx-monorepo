@@ -54,7 +54,7 @@ def get_filters_from_event(event):
         offset = int(params.get('offset', offset))
         limit =  int(params.get('limit', limit))
         property_filter = params.get('property_filter', property_filter)
-        valid = bool(strtobool(params.get('valid', valid)))
+        valid = bool(strtobool(params.get('valid', 'false')))
 
     return {
         "offset": offset,
