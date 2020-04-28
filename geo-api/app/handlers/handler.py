@@ -1,6 +1,6 @@
 from app.handlers import response
 
 
-def ping(event, context):
+def health(event, context):
     print(event)
-    return response(200,"pong")
+    return response(200,"healthy!")

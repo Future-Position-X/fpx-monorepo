@@ -21,6 +21,7 @@ plugins:
   - serverless-finch
   - serverless-domain-manager
   - serverless-binary-cors
+
 custom:
   defaultStage: dev
   stageVars: ${file(serverless/config/${self:provider.stage}.yml)}
