@@ -45,7 +45,7 @@ async function runServerlessDeploy() {
 
 //  Runs all functions in sequence
 async function handler() {
-    //await installDocker()
+    // await installDocker()
     await installServerlessAndPlugins()
     await runServerlessDeploy()
 }
