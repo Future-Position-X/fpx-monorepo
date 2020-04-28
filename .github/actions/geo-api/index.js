@@ -36,18 +36,19 @@ async function installServerlessAndPlugins() {
 //  Runs Serverless deploy including any provided args
 async function runServerlessDeploy() {
     await exeq(
-        `echo Running ./deploy.sh ${ARGS}...`,
+        `echo Running sudo ./deploy.sh ${ARGS}...`,
         'cd geo-api/',
-        `sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
-        'echo "WOOT"',
+        `ls -la "~/.aws"`,
+        `sudo -E sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} ${ARGS}`,
+        `ls -la "~/.aws"`,
         'cat "~/.aws/credentials"',
-        `./deploy.sh ${ARGS}`
+        `sudo -E ./deploy.sh ${ARGS}`
     )
 }
 
 //  Runs all functions in sequence
 async function handler() {
-    //await installDocker()
+    await installDocker()
     await installServerlessAndPlugins()
     await runServerlessDeploy()
 }
