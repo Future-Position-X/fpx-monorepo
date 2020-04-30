@@ -35,7 +35,7 @@ Icon.Default.mergeOptions({
 });
 
 export default {
-  name: "Example",
+  name: "Map",
   components: {
     LMap,
     LTileLayer,
