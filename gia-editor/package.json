@@ -9,8 +9,6 @@
   },
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.5.0",
-    "bootstrap": "^4.4.1",
-    "bootstrap-vue": "^2.13.0",
     "core-js": "^3.6.4",
     "geojson-validation": "^1.0.1",
     "leaflet": "^1.6.0",

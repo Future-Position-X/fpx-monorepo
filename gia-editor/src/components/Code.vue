@@ -1,14 +1,15 @@
 <template>
   <!--<codemirror v-model="code" :options="cmOptions" />-->
-
-  <codemirror
-    ref="cmEditor"
-    :value="code"
-    :options="cmOptions"
-    @ready="onCmReady"
-    @focus="onCmFocus"
-    @input="onCmCodeChange"
-  />
+  <div class="codeWrapper">
+    <codemirror
+      ref="cmEditor"
+      :value="code"
+      :options="cmOptions"
+      @ready="onCmReady"
+      @focus="onCmFocus"
+      @input="onCmCodeChange"
+    />
+  </div>
 </template>
 
 <script>
@@ -54,7 +55,7 @@ export default {
       console.log("the editor is focused!", cm);
     },
     onCmCodeChange(newCode, changeObj) {
-        console.log(changeObj);
+      console.log(changeObj);
       if (changeObj.origin == "setValue") return;
       try {
         const newCodeParsed = JSON.parse(newCode);
@@ -82,5 +83,18 @@ export default {
 </script>
 
 <style>
-.CodeMirror {height: 100%; min-height: 100%;}
+/*
+.codeWrapper {
+  position: absolute;
+  top: 40px;
+  bottom: 0;
+  width: 100%;
+  overflow: auto;
+}
+*/
+.CodeMirror {
+  height: 100%;
+  min-height: 100%;
+  font-size: 14px;
+}
 </style>
