@@ -30,7 +30,6 @@ custom:
   apigwBinary:
     types:
       - 'image/png'
-      - '*/*'
   documentation:
     api: ${file(serverless/documentation/api.yml)}
     models: ${file(serverless/documentation/models.yml)}
