@@ -18,7 +18,29 @@
             </div>
           </b-tab>
           <b-tab title="Table">
-            <v-client-table v-model="tableData" :columns="columns" :options="options"></v-client-table>
+            <v-data-table :headers="headers" :items="tableData" item-key="id" class="elevation-1">
+              <template v-slot:body="{ items, headers }">
+                <tbody>
+                  <tr v-for="(item,idx) in items" :key="idx">
+                    <td v-for="(header,key) in headers" :key="key">
+                      <v-edit-dialog
+                        :return-value.sync="item[header.value]"
+                        @save="save"
+                        @cancel="cancel"
+                        @open="open"
+                        @close="close"
+                        large
+                      >
+                        {{item[header.value]}}
+                        <template v-slot:input>
+                          <v-text-field v-model="item[header.value]" label="Edit" single-line></v-text-field>
+                        </template>
+                      </v-edit-dialog>
+                    </td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-data-table>
           </b-tab>
         </b-tabs>
       </div>
@@ -45,7 +67,20 @@ export default {
       geojson: null,
       show: true,
       loading: false,
-      columns: ["id", "name", "age"],
+      headers: [
+        {
+          text: "id",
+          value: "id"
+        },
+        {
+          text: "name",
+          value: "name"
+        },
+        {
+          text: "age",
+          value: "age"
+        }
+      ],
       tableData: [
         { id: 1, name: "John", age: "20" },
         { id: 2, name: "Jane", age: "24" },
@@ -54,7 +89,7 @@ export default {
         { id: 5, name: "Dan", age: "40" }
       ],
       options: {
-        editableColumns: ['age']
+        editableColumns: ["age"]
       }
     };
   },
@@ -66,8 +101,13 @@ export default {
     geojsonUpdateFromMap(geojson) {
       console.log("geojsonUpdateFromMap");
       this.code = JSON.stringify(geojson, null, "  ");
-    }
+    },
+    save() {},
+    cancel() {},
+    open() {},
+    close() {}
   },
+
   async created() {
     this.loading = true;
     const response = await fetch(
