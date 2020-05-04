@@ -14,6 +14,13 @@ GIA_TOKEN = os.getenv("GIA_TOKEN")
 
 collections = [
     {
+        'name': 'obstacles',
+        'url': 'data/obstacles.json',
+        'uuid': '5cbb09a7-57a5-4641-849a-f0c36ed24bb0',
+        'is_file': True,
+        'batch_size': 100
+    },
+    {
         'name': 'school-assignment-areas',
         'url': 'https://catalog.gavle.se/store/1/resource/374',
         'filename': 'skolplaceringsomraden.json',
@@ -298,11 +305,17 @@ collections = [
 
 def import_collection(collection):
     print("processing dataset: ", collection["name"])
-    r = requests.get(collection['url'])
 
-    z = zipfile.ZipFile(BytesIO(r.content))
-    text = z.read(collection['filename'])
-    json_obj = json.loads(text)
+    is_file = collection.get('is_file', False)
+
+    if is_file:
+        with open(collection['url'], "r") as file:
+            json_obj = json.loads(file.read())
+    else:
+        r = requests.get(collection['url'])
+        z = zipfile.ZipFile(BytesIO(r.content))
+        text = z.read(collection['filename'])
+        json_obj = json.loads(text)
 
     headers = {
         'Authorization': 'Bearer ' + GIA_TOKEN,
