@@ -25,7 +25,8 @@ def authorize(event, context):
             os.environ.get('JWT_SECRET'),
             audience='https://api.gavleinnovationarena.se',
             algorithms=['HS256'])
-    except Exception:
+    except Exception as e:
+        print(e)
         return
 
     principalId = decoded['nameid']
