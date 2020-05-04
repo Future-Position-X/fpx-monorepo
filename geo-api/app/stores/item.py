@@ -73,12 +73,15 @@ class ItemStore(Store):
     def insert_one(self, item):
         return self.insert([item])[0]
 
-    def remove_items_by_provider_uuid(self, provider_uuid):
+    def remove_items_by_collection_uuid(self, provider_uuid, collection_uuid):
         c = self.cursor()
         c.execute("""
         DELETE FROM public.items
-        WHERE provider_uuid = %(provider_uuid)s;
-        """, {"provider_uuid": provider_uuid})
+        WHERE provider_uuid = %(provider_uuid)s AND collection_uuid = %(collection_uuid)s;
+        """, {
+            "provider_uuid": provider_uuid,
+            "collection_uuid": collection_uuid
+        })
 
     def delete_items(self, collection_uuid):
         c = self.cursor()
