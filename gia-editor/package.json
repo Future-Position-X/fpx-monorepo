@@ -13,7 +13,7 @@
     "geojson-validation": "^1.0.1",
     "leaflet": "^1.6.0",
     "vue": "^2.6.11",
-    "vue-codemirror": "^4.0.6",
+    "vue-codemirror": "triptec/vue-codemirror#4c9853251aeb42ec15fb6e1d6de511ce27f5666a",
     "vue2-leaflet": "^2.5.2",
     "vuetify": "^2.2.26"
   },

@@ -55,7 +55,7 @@ export default {
       console.log("the editor is focused!", cm);
     },
     onCmCodeChange(newCode, changeObj) {
-      console.log(changeObj);
+      console.log("codeChanged: ", changeObj);
       if (changeObj.origin == "setValue") return;
       try {
         const newCodeParsed = JSON.parse(newCode);
