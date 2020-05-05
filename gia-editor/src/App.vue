@@ -14,6 +14,12 @@
               <v-tab>Code</v-tab>
               <v-tab>Table</v-tab>
               <v-tab-item>
+                <v-select
+                  :items="items"
+                  label="Collection"
+                  @change="dropDownChange"
+                  v-model="selectedCollection"
+                ></v-select>
                 <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" />
               </v-tab-item>
               <v-tab-item>
@@ -48,7 +54,17 @@ export default {
       loading: false,
       collections: [],
       geojson: {},
+      items: [],
+      selectedCollection: null
     };
+  },
+  watch: {
+    selectedCollection(val) {
+      this.code =
+        val == null
+          ? ""
+          : JSON.stringify(this.geojson[val].geojson, null, "  ");
+    }
   },
   methods: {
     geojsonUpdateFromCode(geojson) {
@@ -62,19 +78,20 @@ export default {
     selectionUpdate(ids) {
       this.fetchGeoJson(ids);
     },
+    dropDownChange(selected) {
+      console.log("selected: ", selected);
+      //this.code = JSON.stringify(this.geojson[selected].geojson, null, "  ");
+    },
     async fetchGeoJson(ids) {
-      const idsToShow = Object.keys(this.geojson).filter(function(key) {
-        return ids.includes(key);
-      });
       for (let key in this.geojson) {
-        this.$set(this.geojson[key], "show", idsToShow.includes(key));
+        this.$set(this.geojson[key], "show", ids.includes(key));
       }
 
       const newIds = ids.filter(id => !Object.keys(this.geojson).includes(id));
-      console.log(newIds);
+      console.log("newIds: ", newIds);
       for (let id of newIds) {
         const response = await fetch(
-          `https://dev.gia.fpx.se/collections/${id}/items/geojson?offset=0&limit=10000`,
+          `https://dev.gia.fpx.se/collections/${id}/items/geojson?offset=0&limit=100000`,
           {
             headers: {
               Authorization:
@@ -90,6 +107,8 @@ export default {
           show: true
         });
       }
+      this.items = ids;
+      this.selectedCollection = ids[0];
     }
   },
   async created() {
