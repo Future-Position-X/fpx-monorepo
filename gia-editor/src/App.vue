@@ -1,10 +1,12 @@
 <template>
   <v-app>
     <v-content>
-      <v-container :fluid=true>
+      <v-container :fluid="true">
         <v-row no-gutter>
-          <v-col sm="1">Sidepane</v-col>
-          <v-col sm="8">
+          <v-col sm="2">
+            <Tree v-bind:collections="collections" />
+          </v-col>
+          <v-col sm="7">
             <Map
               v-bind:geojson="geojson"
               v-bind:loading="loading"
@@ -34,6 +36,7 @@
 import Table from "./components/Table.vue";
 import Map from "./components/Map.vue";
 import Code from "./components/Code.vue";
+import Tree from "./components/Tree.vue";
 
 export default {
   name: "App",
@@ -41,6 +44,7 @@ export default {
     Table,
     Map,
     Code,
+    Tree
   },
   data() {
     return {
@@ -48,7 +52,7 @@ export default {
       geojson: null,
       show: true,
       loading: false,
-
+      collections: []
     };
   },
   methods: {
@@ -59,11 +63,10 @@ export default {
     geojsonUpdateFromMap(geojson) {
       console.log("geojsonUpdateFromMap");
       this.code = JSON.stringify(geojson, null, "  ");
-    },
-
+    }
   },
 
-  async created() {
+  /* async created() {
     this.loading = true;
     const response = await fetch(
       "https://dev.gia.fpx.se/collections/by_name/obstacles/items/geojson?offset=0&limit=1000",
@@ -78,6 +81,18 @@ export default {
     this.geojson = data;
     this.code = JSON.stringify(data, null, "  ");
     this.loading = false;
+  }*/
+  async created() {
+    //this.loading = true;
+    const response = await fetch("https://dev.gia.fpx.se/collections", {
+      headers: {
+        Authorization:
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+      }
+    });
+    const data = await response.json();
+    this.collections = data;
+    //this.loading = false;
   }
 };
 </script>
@@ -89,5 +104,4 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
-
 </style>
