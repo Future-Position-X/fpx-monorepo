@@ -1,26 +1,21 @@
 <template>
   <div style="height: 100%">
-    <div>
-      <span v-if="loading">Loading...</span>
-      <!--
-      <label for="checkbox">GeoJSON Visibility</label>
-      <input id="checkbox" v-model="show" type="checkbox" />
-      <label for="checkboxTooltip">Enable tooltip</label>
-      <input id="checkboxTooltip" v-model="enableTooltip" type="checkbox" />
-      <input v-model="fillColor" type="color" />
-      <br />
-      -->
-    </div>
     <l-map ref="theMap" :zoom="zoom" :center="center" style="height: 100vh; width: 100%">
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json ref="geojsonChild" v-if="show" :geojson="geojson" :options="options" :options-style="styleFunction" />
+      <l-geo-json
+        v-for="layer in layers"
+        v-bind:key="layer.id"
+        :geojson="layer.geojson"
+        :options="options"
+        :options-style="styleFunction"
+      />
     </l-map>
   </div>
 </template>
 
 <script>
 import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
-import 'leaflet/dist/leaflet.css';
+import "leaflet/dist/leaflet.css";
 
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
@@ -39,22 +34,29 @@ export default {
   components: {
     LMap,
     LTileLayer,
-    LGeoJson,
+    LGeoJson
   },
-  props: ["loading", "show", "geojson"],
+  props: ["geojson"],
   data() {
     return {
-      //loading: false,
-      //show: true,
-      enableTooltip: true,
       zoom: 16,
       center: [60.675744, 17.1402],
-      //geojson: null,
+      layers: [],
       fillColor: "#e4ce7f",
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       attribution:
-        '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+        '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     };
+  },
+  watch: {
+    geojson: {
+      handler: function() {
+        console.log('geojson updated');
+        const layers = Object.values(this.geojson).filter((l) => l.show);
+        this.layers = layers;
+      },
+      deep: true
+    }
   },
   mounted() {
     this.$nextTick(() => {
@@ -92,12 +94,14 @@ export default {
         return () => {};
       }
       return (feature, layer) => {
+        /*
         layer.on('pm:update', args => {
             console.log("pm:update", args);
             const geojsonData = this.$refs.geojsonChild.getGeoJSONData();
             console.log(geojsonData);
             this.$emit('geojsonUpdate', geojsonData)
         });
+        */
         layer.bindTooltip(
           "<div>id:" +
             feature.properties.id +

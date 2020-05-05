@@ -4,15 +4,10 @@
       <v-container :fluid="true">
         <v-row no-gutter>
           <v-col sm="2">
-            <Tree v-bind:collections="collections" />
+            <Tree v-bind:collections="collections" @selectionUpdate="selectionUpdate" />
           </v-col>
           <v-col sm="7">
-            <Map
-              v-bind:geojson="geojson"
-              v-bind:loading="loading"
-              v-bind:show="show"
-              @geojsonUpdate="geojsonUpdateFromMap"
-            />
+            <Map v-bind:geojson="geojson" @geojsonUpdate="geojsonUpdateFromMap" />
           </v-col>
           <v-col sm="3">
             <v-tabs>
@@ -49,10 +44,10 @@ export default {
   data() {
     return {
       code: "",
-      geojson: null,
       show: true,
       loading: false,
-      collections: []
+      collections: [],
+      geojson: {},
     };
   },
   methods: {
@@ -63,27 +58,41 @@ export default {
     geojsonUpdateFromMap(geojson) {
       console.log("geojsonUpdateFromMap");
       this.code = JSON.stringify(geojson, null, "  ");
+    },
+    selectionUpdate(ids) {
+      this.fetchGeoJson(ids);
+    },
+    async fetchGeoJson(ids) {
+      const idsToShow = Object.keys(this.geojson).filter(function(key) {
+        return ids.includes(key);
+      });
+      for (let key in this.geojson) {
+        this.$set(this.geojson[key], "show", idsToShow.includes(key));
+      }
+
+      const newIds = ids.filter(id => !Object.keys(this.geojson).includes(id));
+      console.log(newIds);
+      for (let id of newIds) {
+        const response = await fetch(
+          `https://dev.gia.fpx.se/collections/${id}/items/geojson?offset=0&limit=10000`,
+          {
+            headers: {
+              Authorization:
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+            }
+          }
+        );
+        const data = await response.json();
+
+        this.$set(this.geojson, id, {
+          id: id,
+          geojson: data,
+          show: true
+        });
+      }
     }
   },
-
-  /* async created() {
-    this.loading = true;
-    const response = await fetch(
-      "https://dev.gia.fpx.se/collections/by_name/obstacles/items/geojson?offset=0&limit=1000",
-      {
-        headers: {
-          Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-        }
-      }
-    );
-    const data = await response.json();
-    this.geojson = data;
-    this.code = JSON.stringify(data, null, "  ");
-    this.loading = false;
-  }*/
   async created() {
-    //this.loading = true;
     const response = await fetch("https://dev.gia.fpx.se/collections", {
       headers: {
         Authorization:
@@ -92,7 +101,6 @@ export default {
     });
     const data = await response.json();
     this.collections = data;
-    //this.loading = false;
   }
 };
 </script>
