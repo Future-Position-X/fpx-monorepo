@@ -38,19 +38,46 @@ def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
     return collection_uuid
 
+
+def valid_envelope(params):
+    if 'spatial_filter.envelope.ymin' in params and 'spatial_filter.envelope.xmin' in params and 'spatial_filter.envelope.ymax' in params and 'spatial_filter.envelope.xmax' in params:
+        return True
+    return False
+
+
+def valid_distance(params):
+    if 'spatial_filter.distance.x' in params and 'spatial_filter.distance.y' in params and 'spatial_filter.distance.d' in params:
+        return True
+    return False
+
+
 def get_spatial_filter(params):
-    if not bool(strtobool(params.get('spatial_filter', 'false'))):
+    if not params.get('spatial_filter'):
         return None
     else:
-        return {
-            'filter': params.get('spatial_filter'),
-            'envelope': {
-                'ymin': float(params.get('spatial_filter.envelope.ymin', '0.0')),
-                'xmin': float(params.get('spatial_filter.envelope.xmin', '0.0')),
-                'ymax': float(params.get('spatial_filter.envelope.ymax', '0.0')),
-                'xmax': float(params.get('spatial_filter.envelope.xmax', '0.0'))
+        if params.get('spatial_filter') == "within-distance":
+            if not valid_distance(params):
+                return None
+            else:
+                return {
+                    'filter': params.get('spatial_filter'),
+                    'distance': {
+                        'point': Point(float(params.get('spatial_filter.distance.x')), float(params.get('spatial_filter.distance.y'))),
+                        'd': float(params.get('spatial_filter.distance.d')),
+                    }
+                }
+        elif params.get('spatial_filter') in ['within', 'intersect'] and valid_envelope(params):
+            return {
+                'filter': params.get('spatial_filter'),
+                'envelope': {
+                    'ymin': float(params.get('spatial_filter.envelope.ymin')),
+                    'xmin': float(params.get('spatial_filter.envelope.xmin')),
+                    'ymax': float(params.get('spatial_filter.envelope.ymax')),
+                    'xmax': float(params.get('spatial_filter.envelope.xmax'))
+                }
             }
-        }
+        else:
+            None
 
 def get_filters_from_event(event):
     offset = 0
@@ -63,7 +90,7 @@ def get_filters_from_event(event):
 
     if params is not None:
         offset = int(params.get('offset', offset))
-        limit =  int(params.get('limit', limit))
+        limit = int(params.get('limit', limit))
         property_filter = params.get('property_filter', property_filter)
         valid = bool(strtobool(params.get('valid', 'false')))
         spatial_filter = get_spatial_filter(params)

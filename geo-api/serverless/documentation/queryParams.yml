@@ -19,19 +19,28 @@ filters:
     description: "offset"
   - spatial_filter:
     name: "spatial_filter"
-    description: "Spatial filter, intersect or within"
-  - envelope.ymin:
-    name: "envelope.ymin"
+    description: "Spatial filter, intersect, within or within-distance"
+  - spatial_filter.envelope.ymin:
+    name: "spatial_filter.envelope.ymin"
     description: "ymin of envelope for spatial filter"
-  - envelope.xmin:
-    name: "envelope.xmin"
+  - spatial_filter.envelope.xmin:
+    name: "spatial_filter.envelope.xmin"
     description: "xmin of envelope for spatial filter"
-  - envelope.ymax:
-    name: "envelope.ymax"
+  - spatial_filter.envelope.ymax:
+    name: "spatial_filter.envelope.ymax"
     description: "ymax of envelope for spatial filter"
-  - envelope.xmax:
-    name: "envelope.xmax"
+  - spatial_filter.envelope.xmax:
+    name: "spatial_filter.envelope.xmax"
     description: "xmax of envelope for spatial filter"
+  - spatial_filter.distance.x:
+    name: "spatial_filter.distance.x"
+    description: "x (longitude) value of Point for distance"
+  - spatial_filter.distance.y:
+    name: "spatial_filter.distance.y"
+    description: "y (latitude) value of Point for distance"
+  - spatial_filter.distance.d:
+    name: "spatial_filter.distance.d"
+    description: "distance value in meters from Point"
 
 steps:
   name: "steps"

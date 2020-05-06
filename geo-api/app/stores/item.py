@@ -200,6 +200,16 @@ class ItemStore(Store):
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
 
+        if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "within-distance":
+            where += """
+            AND ST_DWithin(
+                geometry,
+                %(distance.point)s,
+                %(distance.d)s,
+                False
+            )
+            """
+
         if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "intersect":
             where += """
             AND ST_Intersects(
@@ -223,12 +233,18 @@ class ItemStore(Store):
             "limit": filters["limit"],
         }
 
-        if filters['spatial_filter']:
+        if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within', 'intersect']:
             exec_dict.update({
-            "envelope.xmin": filters['spatial_filter']['envelope']['xmin'],
-            "envelope.ymin": filters['spatial_filter']['envelope']['ymin'],
-            "envelope.xmax": filters['spatial_filter']['envelope']['xmax'],
-            "envelope.ymax": filters['spatial_filter']['envelope']['ymax'],
+                "envelope.xmin": filters['spatial_filter']['envelope']['xmin'],
+                "envelope.ymin": filters['spatial_filter']['envelope']['ymin'],
+                "envelope.xmax": filters['spatial_filter']['envelope']['xmax'],
+                "envelope.ymax": filters['spatial_filter']['envelope']['ymax'],
+            })
+
+        if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within-distance']:
+            exec_dict.update({
+                "distance.point": filters['spatial_filter']['distance']['point'].wkt,
+                "distance.d": filters['spatial_filter']['distance']['d'],
             })
 
         if filters["property_filter"] is not None:
