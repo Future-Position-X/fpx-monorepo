@@ -88,7 +88,12 @@ export default {
       //this.code = JSON.stringify(this.geojson[selected].geojson, null, "  ");
     },
     boundsUpdate(bounds) {
-      console.log("bounds: ", bounds);
+      this.bounds = {
+        minX: bounds._southWest.lng,
+        minY: bounds._southWest.lat,
+        maxX: bounds._northEast.lng,
+        maxY: bounds._northEast.lat
+      };
     },
     async fetchGeoJson(ids) {
       for (let key in this.geojson) {
@@ -96,10 +101,17 @@ export default {
       }
 
       const newIds = ids.filter(id => !Object.keys(this.geojson).includes(id));
+      const centerX = (this.bounds.minX + this.bounds.maxX) / 2;
+      const centerY = (this.bounds.minY + this.bounds.maxY) / 2;
+      const minX = this.bounds.minX - (centerX - this.bounds.minX);
+      const minY = this.bounds.minY - (centerY - this.bounds.minY);
+      const maxX = this.bounds.maxX + (this.bounds.maxX - centerX);
+      const maxY = this.bounds.maxY + (this.bounds.maxY - centerY);
+      const params = `minx=${minX}&miny=${minY}&maxx=${maxX}&maxy=${maxY}`;
       console.log("newIds: ", newIds);
       for (let id of newIds) {
         const response = await fetch(
-          `https://dev.gia.fpx.se/collections/${id}/items/geojson?offset=0&limit=100000`,
+          `https://dev.gia.fpx.se/collections/${id}/items/within-bounding-box?${params}`,
           {
             headers: {
               Authorization:
