@@ -108,11 +108,12 @@ def get_within_radius(event, context):
 
 
 def get_within_bounding_box(event, context):
+    collection_uuid = get_collection_uuid_from_event(event)
     minx = float(event["queryStringParameters"]["minx"])
     miny = float(event["queryStringParameters"]["miny"])
     maxx = float(event["queryStringParameters"]["maxx"])
     maxy = float(event["queryStringParameters"]["maxy"])
-    items = get_items_within_bounding_box_as_geojson(minx, miny, maxx, maxy)
+    items = get_items_within_bounding_box_as_geojson(collection_uuid, minx, miny, maxx, maxy)
 
     return response(200, rapidjson.dumps(items))
 

@@ -151,7 +151,7 @@ items-within-bounding-box-as-geojson:
   handler: app.handlers.geo_items.get_within_bounding_box
   events:
     - http:
-        path: /items/within-bounding-box
+        path: collections/{collection_uuid}/items/within-bounding-box
         method: get
         cors: true
 
