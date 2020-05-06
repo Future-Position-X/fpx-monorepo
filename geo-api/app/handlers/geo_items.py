@@ -38,12 +38,26 @@ def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
     return collection_uuid
 
+def get_spatial_filter(params):
+    if not bool(strtobool(params.get('spatial_filter', 'false'))):
+        return None
+    else:
+        return {
+            'filter': params.get('spatial_filter'),
+            'envelope': {
+                'ymin': float(params.get('spatial_filter.envelope.ymin', '0.0')),
+                'xmin': float(params.get('spatial_filter.envelope.xmin', '0.0')),
+                'ymax': float(params.get('spatial_filter.envelope.ymax', '0.0')),
+                'xmax': float(params.get('spatial_filter.envelope.xmax', '0.0'))
+            }
+        }
 
 def get_filters_from_event(event):
     offset = 0
     limit = 20
     property_filter = None
     valid = False
+    spatial_filter = None
 
     params = event['queryStringParameters']
 
@@ -52,12 +66,14 @@ def get_filters_from_event(event):
         limit =  int(params.get('limit', limit))
         property_filter = params.get('property_filter', property_filter)
         valid = bool(strtobool(params.get('valid', 'false')))
+        spatial_filter = get_spatial_filter(params)
 
     return {
         "offset": offset,
         "limit": limit,
         "property_filter": property_filter,
-        "valid": valid
+        "valid": valid,
+        "spatial_filter": spatial_filter,
     }
 
 

@@ -52,8 +52,7 @@ items-index-as-geojson:
           summary: "Get items belonging to a collection as geojson FeatureCollection"
           description: "All accessable items belonging to collection as geojson FeatureCollection"
           queryParams:
-            - ${file(serverless/documentation/queryParams.yml):limit}
-            - ${file(serverless/documentation/queryParams.yml):offset}
+            ${file(serverless/documentation/queryParams.yml):filters}
           pathParams:
             - ${file(serverless/documentation/pathParams.yml):collection_uuid}
           methodResponses:
