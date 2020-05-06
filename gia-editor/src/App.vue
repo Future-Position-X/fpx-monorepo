@@ -7,7 +7,11 @@
             <Tree v-bind:collections="collections" @selectionUpdate="selectionUpdate" />
           </v-col>
           <v-col sm="7">
-            <Map v-bind:geojson="geojson" @geojsonUpdate="geojsonUpdateFromMap" />
+            <Map
+              v-bind:geojson="geojson"
+              @geojsonUpdate="geojsonUpdateFromMap"
+              @boundsUpdate="boundsUpdate"
+            />
           </v-col>
           <v-col sm="3">
             <v-tabs>
@@ -55,7 +59,8 @@ export default {
       collections: [],
       geojson: {},
       items: [],
-      selectedCollection: null
+      selectedCollection: null,
+      bounds: null
     };
   },
   watch: {
@@ -81,6 +86,9 @@ export default {
     dropDownChange(selected) {
       console.log("selected: ", selected);
       //this.code = JSON.stringify(this.geojson[selected].geojson, null, "  ");
+    },
+    boundsUpdate(bounds) {
+      console.log("bounds: ", bounds);
     },
     async fetchGeoJson(ids) {
       for (let key in this.geojson) {

@@ -1,6 +1,12 @@
 <template>
   <div style="height: 100%">
-    <l-map ref="theMap" :zoom="zoom" :center="center" style="height: 100vh; width: 100%">
+    <l-map
+      ref="theMap"
+      :zoom="zoom"
+      :center="center"
+      style="height: 100vh; width: 100%"
+      @update:bounds="boundsUpdate"
+    >
       <l-tile-layer :url="url" :attribution="attribution" />
       <l-geo-json
         v-for="layer in layers"
@@ -48,11 +54,16 @@ export default {
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     };
   },
+  methods: {
+    boundsUpdate(bounds) {
+      this.$emit("boundsUpdate", bounds);
+    }
+  },
   watch: {
     geojson: {
       handler: function() {
-        console.log('geojson updated');
-        const layers = Object.values(this.geojson).filter((l) => l.show);
+        console.log("geojson updated");
+        const layers = Object.values(this.geojson).filter(l => l.show);
         this.layers = layers;
       },
       deep: true
