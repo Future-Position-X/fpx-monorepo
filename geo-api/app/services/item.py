@@ -65,6 +65,13 @@ def get_items_within_radius_as_geojson(point_radius, filters):
         return items
 
 
+def get_items_within_bounding_box_as_geojson(minx, miny, maxx, maxy):
+    with ItemStore() as item_store:
+        items = item_store.find_within_bounding_box_as_geojson(minx, miny, maxx, maxy)
+        item_store.complete()
+        return items
+
+
 def get_items_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters):
     with ItemStore() as item_store:
         geojson = item_store.find_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters)

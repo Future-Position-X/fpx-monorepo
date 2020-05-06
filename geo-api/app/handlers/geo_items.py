@@ -26,7 +26,8 @@ from app.services.item import (
     add_items_from_geojson,
     create_items_from_geojson,
     update_items_from_geojson,
-    delete_items_by_collection_uuid
+    delete_items_by_collection_uuid,
+    get_items_within_bounding_box_as_geojson
     )
 
 from app.services.ai import (
@@ -102,6 +103,16 @@ def get_within_radius(event, context):
     }
     filters = get_filters_from_event(event)
     items = get_items_within_radius_as_geojson(point_radius, filters)
+
+    return response(200, rapidjson.dumps(items))
+
+
+def get_within_bounding_box(event, context):
+    minx = float(event["queryStringParameters"]["minx"])
+    miny = float(event["queryStringParameters"]["miny"])
+    maxx = float(event["queryStringParameters"]["maxx"])
+    maxy = float(event["queryStringParameters"]["maxy"])
+    items = get_items_within_bounding_box_as_geojson(minx, miny, maxx, maxy)
 
     return response(200, rapidjson.dumps(items))
 

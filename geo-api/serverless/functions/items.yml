@@ -147,6 +147,14 @@ items-within-radius-as-geojson:
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
 
+items-within-bounding-box-as-geojson:
+  handler: app.handlers.geo_items.get_within_bounding_box
+  events:
+    - http:
+        path: /items/within-bounding-box
+        method: get
+        cors: true
+
 items-get:
   handler: app.handlers.geo_items.get_as_geojson
   events:

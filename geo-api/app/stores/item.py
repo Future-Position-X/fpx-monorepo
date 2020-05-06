@@ -318,3 +318,35 @@ class ItemStore(Store):
             "limit": filters["limit"]
         })
         return c.fetchone()['geojson']
+
+
+    def find_within_bounding_box_as_geojson(self, minx, miny, maxx, maxy):
+        c = self.cursor()
+        c.execute("""
+            SELECT jsonb_build_object(
+                'type', 'FeatureCollection',
+                'features', jsonb_agg(features.feature)) as geojson
+            FROM (
+                SELECT jsonb_build_object(
+                    'type', 'Feature',
+                    'id', uuid,
+                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
+                    'properties', properties
+                ) AS feature
+                FROM (SELECT *
+                    FROM public.items
+                    WHERE ST_Within(
+                        geometry,
+                        ST_MakeEnvelope(%(minx)s, %(miny)s, %(maxx)s, %(maxy)s, 4326)
+                    )
+                    OFFSET 0
+                    LIMIT 10000
+                ) inputs
+            ) features;
+            """, {
+            "minx": minx,
+            "miny": miny,
+            "maxx": maxx,
+            "maxy": maxy
+        })
+        return c.fetchone()['geojson']
