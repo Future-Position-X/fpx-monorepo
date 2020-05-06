@@ -199,12 +199,37 @@ class ItemStore(Store):
 
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
-        
+
+        if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "intersect":
+            where += """
+            AND ST_Intersects(
+                geometry,
+                ST_MakeEnvelope(%(envelope.xmin)s, %(envelope.ymin)s, %(envelope.xmax)s, %(envelope.ymax)s, 4326)
+            )
+            """
+
+        if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "within":
+            where += """
+            AND ST_Within(
+                geometry,
+                ST_MakeEnvelope(%(envelope.xmin)s, %(envelope.ymin)s, %(envelope.xmax)s, %(envelope.ymax)s, 4326)
+            )
+            """
+
+
         exec_dict = {
             "collection_uuid": collection_uuid,
             "offset": filters["offset"],
-            "limit": filters["limit"]
+            "limit": filters["limit"],
         }
+
+        if filters['spatial_filter']:
+            exec_dict.update({
+            "envelope.xmin": filters['spatial_filter']['envelope']['xmin'],
+            "envelope.ymin": filters['spatial_filter']['envelope']['ymin'],
+            "envelope.xmax": filters['spatial_filter']['envelope']['xmax'],
+            "envelope.ymax": filters['spatial_filter']['envelope']['ymax'],
+            })
 
         if filters["property_filter"] is not None:
             where += " AND "

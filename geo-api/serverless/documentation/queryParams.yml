@@ -10,6 +10,29 @@ radius:
 coordinates:
   name: "coordinates"
   description: "Point coordinates, ie. coordinates=lng,lat"
+filters:
+  - limit:
+    name: "limit"
+    description: "limit"
+  - offset:
+    name: "offset"
+    description: "offset"
+  - spatial_filter:
+    name: "spatial_filter"
+    description: "Spatial filter, intersect or within"
+  - envelope.ymin:
+    name: "envelope.ymin"
+    description: "ymin of envelope for spatial filter"
+  - envelope.xmin:
+    name: "envelope.xmin"
+    description: "xmin of envelope for spatial filter"
+  - envelope.ymax:
+    name: "envelope.ymax"
+    description: "ymax of envelope for spatial filter"
+  - envelope.xmax:
+    name: "envelope.xmax"
+    description: "xmax of envelope for spatial filter"
+
 steps:
   name: "steps"
   description: "Steps the agents will try to move in the environment"
