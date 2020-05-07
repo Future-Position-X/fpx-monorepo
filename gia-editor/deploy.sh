@@ -34,9 +34,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 stage=${stage:-dev}
-profile=${profile:-geo-api-deploy-dev}
+profile=${profile:-default}
 
 npm install -g serverless
 npm install
 npm run build
+sudo -E sls config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --stage $stage --profile $profile
 serverless client deploy --stage $stage --profile $profile --no-confirm
