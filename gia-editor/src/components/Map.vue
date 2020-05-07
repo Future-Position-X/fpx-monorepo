@@ -63,7 +63,7 @@ export default {
     geojson: {
       handler: function() {
         console.log("geojson updated");
-        const layers = Object.values(this.geojson).filter(l => l.show);
+        const layers = Object.values(this.geojson);
         this.layers = layers;
       },
       deep: true
