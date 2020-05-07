@@ -142,7 +142,7 @@ export default {
 
       for (let id of ids) {
         const response = await fetch(
-          `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=10000&spatial_filter=within&spatial_filter.envelope.xmin=${minX}&spatial_filter.envelope.ymin=${minY}&spatial_filter.envelope.xmax=${maxX}&spatial_filter.envelope.ymax=${maxY}`,
+          `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=10000&spatial_filter=intersect&spatial_filter.envelope.xmin=${minX}&spatial_filter.envelope.ymin=${minY}&spatial_filter.envelope.xmax=${maxX}&spatial_filter.envelope.ymax=${maxY}`,
           {
             headers: {
               Authorization:

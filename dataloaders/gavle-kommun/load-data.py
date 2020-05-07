@@ -4,6 +4,7 @@ import requests
 import concurrent.futures
 import sys
 import os
+import gzip
 import math
 from io import BytesIO
 
@@ -14,8 +15,29 @@ GIA_TOKEN = os.getenv("GIA_TOKEN")
 
 collections = [
     {
+        'name': 'deso',
+        'url': 'data/deso.geojson.gz',
+        'uuid': '916d7821-a159-4c5a-8e54-e3e952cd8512',
+        'is_file': True,
+        'batch_size': 100
+    },
+    {
+        'name': 'sverige-kommuner',
+        'url': 'data/sverige-kommuner.geojson.gz',
+        'uuid': '457bcd8e-b181-43b6-83d3-30ff906057ac',
+        'is_file': True,
+        'batch_size': 10
+    },
+    {
+        'name': 'sverige-lan',
+        'url': 'data/sverige-lan.geojson.gz',
+        'uuid': 'f36fa6fb-f18d-42a1-9db7-c087bd0d01e5',
+        'is_file': True,
+        'batch_size': 100
+    },
+    {
         'name': 'obstacles',
-        'url': 'data/obstacles.json',
+        'url': 'data/obstacles.geojson.gz',
         'uuid': '5cbb09a7-57a5-4641-849a-f0c36ed24bb0',
         'is_file': True,
         'batch_size': 100
@@ -309,7 +331,7 @@ def import_collection(collection):
     is_file = collection.get('is_file', False)
 
     if is_file:
-        with open(collection['url'], "r") as file:
+        with gzip.open(collection['url'], "r") as file:
             json_obj = json.loads(file.read())
     else:
         r = requests.get(collection['url'])
