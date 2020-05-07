@@ -1,60 +1,27 @@
 <template>
-  <!--<codemirror v-model="code" :options="cmOptions" />-->
-  <div class="codeWrapper">
-    <codemirror
-      ref="cmEditor"
-      :value="code"
-      :options="cmOptions"
-      @ready="onCmReady"
-      @focus="onCmFocus"
-      @input="onCmCodeChange"
-    />
-  </div>
+  <div class="editorContainer" ref="jsoneditor"></div>
 </template>
 
 <script>
-import gjv from "geojson-validation";
-import { codemirror } from "vue-codemirror";
-
-// import base style
-import "codemirror/lib/codemirror.css";
-
-// import language js
-import "codemirror/mode/javascript/javascript.js";
-import "codemirror/addon/fold/foldgutter.js";
-import "codemirror/addon/fold/foldcode.js";
-import "codemirror/addon/fold/brace-fold.js";
-import "codemirror/addon/fold/foldgutter.css";
+//import gjv from "geojson-validation";
+import JSONEditor from "jsoneditor/dist/jsoneditor.js";
+import "jsoneditor/dist/jsoneditor.min.css";
 
 export default {
   name: "Code",
-  components: {
-    codemirror
-  },
   props: ["code"],
   data() {
     return {
-      //code: 'const a = 10',
-      cmOptions: {
-        tabSize: 4,
-        mode: "text/javascript",
-        theme: "default",
-        matchBrackets: true,
-        lineNumbers: true,
-        line: true,
-        foldGutter: true,
-        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
-      }
+      editor: null
     };
   },
+  watch: {
+    code(val) {
+      this.editor.set(val);
+    }
+  },
   methods: {
-    onCmReady(cm) {
-      console.log("the editor is readied!", cm);
-    },
-    onCmFocus(cm) {
-      console.log("the editor is focused!", cm);
-    },
-    onCmCodeChange(newCode, changeObj) {
+    /*onCmCodeChange(newCode, changeObj) {
       console.log("codeChanged: ", changeObj);
       if (changeObj.origin == "setValue") return;
       try {
@@ -68,33 +35,23 @@ export default {
       } catch (e) {
         console.log(e.name);
       }
-    }
+    }*/
   },
-  computed: {
-    codemirror() {
-      return this.$refs.cmEditor.codemirror;
-    }
-  },
+  onJsonChange() {},
   mounted() {
-    console.log("the current CodeMirror instance object:", this.codemirror);
-    // you can use this.codemirror to do something...
+    const container = this.$refs.jsoneditor;
+    const options = {
+      mode: "code",
+      onChange: this.onJsonChange
+    };
+
+    this.editor = new JSONEditor(container, options);
   }
 };
 </script>
 
 <style>
-/*
-.codeWrapper {
-  position: absolute;
-  top: 40px;
-  bottom: 0;
-  width: 100%;
-  overflow: auto;
-}
-*/
-.CodeMirror {
-  height: 100%;
-  min-height: 100%;
-  font-size: 14px;
+.editorContainer {
+  height: 600px;
 }
 </style>
