@@ -36,6 +36,7 @@ done
 stage=${stage:-dev}
 profile=${profile:-geo-api-deploy-dev}
 
+npm install -g serverless
 npm install
 npm run build
 serverless client deploy --stage $stage --profile $profile --no-confirm
