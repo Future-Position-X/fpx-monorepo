@@ -25,7 +25,7 @@
                   @change="dropDownChange"
                   v-model="selectedCollectionId"
                 ></v-select>
-                <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" />
+                <Code v-bind:code="code" />
               </v-tab-item>
               <v-tab-item>
                 <Table />
@@ -65,10 +65,7 @@ export default {
   },
   watch: {
     selectedCollectionId(val) {
-      this.code =
-        val == null
-          ? ""
-          : JSON.stringify(this.geojson[val].geojson, null, "  ");
+      this.code = val == null ? {} : this.geojson[val].geojson;
     }
   },
   methods: {
@@ -101,7 +98,7 @@ export default {
     },
     dropDownChange(selected) {
       console.log("selected: ", selected);
-      this.code = JSON.stringify(this.geojson[selected].geojson, null, "  ");
+      this.code = this.geojson[selected].geojson;
     },
     boundsUpdate(bounds) {
       this.bounds = {

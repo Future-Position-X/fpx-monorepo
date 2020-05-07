@@ -11,9 +11,9 @@
     "@geoman-io/leaflet-geoman-free": "^2.5.0",
     "core-js": "^3.6.4",
     "geojson-validation": "^1.0.1",
+    "jsoneditor": "^8.6.6",
     "leaflet": "^1.6.0",
     "vue": "^2.6.11",
-    "vue-codemirror": "triptec/vue-codemirror#4c9853251aeb42ec15fb6e1d6de511ce27f5666a",
     "vue2-leaflet": "^2.5.2",
     "vuetify": "^2.2.26"
   },
