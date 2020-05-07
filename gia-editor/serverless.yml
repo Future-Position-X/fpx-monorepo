@@ -1,0 +1,15 @@
+service: gia-editor
+plugins:
+  - serverless-finch
+# The `provider` block defines where your service will be deployed
+custom:
+  defaultStage: dev
+  client:
+    bucketName: editor.${self:provider.stage}.gia.fpx.se
+    distributionFolder: dist
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-north-1
+  stage: ${opt:stage, self:custom.defaultStage}
