@@ -231,6 +231,7 @@ class ItemStore(Store):
             "collection_uuid": collection_uuid,
             "offset": filters["offset"],
             "limit": filters["limit"],
+            "simplify": filters["simplify"],
         }
 
         if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within', 'intersect']:
@@ -260,7 +261,7 @@ class ItemStore(Store):
                 SELECT jsonb_build_object(
                     'type', 'Feature',
                     'id', uuid,
-                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
+                    'geometry', ST_AsGeoJSON(ST_Simplify(geometry, %(simplify)s, false))::jsonb,
                     'properties', properties
             ) AS feature
             FROM (

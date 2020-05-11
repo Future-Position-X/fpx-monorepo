@@ -20,6 +20,7 @@
               @itemRemoved="itemRemovedFromMap"
               @itemAdded="itemAddedToMap"
               @itemModified="itemModified"
+              @zoomUpdate="zoomUpdate"
             />
           </v-col>
           <v-col sm="3">
@@ -27,13 +28,16 @@
               <v-tab>Code</v-tab>
               <v-tab>Table</v-tab>
               <v-tab-item>
+                <label for="checkbox">Code Visibility</label>
+                <input id="checkbox" v-model="showCode" type="checkbox" />
                 <v-select
+                  v-if="showCode"
                   :items="renderedCollectionIds"
                   label="Collection"
                   @change="dropDownChange"
                   v-model="selectedCollectionId"
                 ></v-select>
-                <Code v-bind:code="code" />
+                <Code v-if="showCode" v-bind:code="code" />
               </v-tab-item>
               <v-tab-item>
                 <Table />
@@ -63,16 +67,18 @@ export default {
   data() {
     return {
       code: "",
+      showCode: false,
+      zoom: 16,
       collections: [],
       geojson: {},
       renderedCollectionIds: [],
       selectedCollectionId: null,
       bounds: null,
       fetchedBounds: null,
-
       addedItems: [],
       modifiedItems: [],
-      removedItems: []
+      removedItems: [],
+      fetchController: null,
     };
   },
   watch: {
@@ -111,6 +117,13 @@ export default {
     dropDownChange(selected) {
       console.log("selected: ", selected);
       this.code = this.geojson[selected].geojson;
+    },
+    zoomUpdate(zoom) {
+      if (Math.abs(this.zoom - zoom) >= 2) {
+        console.log("fetched zoom exceeded");
+        this.zoom = zoom;
+        this.fetchGeoJson(this.renderedCollectionIds);
+      }
     },
     boundsUpdate(bounds) {
       this.bounds = {
@@ -230,13 +243,18 @@ export default {
       }
     },
     async fetchGeoJson(ids) {
+      if(this.fetchController) {
+        this.fetchController.abort();
+      }
+      this.fetchController = new AbortController();
+      const { signal } = this.fetchController;
       const centerX = (this.bounds.minX + this.bounds.maxX) / 2;
       const centerY = (this.bounds.minY + this.bounds.maxY) / 2;
       const minX = this.bounds.minX - (centerX - this.bounds.minX);
       const minY = this.bounds.minY - (centerY - this.bounds.minY);
       const maxX = this.bounds.maxX + (this.bounds.maxX - centerX);
       const maxY = this.bounds.maxY + (this.bounds.maxY - centerY);
-
+      const simplify = this.zoom >= 16 ? 0.0 : Math.abs(maxX - minX) / 2500;
       this.fetchedBounds = {
         minX: minX,
         minY: minY,
@@ -245,24 +263,28 @@ export default {
       };
 
       for (let id of ids) {
-        const response = await fetch(
-          `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=10000&spatial_filter=intersect&spatial_filter.envelope.xmin=${minX}&spatial_filter.envelope.ymin=${minY}&spatial_filter.envelope.xmax=${maxX}&spatial_filter.envelope.ymax=${maxY}`,
-          {
-            headers: {
-              Authorization:
-                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+        try {
+          const response = await fetch(
+            `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=10000&spatial_filter=intersect&spatial_filter.envelope.xmin=${minX}&spatial_filter.envelope.ymin=${minY}&spatial_filter.envelope.xmax=${maxX}&spatial_filter.envelope.ymax=${maxY}&simplify=${simplify}`,
+            {
+              headers: {
+                Authorization:
+                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+              },
+              signal: signal
             }
-          }
-        );
+          );
+          const data = await response.json();
 
-        const data = await response.json();
-
-        this.$set(this.geojson, id, {
-          id: id,
-          geojson: data
-        });
+          this.$set(this.geojson, id, {
+            id: id,
+            geojson: data
+          });
+        } catch (err) {
+          console.log(err);
+          return;
+        }
       }
-
       this.renderedCollectionIds = ids;
       this.selectedCollectionId = ids[0];
     }
