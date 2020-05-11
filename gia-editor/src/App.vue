@@ -2,6 +2,11 @@
   <v-app>
     <v-content>
       <v-container :fluid="true">
+        <v-row>
+          <div class="my-2">
+            <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
+          </div>
+        </v-row>
         <v-row no-gutter>
           <v-col sm="2">
             <Tree v-bind:collections="collections" @selectionUpdate="selectionUpdate" />
@@ -14,6 +19,7 @@
               @boundsUpdate="boundsUpdate"
               @itemRemoved="itemRemovedFromMap"
               @itemAdded="itemAddedToMap"
+              @itemModified="itemModified"
             />
           </v-col>
           <v-col sm="3">
@@ -62,7 +68,12 @@ export default {
       renderedCollectionIds: [],
       selectedCollectionId: null,
       bounds: null,
-      fetchedBounds: null
+      fetchedBounds: null,
+      itemModContext: {
+        addedItems: [],
+        modifiedItems: [],
+        removedItems: []
+      }
     };
   },
   watch: {
@@ -127,16 +138,83 @@ export default {
         }
       }
     },
+    async putAddedItems() {
+      await fetch(
+        `https://dev.gia.fpx.se/collections/${this.selectedCollectionId}/items/geojson`,
+        {
+          method: "PUT",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization:
+              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+          },
+          body: JSON.stringify({
+            type: "FeatureCollection",
+            features: this.itemModContext.addedItems
+          })
+        }
+      );
+    },
+    async removeItems() {
+      for (const item of this.itemModContext.removedItems) {
+        await fetch(`https://dev.gia.fpx.se/items/${item.id}`, {
+          method: "DELETE",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization:
+              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+          }
+        });
+      }
+    },
+    async modifyItems() {
+      await fetch(`https://dev.gia.fpx.se/items/geojson`, {
+        method: "PUT",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+        },
+        body: JSON.stringify({
+          type: "FeatureCollection",
+          features: this.itemModContext.modifiedItems
+        })
+      });
+    },
     itemRemovedFromMap(item) {
+      this.itemModContext.removedItems.push(item);
       const fc = this.geojson[this.selectedCollectionId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.code = fc;
     },
     itemAddedToMap(item) {
+      this.itemModContext.addedItems.push(item);
       const fc = this.geojson[this.selectedCollectionId].geojson;
       fc.features.push(item);
       this.code = fc;
+    },
+    itemModified(item) {
+      this.itemModContext.modifiedItems.push(item);
+    },
+    async onSaveClick() {
+      if (this.itemModContext.addedItems.length > 0) {
+        await this.putAddedItems();
+        this.itemModContext.addedItems = [];
+      }
+
+      if (this.itemModContext.removedItems.length > 0) {
+        await this.removeItems();
+        this.itemModContext.removedItems = [];
+      }
+
+      if (this.itemModContext.modifiedItems.length > 0) {
+        await this.modifyItems();
+        this.itemModContext.modifiedItems = [];
+      }
     },
     async fetchGeoJson(ids) {
       const centerX = (this.bounds.minX + this.bounds.maxX) / 2;
