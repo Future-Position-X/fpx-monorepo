@@ -184,9 +184,24 @@ export default {
       });
     },
     itemRemovedFromMap(item) {
+      let i;
+
+      for (i = this.addedItems.length - 1; i >= 0; i--) {
+        if (this.addedItems[i] == item) {
+          this.addedItems.splice(i, 1);
+        }
+      }
+
+      for (i = this.modifiedItems.length - 1; i >= 0; i--) {
+        if (this.modifiedItems[i].id == item.id) {
+          this.modifiedItems.splice(i, 1);
+          console.log(">>>>>>>>>> modified");
+        }
+      }
+
       this.removedItems.push(item);
       const fc = this.geojson[this.selectedCollectionId].geojson;
-      const i = fc.features.indexOf(item);
+      i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.code = fc;
     },
