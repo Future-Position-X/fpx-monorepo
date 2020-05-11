@@ -62,9 +62,14 @@ export default {
   watch: {
     geojson: {
       handler: function() {
-        console.log("geojson updated");
-        const layers = Object.values(this.geojson);
-        this.layers = layers;
+        console.log("geojson updated, ", this.geojson);
+        //const layers = Object.values(this.geojson);
+        for (let collectionId in this.geojson) {
+          if (!this.layers.some(l => l.id == collectionId)) {
+            this.layers.push(this.geojson[collectionId]);
+          }
+        }
+        //this.layers = layers;
       },
       deep: true
     }
@@ -77,8 +82,69 @@ export default {
         drawCircle: false
       });
 
-      map.on("pm:create", args => {
-        console.log("pm:create", args);
+      map.on("pm:remove", layerEvent => {
+        const item = layerEvent.layer.feature;
+
+        if (item != null) {
+          this.$emit("itemRemoved", item);
+        }
+      });
+
+      map.on("pm:create", layerEvent => {
+        let feature;
+        let latlng;
+        let coords;
+
+        switch (layerEvent.shape) {
+          case "Marker":
+          case "CircleMarker":
+            latlng = layerEvent.layer._latlng;
+
+            feature = {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [latlng.lng, latlng.lat]
+              },
+              properties: {}
+            };
+            break;
+
+          case "Line":
+            coords = layerEvent.layer._latlngs.map(latlng => [
+              latlng.lng,
+              latlng.lat
+            ]);
+
+            feature = {
+              type: "Feature",
+              geometry: {
+                type: "LineString",
+                coordinates: coords
+              },
+              properties: {}
+            };
+            break;
+
+          case "Rectangle":
+          case "Polygon":
+            coords = layerEvent.layer._latlngs[0].map(latlng => [
+              latlng.lng,
+              latlng.lat
+            ]);
+
+            feature = {
+              type: "Feature",
+              geometry: {
+                type: "Polygon",
+                coordinates: [[coords]]
+              },
+              properties: {}
+            };
+            break;
+        }
+
+        this.$emit("itemAdded", feature);
       });
     });
   },
