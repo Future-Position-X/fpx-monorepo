@@ -98,6 +98,22 @@ export default {
         }
       });
 
+      map.on("pm:globaleditmodetoggled", e => {
+        console.log("globaleditmodetoggled: ", e);
+
+        if (e.enabled) {
+          for (let id in e.map._layers) {
+            console.log("id: ", id);
+            e.map._layers[id].on("pm:edit", ev => {
+              console.log("edit: ", ev);
+              if (ev.target.feature != null) {
+                this.$emit("itemModified", ev.target.toGeoJSON());
+              }
+            });
+          }
+        }
+      });
+
       map.on("pm:remove", layerEvent => {
         const item = layerEvent.layer.feature;
 
