@@ -12,6 +12,8 @@
               v-bind:geojson="geojson"
               @geojsonUpdate="geojsonUpdateFromMap"
               @boundsUpdate="boundsUpdate"
+              @itemRemoved="itemRemovedFromMap"
+              @itemAdded="itemAddedToMap"
             />
           </v-col>
           <v-col sm="3">
@@ -124,6 +126,17 @@ export default {
           }
         }
       }
+    },
+    itemRemovedFromMap(item) {
+      const fc = this.geojson[this.selectedCollectionId].geojson;
+      const i = fc.features.indexOf(item);
+      fc.features.splice(i, 1);
+      this.code = fc;
+    },
+    itemAddedToMap(item) {
+      const fc = this.geojson[this.selectedCollectionId].geojson;
+      fc.features.push(item);
+      this.code = fc;
     },
     async fetchGeoJson(ids) {
       const centerX = (this.bounds.minX + this.bounds.maxX) / 2;
