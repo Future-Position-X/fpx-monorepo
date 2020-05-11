@@ -2,10 +2,12 @@
   <div style="height: 100%">
     <l-map
       ref="theMap"
+      :options="{preferCanvas: true}"
       :zoom="zoom"
       :center="center"
       style="height: 100vh; width: 100%"
       @update:bounds="boundsUpdate"
+      @update:zoom="zoomUpdate"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
       <l-geo-json
@@ -57,6 +59,15 @@ export default {
   methods: {
     boundsUpdate(bounds) {
       this.$emit("boundsUpdate", bounds);
+    },
+    zoomUpdate(zoom) {
+      if (zoom >= 16) {
+        this.$refs.theMap.mapObject.pm.addControls();
+      } else {
+        this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons()
+        this.$refs.theMap.mapObject.pm.removeControls();
+      }
+      this.$emit("zoomUpdate", zoom);
     }
   },
   watch: {
@@ -145,7 +156,7 @@ export default {
           color: "#ECEFF1",
           opacity: 1,
           fillColor: fillColor,
-          fillOpacity: 1
+          fillOpacity: 0.5
         };
       };
     },
@@ -153,15 +164,18 @@ export default {
       if (!this.enableTooltip) {
         return () => {};
       }
+
+      return () => {};
+
+      /*
       return (feature, layer) => {
-        /*
         layer.on('pm:update', args => {
             console.log("pm:update", args);
             const geojsonData = this.$refs.geojsonChild.getGeoJSONData();
             console.log(geojsonData);
             this.$emit('geojsonUpdate', geojsonData)
         });
-        */
+        
         layer.bindTooltip(
           "<div>id:" +
             feature.properties.id +
@@ -170,7 +184,9 @@ export default {
             "</div>",
           { permanent: false, sticky: true }
         );
+        
       };
+      */
     }
   }
   /*

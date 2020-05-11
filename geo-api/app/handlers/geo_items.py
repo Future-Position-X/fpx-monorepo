@@ -85,6 +85,7 @@ def get_filters_from_event(event):
     property_filter = None
     valid = False
     spatial_filter = None
+    simplify = 0.0
 
     params = event['queryStringParameters']
 
@@ -94,6 +95,7 @@ def get_filters_from_event(event):
         property_filter = params.get('property_filter', property_filter)
         valid = bool(strtobool(params.get('valid', 'false')))
         spatial_filter = get_spatial_filter(params)
+        simplify = float(params.get('simplify', simplify))
 
     return {
         "offset": offset,
@@ -101,6 +103,7 @@ def get_filters_from_event(event):
         "property_filter": property_filter,
         "valid": valid,
         "spatial_filter": spatial_filter,
+        "simplify": simplify,
     }
 
 
