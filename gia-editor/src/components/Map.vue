@@ -82,6 +82,22 @@ export default {
         drawCircle: false
       });
 
+      map.on("pm:globaldragmodetoggled", e => {
+        console.log("globaldragmodetoggled: ", e);
+
+        if (e.enabled) {
+          for (let id in e.map._layers) {
+            console.log("id: ", id);
+            e.map._layers[id].on("pm:edit", ev => {
+              console.log("edit: ", ev);
+              if (ev.target.feature != null) {
+                this.$emit("itemModified", ev.target.toGeoJSON());
+              }
+            });
+          }
+        }
+      });
+
       map.on("pm:remove", layerEvent => {
         const item = layerEvent.layer.feature;
 
@@ -91,60 +107,11 @@ export default {
       });
 
       map.on("pm:create", layerEvent => {
-        let feature;
-        let latlng;
-        let coords;
+        let feature = layerEvent.layer.toGeoJSON();
 
-        switch (layerEvent.shape) {
-          case "Marker":
-          case "CircleMarker":
-            latlng = layerEvent.layer._latlng;
-
-            feature = {
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [latlng.lng, latlng.lat]
-              },
-              properties: {}
-            };
-            break;
-
-          case "Line":
-            coords = layerEvent.layer._latlngs.map(latlng => [
-              latlng.lng,
-              latlng.lat
-            ]);
-
-            feature = {
-              type: "Feature",
-              geometry: {
-                type: "LineString",
-                coordinates: coords
-              },
-              properties: {}
-            };
-            break;
-
-          case "Rectangle":
-          case "Polygon":
-            coords = layerEvent.layer._latlngs[0].map(latlng => [
-              latlng.lng,
-              latlng.lat
-            ]);
-
-            feature = {
-              type: "Feature",
-              geometry: {
-                type: "Polygon",
-                coordinates: [[coords]]
-              },
-              properties: {}
-            };
-            break;
+        if (feature != null) {
+          this.$emit("itemAdded", feature);
         }
-
-        this.$emit("itemAdded", feature);
       });
     });
   },
