@@ -69,11 +69,10 @@ export default {
       selectedCollectionId: null,
       bounds: null,
       fetchedBounds: null,
-      itemModContext: {
-        addedItems: [],
-        modifiedItems: [],
-        removedItems: []
-      }
+
+      addedItems: [],
+      modifiedItems: [],
+      removedItems: []
     };
   },
   watch: {
@@ -151,13 +150,13 @@ export default {
           },
           body: JSON.stringify({
             type: "FeatureCollection",
-            features: this.itemModContext.addedItems
+            features: this.addedItems
           })
         }
       );
     },
     async removeItems() {
-      for (const item of this.itemModContext.removedItems) {
+      for (const item of this.removedItems) {
         await fetch(`https://dev.gia.fpx.se/items/${item.id}`, {
           method: "DELETE",
           mode: "cors",
@@ -180,40 +179,40 @@ export default {
         },
         body: JSON.stringify({
           type: "FeatureCollection",
-          features: this.itemModContext.modifiedItems
+          features: this.modifiedItems
         })
       });
     },
     itemRemovedFromMap(item) {
-      this.itemModContext.removedItems.push(item);
+      this.removedItems.push(item);
       const fc = this.geojson[this.selectedCollectionId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.code = fc;
     },
     itemAddedToMap(item) {
-      this.itemModContext.addedItems.push(item);
+      this.addedItems.push(item);
       const fc = this.geojson[this.selectedCollectionId].geojson;
       fc.features.push(item);
       this.code = fc;
     },
     itemModified(item) {
-      this.itemModContext.modifiedItems.push(item);
+      this.modifiedItems.push(item);
     },
     async onSaveClick() {
-      if (this.itemModContext.addedItems.length > 0) {
+      if (this.addedItems.length > 0) {
         await this.putAddedItems();
-        this.itemModContext.addedItems = [];
+        this.addedItems = [];
       }
 
-      if (this.itemModContext.removedItems.length > 0) {
+      if (this.removedItems.length > 0) {
         await this.removeItems();
-        this.itemModContext.removedItems = [];
+        this.removedItems = [];
       }
 
-      if (this.itemModContext.modifiedItems.length > 0) {
+      if (this.modifiedItems.length > 0) {
         await this.modifyItems();
-        this.itemModContext.modifiedItems = [];
+        this.modifiedItems = [];
       }
     },
     async fetchGeoJson(ids) {
