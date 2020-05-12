@@ -195,7 +195,6 @@ export default {
       for (i = this.modifiedItems.length - 1; i >= 0; i--) {
         if (this.modifiedItems[i].id == item.id) {
           this.modifiedItems.splice(i, 1);
-          console.log(">>>>>>>>>> modified");
         }
       }
 
