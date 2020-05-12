@@ -2,6 +2,7 @@
   <div style="height: 100%">
     <l-map
       ref="theMap"
+      :options="{preferCanvas: true}"
       :zoom="zoom"
       :center="center"
       style="height: 100vh; width: 100%"

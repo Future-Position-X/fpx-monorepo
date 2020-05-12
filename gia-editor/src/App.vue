@@ -6,6 +6,9 @@
           <div class="my-2">
             <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
           </div>
+          <div class="my-2">
+            <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
+          </div>
         </v-row>
         <v-row no-gutter>
           <v-col sm="2">
@@ -51,6 +54,7 @@ import Table from "./components/Table.vue";
 import Map from "./components/Map.vue";
 import Code from "./components/Code.vue";
 import Tree from "./components/Tree.vue";
+import leafletImage from "leaflet-image";
 
 export default {
   name: "App",
@@ -228,6 +232,16 @@ export default {
         await this.modifyItems();
         this.modifiedItems = [];
       }
+    },
+    onExportImageClick() {
+      const map = this.$refs.leafletMap.$refs.theMap.mapObject;
+
+      leafletImage(map, function(err, canvas) {
+        var a = document.createElement("a");
+        a.download = "image.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      });
     },
     async fetchGeoJson(ids) {
       const centerX = (this.bounds.minX + this.bounds.maxX) / 2;
