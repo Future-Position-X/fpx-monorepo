@@ -78,7 +78,7 @@ export default {
       addedItems: [],
       modifiedItems: [],
       removedItems: [],
-      fetchController: null,
+      fetchController: null
     };
   },
   watch: {
@@ -253,18 +253,37 @@ export default {
       });
     },
     async fetchGeoJson(ids) {
-      if(this.fetchController) {
+      if (this.fetchController) {
         this.fetchController.abort();
       }
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
-      const centerX = (this.bounds.minX + this.bounds.maxX) / 2;
-      const centerY = (this.bounds.minY + this.bounds.maxY) / 2;
-      const minX = this.bounds.minX - (centerX - this.bounds.minX);
-      const minY = this.bounds.minY - (centerY - this.bounds.minY);
-      const maxX = this.bounds.maxX + (this.bounds.maxX - centerX);
-      const maxY = this.bounds.maxY + (this.bounds.maxY - centerY);
       const simplify = this.zoom >= 16 ? 0.0 : Math.abs(maxX - minX) / 2500;
+
+      const map = this.$refs.leafletMap.$refs.theMap.mapObject;
+      let swCoord = map.getBounds()._southWest;
+      let neCoord = map.getBounds()._northEast;
+
+      const swPoint = map
+        .project(swCoord, this.zoom)
+        .subtract(map.getPixelOrigin());
+      const nePoint = map
+        .project(neCoord, this.zoom)
+        .subtract(map.getPixelOrigin());
+
+      swPoint.x -= 300;
+      swPoint.y += 300;
+      nePoint.x += 300;
+      nePoint.y -= 300;
+
+      swCoord = map.layerPointToLatLng(swPoint);
+      neCoord = map.layerPointToLatLng(nePoint);
+
+      let minX = swCoord.lng;
+      let minY = swCoord.lat;
+      let maxX = neCoord.lng;
+      let maxY = neCoord.lat;
+
       this.fetchedBounds = {
         minX: minX,
         minY: minY,
