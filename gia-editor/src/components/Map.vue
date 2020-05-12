@@ -74,13 +74,8 @@ export default {
     geojson: {
       handler: function() {
         console.log("geojson updated, ", this.geojson);
-        //const layers = Object.values(this.geojson);
-        for (let collectionId in this.geojson) {
-          if (!this.layers.some(l => l.id == collectionId)) {
-            this.layers.push(this.geojson[collectionId]);
-          }
-        }
-        //this.layers = layers;
+        const layers = Object.values(this.geojson);
+        this.layers = layers;
       },
       deep: true
     }
