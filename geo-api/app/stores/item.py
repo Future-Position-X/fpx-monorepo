@@ -4,21 +4,22 @@ from app.models.item import Item
 
 
 def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
-        params = filter.split(",")
+    params = filter.split(",")
 
-        for i, p in enumerate(params):
-            tokens = p.split("=")
-            name = "name_" + str(i)
-            value = "value_" + str(i)
+    for i, p in enumerate(params):
+        tokens = p.split("=")
+        name = "name_" + str(i)
+        value = "value_" + str(i)
 
-            where_clause += " properties->>%(" + name + ")s = %(" + value + ")s"
-            execute_dict[name] = tokens[0]
-            execute_dict[value] = tokens[1]
-            
-            if i < (len(params) - 1):
-                where_clause += " AND"
+        where_clause += " properties->>%(" + \
+            name + ")s = %(" + value + ")s"
+        execute_dict[name] = tokens[0]
+        execute_dict[value] = tokens[1]
 
-        return where_clause
+        if i < (len(params) - 1):
+            where_clause += " AND"
+
+    return where_clause
 
 
 class ItemStore(Store):
@@ -151,10 +152,9 @@ class ItemStore(Store):
             """, exec_dict)
         return [Item(**row) for row in c.fetchall()]
 
-
     def find_by_collection_name(self, collection_name, current_provider_uuid, filters):
         c = self.cursor()
-        
+
         where = """
         collections.name = %(collection_name)s
         AND (
@@ -192,10 +192,10 @@ class ItemStore(Store):
             """, exec_dict)
         return [Item(**row) for row in c.fetchall()]
 
-
-    def find_by_collection_uuid_as_geojson(self, collection_uuid, filters):
+    def find_by_collection_uuid_as_geojson(self, collection_uuid, filters, transforms):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
+        transform = "ST_AsGeoJSON(geometry)::jsonb"
 
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
@@ -226,12 +226,10 @@ class ItemStore(Store):
             )
             """
 
-
         exec_dict = {
             "collection_uuid": collection_uuid,
             "offset": filters["offset"],
             "limit": filters["limit"],
-            "simplify": filters["simplify"],
         }
 
         if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within', 'intersect']:
@@ -248,6 +246,12 @@ class ItemStore(Store):
                 "distance.d": filters['spatial_filter']['distance']['d'],
             })
 
+        if transforms['simplify'] and transforms['simplify'] > 0.0:
+            exec_dict.update({
+                "simplify": transforms["simplify"],
+            })
+            transform = "ST_AsGeoJSON(ST_Simplify(geometry, %(simplify)s, false))::jsonb"
+
         if filters["property_filter"] is not None:
             where += " AND "
             where = append_property_filter_to_where_clause(
@@ -261,7 +265,7 @@ class ItemStore(Store):
                 SELECT jsonb_build_object(
                     'type', 'Feature',
                     'id', uuid,
-                    'geometry', ST_AsGeoJSON(ST_Simplify(geometry, %(simplify)s, false))::jsonb,
+                    'geometry', """ + transform + """,
                     'properties', properties
             ) AS feature
             FROM (
@@ -287,7 +291,7 @@ class ItemStore(Store):
 
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
-        
+
         exec_dict = {
             "collection_name": collection_name,
             "current_provider_uuid": current_provider_uuid,

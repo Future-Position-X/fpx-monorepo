@@ -79,13 +79,23 @@ def get_spatial_filter(params):
         else:
             None
 
+def get_transforms_from_event(event):
+    simplify = 0.0
+    params = event['queryStringParameters']
+
+    if params is not None:
+        simplify = float(params.get('simplify', simplify))
+
+    return {
+        "simplify": simplify,
+    }
+
 def get_filters_from_event(event):
     offset = 0
     limit = 20
     property_filter = None
     valid = False
     spatial_filter = None
-    simplify = 0.0
 
     params = event['queryStringParameters']
 
@@ -95,7 +105,6 @@ def get_filters_from_event(event):
         property_filter = params.get('property_filter', property_filter)
         valid = bool(strtobool(params.get('valid', 'false')))
         spatial_filter = get_spatial_filter(params)
-        simplify = float(params.get('simplify', simplify))
 
     return {
         "offset": offset,
@@ -103,7 +112,6 @@ def get_filters_from_event(event):
         "property_filter": property_filter,
         "valid": valid,
         "spatial_filter": spatial_filter,
-        "simplify": simplify,
     }
 
 
@@ -178,7 +186,8 @@ def get_as_png(event, context):
 def index_as_geojson(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
     filters = get_filters_from_event(event)
-    geojson = get_items_by_collection_uuid_as_geojson(collection_uuid, filters)
+    transforms = get_transforms_from_event(event)
+    geojson = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
 
     return response(200, rapidjson.dumps(geojson))
 

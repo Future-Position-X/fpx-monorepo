@@ -34,9 +34,9 @@ def get_items_by_collection_name(collection_name, current_provider_uuid, filters
         item_store.complete()
         return items
 
-def get_items_by_collection_uuid_as_geojson(collection_uuid, filters):
+def get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms):
     with ItemStore() as item_store:
-        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, filters)
+        items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
         item_store.complete()
         return items
 

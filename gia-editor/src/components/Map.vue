@@ -156,7 +156,7 @@ export default {
           color: "#ECEFF1",
           opacity: 1,
           fillColor: fillColor,
-          fillOpacity: 0.5
+          fillOpacity: 0.7
         };
       };
     },
