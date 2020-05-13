@@ -258,7 +258,6 @@ export default {
       }
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
-      const simplify = this.zoom >= 16 ? 0.0 : Math.abs(maxX - minX) / 2500;
 
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
       let swCoord = map.getBounds()._southWest;
@@ -283,6 +282,8 @@ export default {
       let minY = swCoord.lat;
       let maxX = neCoord.lng;
       let maxY = neCoord.lat;
+
+      const simplify = this.zoom >= 16 ? 0.0 : Math.abs(maxX - minX) / 2500;
 
       this.fetchedBounds = {
         minX: minX,
