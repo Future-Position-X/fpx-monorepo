@@ -75,10 +75,10 @@ export default {
       let neCoord = map.getBounds()._northEast;
 
       const swPoint = map
-        .project(swCoord, this.zoom)
+        .project(swCoord, map.getZoom())
         .subtract(map.getPixelOrigin());
       const nePoint = map
-        .project(neCoord, this.zoom)
+        .project(neCoord, map.getZoom())
         .subtract(map.getPixelOrigin());
 
       swPoint.x -= 300;
