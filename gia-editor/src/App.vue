@@ -74,7 +74,7 @@ export default {
       renderedCollectionIds: [],
       selectedCollectionId: null,
       bounds: null,
-      fetchedBounds: null,
+      dataBounds: null,
       addedItems: [],
       modifiedItems: [],
       removedItems: [],
@@ -134,15 +134,15 @@ export default {
       };
 
       if (this.renderedCollectionIds.length > 0) {
-        if (this.fetchedBounds != null) {
+        if (this.dataBounds != null) {
           const boundsExceeded =
-            this.fetchedBounds.minX > this.bounds.minX ||
-            this.fetchedBounds.minY > this.bounds.minY ||
-            this.fetchedBounds.maxX < this.bounds.maxX ||
-            this.fetchedBounds.maxY < this.bounds.maxY;
+            this.dataBounds.minX > this.bounds.minX ||
+            this.dataBounds.minY > this.bounds.minY ||
+            this.dataBounds.maxX < this.bounds.maxX ||
+            this.dataBounds.maxY < this.bounds.maxY;
 
           if (boundsExceeded) {
-            console.log("fetched bounds exceeded");
+            console.log("data bounds exceeded");
             this.fetchGeoJson(this.renderedCollectionIds);
           } else {
             console.log("still within fetched bounds");
@@ -259,16 +259,16 @@ export default {
 
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
-      this.fetchedBounds = this.$refs.leafletMap.getDataBounds();
+      this.dataBounds = this.$refs.leafletMap.getDataBounds();
       const simplify =
         this.zoom >= 16
           ? 0.0
-          : Math.abs(this.fetchedBounds.maxX - this.fetchedBounds.minX) / 2500;
+          : Math.abs(this.dataBounds.maxX - this.dataBounds.minX) / 2500;
 
       for (let id of ids) {
         try {
           const response = await fetch(
-            `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${this.fetchedBounds.minX}&spatial_filter.envelope.ymin=${this.fetchedBounds.minY}&spatial_filter.envelope.xmax=${this.fetchedBounds.maxX}&spatial_filter.envelope.ymax=${this.fetchedBounds.maxY}&simplify=${simplify}`,
+            `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${this.dataBounds.minX}&spatial_filter.envelope.ymin=${this.dataBounds.minY}&spatial_filter.envelope.xmax=${this.dataBounds.maxX}&spatial_filter.envelope.ymax=${this.dataBounds.maxY}&simplify=${simplify}`,
             {
               headers: {
                 Authorization:
