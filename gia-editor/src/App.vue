@@ -10,6 +10,9 @@
             <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
           </div>
           <v-progress-circular v-if="isFetchingItems" indeterminate color="primary"></v-progress-circular>
+          <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+          <v-checkbox v-model="isPublicCollection" label="Public"></v-checkbox>
+          <v-btn @click="onCreateCollectionClick" small color="primary">Create</v-btn>
         </v-row>
         <v-row no-gutter>
           <v-col sm="2">
@@ -80,7 +83,9 @@ export default {
       modifiedItems: [],
       removedItems: [],
       fetchController: null,
-      isFetchingItems: false
+      isFetchingItems: false,
+      collectionName: null,
+      isPublicCollection: false,
     };
   },
   watch: {
@@ -254,6 +259,21 @@ export default {
         a.click();
       });
     },
+    async onCreateCollectionClick() {
+      await fetch(`https://dev.gia.fpx.se/collections`, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
+        },
+        body: JSON.stringify({
+          name: this.collectionName,
+          is_public: this.isPublicCollection
+        })
+      });
+    },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
         this.fetchController.abort();
@@ -288,6 +308,7 @@ export default {
           });
         } catch (err) {
           console.log(err);
+          this.isFetchingItems = false;
           return;
         }
       }
