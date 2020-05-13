@@ -15,7 +15,7 @@
         v-bind:key="layer.id"
         :geojson="layer.geojson"
         :options="options"
-        :options-style="styleFunction"
+        :options-style="styleFunction(layer.color)"
       />
     </l-map>
   </div>
@@ -69,6 +69,7 @@ export default {
       }
       this.$emit("zoomUpdate", zoom);
     },
+<<<<<<< HEAD
     getDataBounds() {
       const map = this.$refs.theMap.mapObject;
       let swCoord = map.getBounds()._southWest;
@@ -94,6 +95,18 @@ export default {
         minY: swCoord.lat,
         maxX: neCoord.lng,
         maxY: neCoord.lat
+=======
+    styleFunction(color) {
+      //const fillColor = this.fillColor; // important! need touch fillColor in computed for re-calculate when change fillColor
+      return () => {
+        return {
+          weight: 1,
+          color: "#ECEFF1",
+          opacity: 1,
+          fillColor: color,
+          fillOpacity: 0.7
+        };
+>>>>>>> make layers get color
       };
     }
   },
@@ -168,18 +181,6 @@ export default {
     options() {
       return {
         onEachFeature: this.onEachFeatureFunction
-      };
-    },
-    styleFunction() {
-      const fillColor = this.fillColor; // important! need touch fillColor in computed for re-calculate when change fillColor
-      return () => {
-        return {
-          weight: 1,
-          color: "#ECEFF1",
-          opacity: 1,
-          fillColor: fillColor,
-          fillOpacity: 0.7
-        };
       };
     },
     onEachFeatureFunction() {
