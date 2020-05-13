@@ -9,6 +9,7 @@
           <div class="my-2">
             <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
           </div>
+          <v-progress-circular v-if="isFetchingItems" indeterminate color="primary"></v-progress-circular>
         </v-row>
         <v-row no-gutter>
           <v-col sm="2">
@@ -78,7 +79,8 @@ export default {
       addedItems: [],
       modifiedItems: [],
       removedItems: [],
-      fetchController: null
+      fetchController: null,
+      isFetchingItems: false
     };
   },
   watch: {
@@ -257,6 +259,7 @@ export default {
         this.fetchController.abort();
       }
 
+      this.isFetchingItems = true;
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
       this.dataBounds = this.$refs.leafletMap.getDataBounds();
@@ -290,6 +293,7 @@ export default {
       }
       this.renderedCollectionIds = ids;
       this.selectedCollectionId = ids[0];
+      this.isFetchingItems = false;
     }
   },
   async created() {
