@@ -69,8 +69,32 @@ export default {
       }
       this.$emit("zoomUpdate", zoom);
     },
-    getMap() {
-      return this.$refs.theMap.mapObject;
+    getDataBounds() {
+      const map = this.$refs.theMap.mapObject;
+      let swCoord = map.getBounds()._southWest;
+      let neCoord = map.getBounds()._northEast;
+
+      const swPoint = map
+        .project(swCoord, this.zoom)
+        .subtract(map.getPixelOrigin());
+      const nePoint = map
+        .project(neCoord, this.zoom)
+        .subtract(map.getPixelOrigin());
+
+      swPoint.x -= 300;
+      swPoint.y += 300;
+      nePoint.x += 300;
+      nePoint.y -= 300;
+
+      swCoord = map.layerPointToLatLng(swPoint);
+      neCoord = map.layerPointToLatLng(nePoint);
+
+      return {
+        minX: swCoord.lng,
+        minY: swCoord.lat,
+        maxX: neCoord.lng,
+        maxY: neCoord.lat
+      };
     }
   },
   watch: {

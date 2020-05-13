@@ -256,46 +256,19 @@ export default {
       if (this.fetchController) {
         this.fetchController.abort();
       }
+
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
-
-      const map = this.$refs.leafletMap.getMap();
-      let swCoord = map.getBounds()._southWest;
-      let neCoord = map.getBounds()._northEast;
-
-      const swPoint = map
-        .project(swCoord, this.zoom)
-        .subtract(map.getPixelOrigin());
-      const nePoint = map
-        .project(neCoord, this.zoom)
-        .subtract(map.getPixelOrigin());
-
-      swPoint.x -= 300;
-      swPoint.y += 300;
-      nePoint.x += 300;
-      nePoint.y -= 300;
-
-      swCoord = map.layerPointToLatLng(swPoint);
-      neCoord = map.layerPointToLatLng(nePoint);
-
-      let minX = swCoord.lng;
-      let minY = swCoord.lat;
-      let maxX = neCoord.lng;
-      let maxY = neCoord.lat;
-
-      const simplify = this.zoom >= 16 ? 0.0 : Math.abs(maxX - minX) / 2500;
-
-      this.fetchedBounds = {
-        minX: minX,
-        minY: minY,
-        maxX: maxX,
-        maxY: maxY
-      };
+      this.fetchedBounds = this.$refs.leafletMap.getDataBounds();
+      const simplify =
+        this.zoom >= 16
+          ? 0.0
+          : Math.abs(this.fetchedBounds.maxX - this.fetchedBounds.minX) / 2500;
 
       for (let id of ids) {
         try {
           const response = await fetch(
-            `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${minX}&spatial_filter.envelope.ymin=${minY}&spatial_filter.envelope.xmax=${maxX}&spatial_filter.envelope.ymax=${maxY}&simplify=${simplify}`,
+            `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${this.fetchedBounds.minX}&spatial_filter.envelope.ymin=${this.fetchedBounds.minY}&spatial_filter.envelope.xmax=${this.fetchedBounds.maxX}&spatial_filter.envelope.ymax=${this.fetchedBounds.maxY}&simplify=${simplify}`,
             {
               headers: {
                 Authorization:
