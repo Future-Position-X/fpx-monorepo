@@ -16,7 +16,7 @@
         </v-row>
         <v-row no-gutter>
           <v-col sm="2">
-            <Tree v-bind:collections="collections" @selectionUpdate="selectionUpdate" />
+            <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
           </v-col>
           <v-col sm="7">
             <Map
@@ -74,6 +74,7 @@ export default {
       code: "",
       zoom: 16,
       collections: [],
+      sortedCollections: [],
       geojson: {},
       renderedCollectionIds: [],
       selectedCollectionId: null,
@@ -86,6 +87,7 @@ export default {
       isFetchingItems: false,
       collectionName: null,
       isPublicCollection: false,
+      collectionColors: {},
     };
   },
   watch: {
@@ -304,7 +306,8 @@ export default {
 
           this.$set(this.geojson, id, {
             id: id,
-            geojson: data
+            color: this.collectionColors[id],
+            geojson: data,
           });
         } catch (err) {
           console.log(err);
@@ -326,7 +329,35 @@ export default {
     });
     const data = await response.json();
     this.collections = data;
+    let sortedCollections = groupBy(this.collections, "name");
+    const len = Object.keys(sortedCollections).length;
+    let i = 1;
+    for (let [key, value] of Object.entries(sortedCollections)) {
+      console.log(key);
+      let color = selectColor(i, len);
+      value = value.map((c) => {
+        c.color = color;
+        this.collectionColors[c.uuid] = color;
+        return c;
+      });
+      i++;
+    }
+    this.sortedCollections = sortedCollections;
   }
+};
+
+const groupBy = function(xs, key) {
+  return xs.reduce(function(rv, x) {
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
+};
+const selectColor = function(colorNum, colors) {
+  if (colors < 1) colors = 1; // defaults to one color - avoid divide by zero
+  const saturation = 60 + (colorNum % 5) * 10;
+  return (
+    "hsl(" + ((colorNum * (360 / colors)) % 360) + "," + saturation + "%,50%)"
+  );
 };
 </script>
 
