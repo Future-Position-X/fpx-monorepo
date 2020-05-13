@@ -259,7 +259,7 @@ export default {
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
 
-      const map = this.$refs.leafletMap.$refs.theMap.mapObject;
+      const map = this.$refs.leafletMap.getMap();
       let swCoord = map.getBounds()._southWest;
       let neCoord = map.getBounds()._northEast;
 

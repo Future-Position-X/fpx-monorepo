@@ -64,10 +64,13 @@ export default {
       if (zoom >= 16) {
         this.$refs.theMap.mapObject.pm.addControls();
       } else {
-        this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons()
+        this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
         this.$refs.theMap.mapObject.pm.removeControls();
       }
       this.$emit("zoomUpdate", zoom);
+    },
+    getMap() {
+      return this.$refs.theMap.mapObject;
     }
   },
   watch: {
