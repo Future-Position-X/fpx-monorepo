@@ -4,9 +4,9 @@
       <v-container :fluid="true" style="padding: 0px">
         <v-row no-gutter>
           <v-col sm="2" style="height: 100vh; overflow: scroll">
-          <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-          <v-checkbox v-model="isPublicCollection" label="Public"></v-checkbox>
-          <v-btn @click="onCreateCollectionClick" small color="primary">Create</v-btn>
+            <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+            <v-checkbox v-model="isPublicCollection" label="Public"></v-checkbox>
+            <v-btn @click="onCreateCollectionClick" small color="primary">Create</v-btn>
             <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
           </v-col>
           <v-col sm="7" style="padding: 0px;">
@@ -21,17 +21,23 @@
               @zoomUpdate="zoomUpdate"
             />
           </v-col>
-          <v-col sm="3" style="display: flex; flex-direction:column; background-color: #4b4b4b; height: 100vh; padding: 0;">
+          <v-col
+            sm="3"
+            style="display: flex; flex-direction:column; background-color: #4b4b4b; height: 100vh; padding: 0;"
+          >
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
               <!--<v-tab>Table</v-tab>-->
               <v-tab-item style="display: flex;flex-direction:column; flex:1;">
                 <v-select
-                  :items="renderedCollectionIds"
+                  :items="renderedCollections"
                   label="Collection"
                   @change="dropDownChange"
-                  v-model="selectedCollectionId"
-                class="select-collection"></v-select>
+                  v-model="selectedCollection"
+                  class="select-collection"
+                  item-text="name"
+                  return-object
+                ></v-select>
                 <Code v-bind:code="code" style="display: flex;flex-direction:column; flex:1;" />
               </v-tab-item>
               <!--
@@ -75,8 +81,8 @@ export default {
       collections: [],
       sortedCollections: [],
       geojson: {},
-      renderedCollectionIds: [],
-      selectedCollectionId: null,
+      renderedCollections: [],
+      selectedCollection: null,
       bounds: null,
       dataBounds: null,
       addedItems: [],
@@ -86,12 +92,12 @@ export default {
       isFetchingItems: false,
       collectionName: null,
       isPublicCollection: false,
-      collectionColors: {},
+      collectionColors: {}
     };
   },
   watch: {
-    selectedCollectionId(val) {
-      this.code = val == null ? {} : this.geojson[val].geojson;
+    selectedCollection(val) {
+      this.code = val == null ? {} : this.geojson[val.uuid].geojson;
     }
   },
   methods: {
@@ -106,29 +112,29 @@ export default {
     selectionUpdate(ids) {
       let index = -1;
 
-      this.renderedCollectionIds.forEach(id => {
-        if (!ids.includes(id)) {
-          if (this.selectedCollectionId == id) {
-            this.selectedCollectionId = null;
+      this.renderedCollections.forEach(c => {
+        if (!ids.includes(c.uuid)) {
+          if (this.selectedCollection == c) {
+            this.selectedCollection = null;
           }
 
-          index = this.renderedCollectionIds.indexOf(id);
-          this.$delete(this.geojson, id);
+          index = this.renderedCollections.indexOf(c);
+          this.$delete(this.geojson, c.uuid);
         }
       });
 
-      this.renderedCollectionIds.splice(index, 1);
+      this.renderedCollections.splice(index, 1);
       this.fetchGeoJson(
-        ids.filter(id => !this.renderedCollectionIds.includes(id))
+        ids.filter(id => !this.renderedCollections.some(c => c.uuid == id))
       );
     },
     dropDownChange(selected) {
       console.log("selected: ", selected);
-      this.code = this.geojson[selected].geojson;
+      this.code = this.geojson[selected.uuid].geojson;
     },
     zoomUpdate(zoom) {
-      if(this.zoom != zoom) {
-        this.fetchGeoJson(this.renderedCollectionIds);
+      if (this.zoom != zoom) {
+        this.fetchGeoJson(this.renderedCollections.map(c => c.uuid));
       }
       this.zoom = zoom;
       /*
@@ -147,7 +153,7 @@ export default {
         maxY: bounds._northEast.lat
       };
 
-      if (this.renderedCollectionIds.length > 0) {
+      if (this.renderedCollections.length > 0) {
         if (this.dataBounds != null) {
           const boundsExceeded =
             this.dataBounds.minX > this.bounds.minX ||
@@ -157,7 +163,7 @@ export default {
 
           if (boundsExceeded) {
             console.log("data bounds exceeded");
-            this.fetchGeoJson(this.renderedCollectionIds);
+            this.fetchGeoJson(this.renderedCollections.map(c => c.uuid));
           } else {
             console.log("still within fetched bounds");
           }
@@ -166,7 +172,7 @@ export default {
     },
     async putAddedItems() {
       await fetch(
-        `https://dev.gia.fpx.se/collections/${this.selectedCollectionId}/items/geojson`,
+        `https://dev.gia.fpx.se/collections/${this.selectedCollection.uuid}/items/geojson`,
         {
           method: "PUT",
           mode: "cors",
@@ -226,14 +232,14 @@ export default {
       }
 
       this.removedItems.push(item);
-      const fc = this.geojson[this.selectedCollectionId].geojson;
+      const fc = this.geojson[this.selectedCollection.uuid].geojson;
       i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.code = fc;
     },
     itemAddedToMap(item) {
       this.addedItems.push(item);
-      const fc = this.geojson[this.selectedCollectionId].geojson;
+      const fc = this.geojson[this.selectedCollection.uuid].geojson;
       fc.features.push(item);
       this.code = fc;
     },
@@ -320,8 +326,12 @@ export default {
           return;
         }
       }
-      this.renderedCollectionIds = ids;
-      this.selectedCollectionId = ids[0];
+      this.renderedCollections = this.collections.filter(c =>
+        ids.some(id => id == c.uuid)
+      );
+      this.selectedCollectionId = this.collections.filter(
+        c => c.uuid == ids[0]
+      )[0];
       this.isFetchingItems = false;
     }
   },
@@ -347,7 +357,9 @@ export default {
       });
       i++;
     }
+
     this.sortedCollections = sortedCollections;
+    console.log("sorted collections", this.sortedCollections);
   }
 };
 
@@ -375,7 +387,8 @@ const selectColor = function(colorNum, colors) {
   color: #2c3e50;
 }
 
-.save-button button, .export-image-button button{
+.save-button button,
+.export-image-button button {
   padding: 0;
   width: 100%;
 }
@@ -383,17 +396,18 @@ const selectColor = function(colorNum, colors) {
   background: transparent;
 }
 
-.code-column, .code-column .v-tabs-items, .code-column .v-window__container {
+.code-column,
+.code-column .v-tabs-items,
+.code-column .v-window__container {
   background: #4b4b4b;
   display: flex;
-  flex-direction:column; 
-  flex:1;
+  flex-direction: column;
+  flex: 1;
 }
 .code-column .select-collection {
   flex: 0 1 auto;
   background-color: #4b4b4b;
   padding: 5px;
-
 }
 
 .code-column .v-tabs-bar {

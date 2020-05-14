@@ -24,7 +24,7 @@ export default {
           color: value[0].color,
           children: value.map(function(e) {
             e.id = e.uuid;
-            e.name = e.provider_uuid;
+            //e.name = e.provider_uuid;
             return e;
           })
         });
