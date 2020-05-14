@@ -88,7 +88,6 @@ export default {
       collectionName: null,
       isPublicCollection: false,
       collectionColors: {},
-      collectionColors: {},
     };
   },
   watch: {
