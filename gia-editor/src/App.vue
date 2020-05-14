@@ -85,13 +85,10 @@ export default {
       removedItems: [],
       fetchController: null,
       isFetchingItems: false,
-<<<<<<< HEAD
       collectionName: null,
       isPublicCollection: false,
       collectionColors: {},
-=======
-      collectionColors: {}
->>>>>>> wip
+      collectionColors: {},
     };
   },
   watch: {
