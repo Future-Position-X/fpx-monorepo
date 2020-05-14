@@ -1,19 +1,12 @@
 <template>
   <v-treeview @input="selectionUpdate" selectable :items="items">
-        <template v-slot:append="{ item }">
-          <!--
-          <v-icon
-            v-if="item.children"
-            v-text="`mdi-${item.id === 1 ? 'home-variant' : 'folder-network'}`"
-            v-color=
-          ></v-icon>-->
-          <div :style="{'background-color': item.color}">YOLO</div>
-        </template>
+    <template v-slot:append="{ item }">
+      <v-icon :color="item.color">mdi-brightness-1</v-icon>
+    </template>
   </v-treeview>
 </template>
 
 <script>
-
 export default {
   props: ["sortedCollections"],
   methods: {
