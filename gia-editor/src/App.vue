@@ -85,9 +85,13 @@ export default {
       removedItems: [],
       fetchController: null,
       isFetchingItems: false,
+<<<<<<< HEAD
       collectionName: null,
       isPublicCollection: false,
       collectionColors: {},
+=======
+      collectionColors: {}
+>>>>>>> wip
     };
   },
   watch: {
@@ -128,11 +132,17 @@ export default {
       this.code = this.geojson[selected].geojson;
     },
     zoomUpdate(zoom) {
+      if(this.zoom != zoom) {
+        this.fetchGeoJson(this.renderedCollectionIds);
+      }
+      this.zoom = zoom;
+      /*
       if (Math.abs(this.zoom - zoom) >= 2) {
         console.log("fetched zoom exceeded");
         this.zoom = zoom;
         this.fetchGeoJson(this.renderedCollectionIds);
       }
+      */
     },
     boundsUpdate(bounds) {
       this.bounds = {
@@ -307,7 +317,7 @@ export default {
           this.$set(this.geojson, id, {
             id: id,
             color: this.collectionColors[id],
-            geojson: data,
+            geojson: data
           });
         } catch (err) {
           console.log(err);
@@ -335,7 +345,7 @@ export default {
     for (let [key, value] of Object.entries(sortedCollections)) {
       console.log(key);
       let color = selectColor(i, len);
-      value = value.map((c) => {
+      value = value.map(c => {
         c.color = color;
         this.collectionColors[c.uuid] = color;
         return c;
@@ -354,7 +364,8 @@ const groupBy = function(xs, key) {
 };
 const selectColor = function(colorNum, colors) {
   if (colors < 1) colors = 1; // defaults to one color - avoid divide by zero
-  const saturation = 60 + (colorNum % 5) * 10;
+  //const saturation = 60 + (colorNum % 5) * 10;
+  const saturation = 100;
   return (
     "hsl(" + ((colorNum * (360 / colors)) % 360) + "," + saturation + "%,50%)"
   );

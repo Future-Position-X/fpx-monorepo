@@ -51,7 +51,8 @@ export default {
       center: [60.675744, 17.1402],
       layers: [],
       fillColor: "#e4ce7f",
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      //url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      url: "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     };
@@ -97,14 +98,13 @@ export default {
       }
     },
     styleFunction(color) {
-      //const fillColor = this.fillColor; // important! need touch fillColor in computed for re-calculate when change fillColor
       return () => {
         return {
           weight: 1,
-          color: "#ECEFF1",
+          color: "#333",
           opacity: 1,
           fillColor: color,
-          fillOpacity: 0.7
+          fillOpacity: Math.random()
         };
       };
     }
@@ -183,10 +183,11 @@ export default {
       };
     },
     onEachFeatureFunction() {
+      /*
       if (!this.enableTooltip) {
         return () => {};
       }
-
+      */
       return () => {};
 
       /*
