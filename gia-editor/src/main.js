@@ -12,8 +12,8 @@ new Vue({
     theme: {
       themes: {
         light: {
-          primary: '#000',
-          secondary: '#000',
+          primary: '#333',
+          secondary: '#999',
           anchor: '#000',
         }
       },

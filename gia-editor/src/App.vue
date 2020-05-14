@@ -2,15 +2,6 @@
   <v-app>
     <v-content>
       <v-container :fluid="true" style="padding: 0px">
-        <v-row style="position: fixed; bottom: 0px">
-          <div class="my-2">
-            <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
-          </div>
-          <div class="my-2">
-            <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
-          </div>
-          <v-progress-circular v-if="isFetchingItems" indeterminate color="primary"></v-progress-circular>
-        </v-row>
         <v-row no-gutter>
           <v-col sm="2" style="height: 100vh; overflow: scroll">
           <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
@@ -30,18 +21,18 @@
               @zoomUpdate="zoomUpdate"
             />
           </v-col>
-          <v-col sm="3" style="background-color: #ccc; height: 100vh;">
-            <v-tabs class="mytabs">
+          <v-col sm="3" style="display: flex; flex-direction:column; background-color: #4b4b4b; height: 100vh; padding: 0;">
+            <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
               <!--<v-tab>Table</v-tab>-->
-              <v-tab-item>
+              <v-tab-item style="display: flex;flex-direction:column; flex:1;">
                 <v-select
                   :items="renderedCollectionIds"
                   label="Collection"
                   @change="dropDownChange"
                   v-model="selectedCollectionId"
-                ></v-select>
-                <Code v-bind:code="code" />
+                class="select-collection"></v-select>
+                <Code v-bind:code="code" style="display: flex;flex-direction:column; flex:1;" />
               </v-tab-item>
               <!--
               <v-tab-item>
@@ -49,6 +40,12 @@
               </v-tab-item>
               -->
             </v-tabs>
+            <div class="my-2 save-button">
+              <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
+            </div>
+            <div class="my-2 export-image-button">
+              <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
+            </div>
           </v-col>
         </v-row>
       </v-container>
@@ -377,7 +374,29 @@ const selectColor = function(colorNum, colors) {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
+
+.save-button button, .export-image-button button{
+  padding: 0;
+  width: 100%;
+}
 .theme--light.v-tabs.mytabs > .v-tabs-bar {
   background: transparent;
+}
+
+.code-column, .code-column .v-tabs-items, .code-column .v-window__container {
+  background: #4b4b4b;
+  display: flex;
+  flex-direction:column; 
+  flex:1;
+}
+.code-column .select-collection {
+  flex: 0 1 auto;
+  background-color: #4b4b4b;
+  padding: 5px;
+
+}
+
+.code-column .v-tabs-bar {
+  display: none;
 }
 </style>
