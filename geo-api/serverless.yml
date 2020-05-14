@@ -7,8 +7,6 @@ provider:
   profile: ${opt:profile, self:custom.stageVars.profile}
   memorySize: 3008
   timeout: 30
-  apiGateway:
-    minimumCompressionSize: 1024
   environment:
     DATABASE_URL: ${self:custom.stageVars.environment.DATABASE_URL}
     JWT_SECRET: ${self:custom.stageVars.environment.JWT_SECRET}
@@ -32,6 +30,7 @@ custom:
   apigwBinary:
     types:
       - 'image/png'
+      - 'application/*'
   documentation:
     api: ${file(serverless/documentation/api.yml)}
     models: ${file(serverless/documentation/models.yml)}

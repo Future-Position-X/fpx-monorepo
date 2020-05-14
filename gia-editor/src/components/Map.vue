@@ -102,9 +102,9 @@ export default {
         return {
           weight: 1,
           color: "#333",
-          opacity: 1,
+          opacity: 0.5,
           fillColor: color,
-          fillOpacity: Math.random()
+          fillOpacity: 0.3 + Math.random() * 0.05,
         };
       };
     }

@@ -1,8 +1,8 @@
 <template>
   <v-app>
     <v-content>
-      <v-container :fluid="true">
-        <v-row>
+      <v-container :fluid="true" style="padding: 0px">
+        <v-row style="position: fixed; bottom: 0px">
           <div class="my-2">
             <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
           </div>
@@ -10,15 +10,15 @@
             <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
           </div>
           <v-progress-circular v-if="isFetchingItems" indeterminate color="primary"></v-progress-circular>
+        </v-row>
+        <v-row no-gutter>
+          <v-col sm="2" style="height: 100vh; overflow: scroll">
           <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
           <v-checkbox v-model="isPublicCollection" label="Public"></v-checkbox>
           <v-btn @click="onCreateCollectionClick" small color="primary">Create</v-btn>
-        </v-row>
-        <v-row no-gutter>
-          <v-col sm="2">
             <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
           </v-col>
-          <v-col sm="7">
+          <v-col sm="7" style="padding: 0px;">
             <Map
               ref="leafletMap"
               v-bind:geojson="geojson"
@@ -30,10 +30,10 @@
               @zoomUpdate="zoomUpdate"
             />
           </v-col>
-          <v-col sm="3">
-            <v-tabs>
+          <v-col sm="3" style="background-color: #ccc; height: 100vh;">
+            <v-tabs class="mytabs">
               <v-tab>Code</v-tab>
-              <v-tab>Table</v-tab>
+              <!--<v-tab>Table</v-tab>-->
               <v-tab-item>
                 <v-select
                   :items="renderedCollectionIds"
@@ -43,9 +43,11 @@
                 ></v-select>
                 <Code v-bind:code="code" />
               </v-tab-item>
+              <!--
               <v-tab-item>
                 <Table />
               </v-tab-item>
+              -->
             </v-tabs>
           </v-col>
         </v-row>
@@ -55,7 +57,7 @@
 </template>
 
 <script>
-import Table from "./components/Table.vue";
+//import Table from "./components/Table.vue";
 import Map from "./components/Map.vue";
 import Code from "./components/Code.vue";
 import Tree from "./components/Tree.vue";
@@ -64,7 +66,7 @@ import leafletImage from "leaflet-image";
 export default {
   name: "App",
   components: {
-    Table,
+    //Table,
     Map,
     Code,
     Tree
@@ -374,5 +376,8 @@ const selectColor = function(colorNum, colors) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
+}
+.theme--light.v-tabs.mytabs > .v-tabs-bar {
+  background: transparent;
 }
 </style>

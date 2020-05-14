@@ -51,7 +51,5 @@ export default {
 </script>
 
 <style>
-.editorContainer {
-  height: 600px;
-}
+.editorContainer {}
 </style>
