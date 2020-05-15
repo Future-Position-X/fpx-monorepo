@@ -13,7 +13,7 @@ def response(status_code, payload=None):
     if payload != None:
         resp.update(
             {
-                "body": base64.b64encode(gzip.compress(bytes(payload, 'utf-8'))),
+                "body": base64.b64encode(gzip.compress(bytes(payload, 'utf-8'))).decode('utf-8'),
                 "isBase64Encoded": True,
             }
         )
