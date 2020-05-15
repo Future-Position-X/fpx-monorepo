@@ -300,13 +300,14 @@ export default {
       const { signal } = this.fetchController;
       this.dataBounds = this.$refs.leafletMap.getDataBounds();
       const simplify =
-        this.zoom >= 16
+        this.zoom >= 0
           ? 0.0
           : Math.abs(this.dataBounds.maxX - this.dataBounds.minX) / 2500;
 
       for (let id of ids) {
         try {
           const response = await fetch(
+            //`http://fpx.lan:3000/dev/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${this.dataBounds.minX}&spatial_filter.envelope.ymin=${this.dataBounds.minY}&spatial_filter.envelope.xmax=${this.dataBounds.maxX}&spatial_filter.envelope.ymax=${this.dataBounds.maxY}&simplify=${simplify}`,
             `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${this.dataBounds.minX}&spatial_filter.envelope.ymin=${this.dataBounds.minY}&spatial_filter.envelope.xmax=${this.dataBounds.maxX}&spatial_filter.envelope.ymax=${this.dataBounds.maxY}&simplify=${simplify}`,
             {
               headers: {

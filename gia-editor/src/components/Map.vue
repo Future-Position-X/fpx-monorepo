@@ -25,10 +25,14 @@
 import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import "@geoman-io/leaflet-geoman-free";
+//import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
 import { Icon } from "leaflet";
+
+import glify from 'leaflet.glify';
+
+console.log(glify)
 
 delete Icon.Default.prototype._getIconUrl;
 Icon.Default.mergeOptions({
@@ -52,7 +56,8 @@ export default {
       layers: [],
       fillColor: "#e4ce7f",
       //url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      url: "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
+      url:
+        "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     };
@@ -62,6 +67,8 @@ export default {
       this.$emit("boundsUpdate", bounds);
     },
     zoomUpdate(zoom) {
+      console.log(zoom)
+      /*
       if (zoom >= 16) {
         this.$refs.theMap.mapObject.pm.addControls();
       } else {
@@ -69,6 +76,7 @@ export default {
         this.$refs.theMap.mapObject.pm.removeControls();
       }
       this.$emit("zoomUpdate", zoom);
+      */
     },
     getDataBounds() {
       const map = this.$refs.theMap.mapObject;
@@ -95,7 +103,7 @@ export default {
         minY: swCoord.lat,
         maxX: neCoord.lng,
         maxY: neCoord.lat
-      }
+      };
     },
     styleFunction(color) {
       return () => {
@@ -104,7 +112,7 @@ export default {
           color: "#333",
           opacity: 0.5,
           fillColor: color,
-          fillOpacity: 0.3 + Math.random() * 0.05,
+          fillOpacity: 0.3 + Math.random() * 0.05
         };
       };
     }
@@ -112,9 +120,25 @@ export default {
   watch: {
     geojson: {
       handler: function() {
-        console.log("geojson updated, ", this.geojson);
         const layers = Object.values(this.geojson);
-        this.layers = layers;
+        
+
+        glify.Shapes.instances.forEach(element => {
+          element.remove();
+        });
+        glify.Shapes.instances =[];
+
+        for (let layer of layers) {
+          glify.shapes({
+            map: this.$refs.theMap.mapObject, 
+            data: layer.geojson,
+          });
+        }
+        
+        
+
+        //const layers = Object.values(this.geojson);
+        //this.layers = layers;
       },
       deep: true
     }
@@ -122,10 +146,12 @@ export default {
   mounted() {
     this.$nextTick(() => {
       const map = this.$refs.theMap.mapObject;
+      /*
       map.pm.addControls({
         position: "topleft",
         drawCircle: false
       });
+      */
 
       map.on("pm:globaldragmodetoggled", e => {
         console.log("globaldragmodetoggled: ", e);

@@ -195,7 +195,7 @@ class ItemStore(Store):
     def find_by_collection_uuid_as_geojson(self, collection_uuid, filters, transforms):
         c = self.cursor()
         where = "collection_uuid = %(collection_uuid)s"
-        transform = "ST_AsGeoJSON(geometry)::jsonb"
+        transform = "geometry"
 
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
@@ -250,7 +250,7 @@ class ItemStore(Store):
             exec_dict.update({
                 "simplify": transforms["simplify"],
             })
-            transform = "ST_AsGeoJSON(ST_Simplify(geometry, %(simplify)s, false))::jsonb"
+            transform = "ST_Simplify(geometry, %(simplify)s, false) as geometry"
 
         if filters["property_filter"] is not None:
             where += " AND "
@@ -265,17 +265,18 @@ class ItemStore(Store):
                 SELECT jsonb_build_object(
                     'type', 'Feature',
                     'id', uuid,
-                    'geometry', """ + transform + """,
+                    'geometry', ST_AsGeoJSON(geometry)::jsonb,
                     'properties', properties
             ) AS feature
             FROM (
-                SELECT *
+                SELECT uuid, properties, """ + transform + """
                 FROM public.items
                 WHERE """ + where + """
                     OFFSET %(offset)s
                     LIMIT %(limit)s
-            )
-            inputs) features;
+            ) inputs
+            WHERE geometry IS NOT NULL
+            ) features;
             """, exec_dict)
         return c.fetchone()['geojson']
 
