@@ -175,7 +175,7 @@ def get_as_png(event, context):
 
     return {
         "statusCode": 200,
-        "body": base64.b64encode(png_bytes),
+        "body": base64.b64encode(png_bytes).decode('utf-8'),
         "isBase64Encoded": "true",
         "headers": {
             "Content-Type": "image/png"
@@ -209,7 +209,7 @@ def index_as_png(event, context):
 
     return {
         "statusCode": 200,
-        "body": base64.b64encode(png_bytes),
+        "body": base64.b64encode(png_bytes).decode('utf-8'),
         "isBase64Encoded": "true",
         "headers": {
             "Content-Type": "image/png"
@@ -226,7 +226,7 @@ def index_as_png_by_name(event, context):
 
     return {
         "statusCode": 200,
-        "body": base64.b64encode(png_bytes),
+        "body": base64.b64encode(png_bytes).decode('utf-8'),
         "isBase64Encoded": "true",
         "headers": {
             "Content-Type": "image/png"
@@ -235,7 +235,8 @@ def index_as_png_by_name(event, context):
 
 
 def create(event, context):
-    payload = event['body']
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
     item_hash = rapidjson.loads(payload)
     item = Item(**item_hash)
     uuid = create_item(item)
@@ -251,7 +252,9 @@ def delete(event, context):
 
 def update(event, context):
     item_uuid = event['pathParameters']['item_uuid']
-    item_hash = rapidjson.loads(event['body'])
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
+    item_hash = rapidjson.loads(payload)
     item = Item(**item_hash)
     update_item(item_uuid, item)
     return response(204)
@@ -285,7 +288,8 @@ def add_from_geojson(event, context):
     # Get provider_uuid from user_id
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
     collection_uuid = get_collection_uuid_from_event(event)
-    payload = event['body']
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
     geojson = rapidjson.loads(payload)
 
     uuids = add_items_from_geojson(
@@ -301,7 +305,8 @@ def create_from_geojson(event, context):
     # Get provider_uuid from user_id
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
     collection_uuid = get_collection_uuid_from_event(event)
-    payload = event['body']
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
     geojson = rapidjson.loads(payload)
 
     uuids = create_items_from_geojson(
@@ -313,7 +318,9 @@ def create_from_geojson(event, context):
 
  
 def update_from_geojson(event, context):
-    feature_collection = rapidjson.loads(event['body'])
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
+    feature_collection = rapidjson.loads(payload)
     update_items_from_geojson(feature_collection)
     return response(204)
 
