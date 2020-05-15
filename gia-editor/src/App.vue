@@ -3,11 +3,14 @@
     <v-content>
       <v-container :fluid="true" style="padding: 0px">
         <v-row no-gutter>
-          <v-col sm="2" style="height: 100vh; overflow: scroll">
-            <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-            <v-checkbox v-model="isPublicCollection" label="Public"></v-checkbox>
-            <v-btn @click="onCreateCollectionClick" small color="primary">Create</v-btn>
+          <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden;">
             <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
+            <div style="background-color: #EEE">
+              <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+              <v-checkbox v-model="isPublicCollection" label="Public" style="width: 100px; float: left;"></v-checkbox>
+              <v-btn @click="onCreateCollectionClick" small color="primary" style="width: 100px; float: right;">Create</v-btn>
+              <br clear="both" />
+            </div>
           </v-col>
           <v-col sm="7" style="padding: 0px;">
             <Map
@@ -412,5 +415,9 @@ const selectColor = function(colorNum, colors) {
 
 .code-column .v-tabs-bar {
   display: none;
+}
+
+.v-select__slot {
+  background-color: #999;
 }
 </style>
