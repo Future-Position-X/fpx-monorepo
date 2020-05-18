@@ -17,7 +17,6 @@ from app.services.item import (
     get_items_by_collection_name,
     get_items_by_collection_name_as_geojson,
     get_items_by_collection_name_as_png,
-    get_items_within_radius_as_geojson,
     get_item_by_uuid_as_geojson,
     get_item_by_uuid_as_png,
     create_item,
@@ -132,106 +131,95 @@ def get_visualizer_params_from_event(event):
     }
 
 
+def get_format_from_event(event):
+    format = "geojson"
+
+    if event['queryStringParameters'] is not None:
+        format = event['queryStringParameters'].get('format', format)
+    
+    return format
+
+
 def index(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
     filters = get_filters_from_event(event)
-    items = get_items_by_collection_uuid(collection_uuid, filters)
+    transforms = get_transforms_from_event(event)
+    format = get_format_from_event(event)
 
-    return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
+    if format == "json":
+        items = get_items_by_collection_uuid(collection_uuid, filters)
+        return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
+    elif format == "geojson":
+        items = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
+        return response(200, rapidjson.dumps(items))
+    elif format == "png":
+        vis_params = get_visualizer_params_from_event(event)
+        png_bytes = get_items_by_collection_uuid_as_png(
+            collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'], transforms)
+
+        return {
+            "statusCode": 200,
+            "body": base64.b64encode(png_bytes).decode('utf-8'),
+            "isBase64Encoded": "true",
+            "headers": {
+                "Content-Type": "image/png"
+            }
+        }
+    else:
+        return response(400, "invalid format")
 
 
 def index_by_name(event, context):
     collection_name = event['pathParameters']['collection_name']
     filters = get_filters_from_event(event)
-    items = get_items_by_collection_name(collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters)
+    format = get_format_from_event(event)
 
-    return response(200, rapidjson.dumps([i.as_dict() for i in items]))
+    if format == "json":
+        items = get_items_by_collection_name(collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters)
+        return response(200, rapidjson.dumps([i.as_dict() for i in items]))
+    elif format == "geojson":
+        items = get_items_by_collection_name_as_geojson(collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters)
+        return response(200, rapidjson.dumps(items))
+    elif format == "png":
+        vis_params = get_visualizer_params_from_event(event)
+        png_bytes = get_items_by_collection_name_as_png(
+            collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
 
-def get_within_radius(event, context):
-    coordinates = event["queryStringParameters"]["coordinates"]
-    lng, lat = coordinates.split(",")
-    point_radius = {
-        "point": Point(float(lng), float(lat)),
-        "radius": float(event["queryStringParameters"]["radius"])
-    }
-    filters = get_filters_from_event(event)
-    items = get_items_within_radius_as_geojson(point_radius, filters)
+        return {
+            "statusCode": 200,
+            "body": base64.b64encode(png_bytes).decode('utf-8'),
+            "isBase64Encoded": "true",
+            "headers": {
+                "Content-Type": "image/png"
+            }
+        }
+    
 
-    return response(200, rapidjson.dumps(items))
-
-
-def get_as_geojson(event, context):
+def get(event, context):
     item_uuid = event['pathParameters']['item_uuid']
-    item = get_item_by_uuid_as_geojson(item_uuid)
+    format = get_format_from_event(event)
 
-    return response(200, rapidjson.dumps(item))
+    if format == "json":
+        # not implemented yet
+        return response(501)
+    elif format == "geojson":
+        item = get_item_by_uuid_as_geojson(item_uuid)
+        return response(200, rapidjson.dumps(item))
+    elif format == "png":
+        params = get_visualizer_params_from_event(event)
+        png_bytes = get_item_by_uuid_as_png(
+            item_uuid, params['width'], params['height'], params['map_id'])
 
-
-def get_as_png(event, context):
-    item_uuid = event['pathParameters']['item_uuid']
-    params = get_visualizer_params_from_event(event)
-    png_bytes = get_item_by_uuid_as_png(
-        item_uuid, params['width'], params['height'], params['map_id'])
-
-    return {
-        "statusCode": 200,
-        "body": base64.b64encode(png_bytes).decode('utf-8'),
-        "isBase64Encoded": "true",
-        "headers": {
-            "Content-Type": "image/png"
+        return {
+            "statusCode": 200,
+            "body": base64.b64encode(png_bytes).decode('utf-8'),
+            "isBase64Encoded": "true",
+            "headers": {
+                "Content-Type": "image/png"
+            }
         }
-    }
-
-
-def index_as_geojson(event, context):
-    collection_uuid = get_collection_uuid_from_event(event)
-    filters = get_filters_from_event(event)
-    transforms = get_transforms_from_event(event)
-    geojson = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
-
-    return response(200, rapidjson.dumps(geojson))
-
-
-def index_as_geojson_by_name(event, context):
-    collection_name = event['pathParameters']['collection_name']
-    filters = get_filters_from_event(event)
-    geojson = get_items_by_collection_name_as_geojson(collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters)
-
-    return response(200, rapidjson.dumps(geojson))
-
-
-def index_as_png(event, context):
-    collection_uuid = get_collection_uuid_from_event(event)
-    filters = get_filters_from_event(event)
-    vis_params = get_visualizer_params_from_event(event)
-    png_bytes = get_items_by_collection_uuid_as_png(
-        collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
-
-    return {
-        "statusCode": 200,
-        "body": base64.b64encode(png_bytes).decode('utf-8'),
-        "isBase64Encoded": "true",
-        "headers": {
-            "Content-Type": "image/png"
-        }
-    }
-
-
-def index_as_png_by_name(event, context):
-    collection_name = event['pathParameters']['collection_name']
-    filters = get_filters_from_event(event)
-    vis_params = get_visualizer_params_from_event(event)
-    png_bytes = get_items_by_collection_name_as_png(
-        collection_name, '99aaeecb-ccb0-4342-9704-3dfa49d66174', filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
-
-    return {
-        "statusCode": 200,
-        "body": base64.b64encode(png_bytes).decode('utf-8'),
-        "isBase64Encoded": "true",
-        "headers": {
-            "Content-Type": "image/png"
-        }
-    }
+    else:
+        return response(400, "invalid format")
 
 
 def create(event, context):
@@ -244,9 +232,32 @@ def create(event, context):
     return response(201, uuid)
 
 
+def create_from_geojson(event, context):
+    # user_id = event['requestContext']['authorizer']['principalId']
+    # Get provider_uuid from user_id
+    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
+    collection_uuid = get_collection_uuid_from_event(event)
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
+    geojson = rapidjson.loads(payload)
+
+    uuids = create_items_from_geojson(
+        geojson=geojson,
+        collection_uuid=collection_uuid,
+        provider_uuid=provider_uuid)
+
+    return response(201, rapidjson.dumps(uuids))
+
+
 def delete(event, context):
     item_uuid = event['pathParameters']['item_uuid']
     delete_item(item_uuid)
+    return response(204)
+
+
+def delete_items(event, context):
+    collection_uuid = get_collection_uuid_from_event(event)
+    delete_items_by_collection_uuid(collection_uuid)
     return response(204)
 
 
@@ -258,6 +269,29 @@ def update(event, context):
     item = Item(**item_hash)
     update_item(item_uuid, item)
     return response(204)
+
+def update_from_geojson(event, context):
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
+    feature_collection = rapidjson.loads(payload)
+    update_items_from_geojson(feature_collection)
+    return response(204)
+
+def add_from_geojson(event, context):
+    # user_id = event['requestContext']['authorizer']['principalId']
+    # Get provider_uuid from user_id
+    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
+    collection_uuid = get_collection_uuid_from_event(event)
+    payload = base64.b64decode(
+        event['body']) if event['isBase64Encoded'] else event['body']
+    geojson = rapidjson.loads(payload)
+
+    uuids = add_items_from_geojson(
+        geojson=geojson,
+        collection_uuid=collection_uuid,
+        provider_uuid=provider_uuid)
+
+    return response(201, rapidjson.dumps(uuids))
 
 def generate_walking_paths(event, context):
     provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
@@ -283,49 +317,3 @@ def generate_walking_paths(event, context):
     )
     return response(201, rapidjson.dumps(uuids))
 
-def add_from_geojson(event, context):
-    # user_id = event['requestContext']['authorizer']['principalId']
-    # Get provider_uuid from user_id
-    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
-    collection_uuid = get_collection_uuid_from_event(event)
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    geojson = rapidjson.loads(payload)
-
-    uuids = add_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
-
-    return response(201, rapidjson.dumps(uuids))
-
-
-def create_from_geojson(event, context):
-    # user_id = event['requestContext']['authorizer']['principalId']
-    # Get provider_uuid from user_id
-    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
-    collection_uuid = get_collection_uuid_from_event(event)
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    geojson = rapidjson.loads(payload)
-
-    uuids = create_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
-
-    return response(201, rapidjson.dumps(uuids))
-
- 
-def update_from_geojson(event, context):
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    feature_collection = rapidjson.loads(payload)
-    update_items_from_geojson(feature_collection)
-    return response(204)
-
-
-def delete_items(event, context):
-    collection_uuid = get_collection_uuid_from_event(event)
-    delete_items_by_collection_uuid(collection_uuid)
-    return response(204)

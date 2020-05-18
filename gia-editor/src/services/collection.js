@@ -14,7 +14,7 @@ export default {
     },
     async fetchById(signal, collectionId, bounds, simplify) {
         const response = await fetch(
-            `https://dev.gia.fpx.se/collections/${collectionId}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
+            `https://dev.gia.fpx.se/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}&format=geojson`,
             {
                 headers: {
                     Authorization:
