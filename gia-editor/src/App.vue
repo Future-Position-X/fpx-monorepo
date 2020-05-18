@@ -78,6 +78,7 @@ import Code from "./components/Code.vue";
 import Tree from "./components/Tree.vue";
 import leafletImage from "leaflet-image";
 import collection from "./services/collection";
+import modify from "./services/modify";
 
 export default {
   name: "App",
@@ -98,14 +99,12 @@ export default {
       selectedCollection: null,
       bounds: null,
       dataBounds: null,
-      addedItems: [],
-      modifiedItems: [],
-      removedItems: [],
       fetchController: null,
       isFetchingItems: false,
       collectionName: null,
       isPublicCollection: false,
-      collectionColors: {}
+      collectionColors: {},
+      modCtx: modify.createContext()
     };
   },
   watch: {
@@ -184,53 +183,24 @@ export default {
       }
     },
     itemRemovedFromMap(item) {
-      let i;
-
-      for (i = this.addedItems.length - 1; i >= 0; i--) {
-        if (this.addedItems[i] == item) {
-          this.addedItems.splice(i, 1);
-        }
-      }
-
-      for (i = this.modifiedItems.length - 1; i >= 0; i--) {
-        if (this.modifiedItems[i].id == item.id) {
-          this.modifiedItems.splice(i, 1);
-        }
-      }
-
-      this.removedItems.push(item);
+      modify.onItemRemoved(this.modCtx, item);
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
-      i = fc.features.indexOf(item);
+      let i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.code = fc;
     },
     itemAddedToMap(item) {
-      this.addedItems.push(item);
+      modify.onItemAdded(this.modCtx, item);
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
       fc.features.push(item);
       this.code = fc;
     },
     itemModified(item) {
-      this.modifiedItems.push(item);
+      modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      if (this.addedItems.length > 0) {
-        await collection.addItems(
-          this.selectedCollection.uuid,
-          this.addedItems
-        );
-        this.addedItems = [];
-      }
-
-      if (this.removedItems.length > 0) {
-        await collection.removeItems(this.removedItems);
-        this.removedItems = [];
-      }
-
-      if (this.modifiedItems.length > 0) {
-        await collection.updateItems(this.modifiedItems);
-        this.modifiedItems = [];
-      }
+      await modify.commit(this.modCtx, this.selectedCollection.uuid);
+      this.modCtx = modify.createContext();
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
