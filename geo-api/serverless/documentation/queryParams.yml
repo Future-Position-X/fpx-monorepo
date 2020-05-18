@@ -1,3 +1,6 @@
+format:
+  name: "format"
+  description: "one of json, geojson, png"
 limit:
   name: "limit"
   description: "limit"

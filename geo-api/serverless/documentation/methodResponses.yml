@@ -28,7 +28,15 @@ featureCollection:
   responseBody:
     description: "FeatureCollection"
   responseModels:
-    "application/json": "FeatureCollection"
+    "application/geojson": "FeatureCollection"
+formatDependent:
+  statusCode: "200"
+  responseBody:
+    description: "Format dependent response"
+  responseModels:
+    "application/json": "Items"
+    "application/geojson": "FeatureCollection"
+    "image/png": "ImagePng"
 imagePng:
   statusCode: "200"
   responseBody:

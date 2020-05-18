@@ -39,7 +39,7 @@ profile=${profile:-geo-api-deploy-dev}
 serverless deploy --stage $stage --profile $profile
 serverless downloadDocumentation  --stage $stage --profile $profile --outputFileName=static/swagger/oas.json
 
-python <<EOF
+python3 <<EOF
 print("Fixing openapi spec")
 import json
 with open('static/swagger/oas.json') as json_file:
@@ -60,3 +60,4 @@ print("Fixed openapi spec")
 EOF
 
 serverless client deploy --stage $stage --profile $profile --no-confirm
+rm static/swagger/oas.json
