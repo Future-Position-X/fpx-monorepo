@@ -7,8 +7,17 @@
             <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
             <div style="background-color: #EEE">
               <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-              <v-checkbox v-model="isPublicCollection" label="Public" style="width: 100px; float: left;"></v-checkbox>
-              <v-btn @click="onCreateCollectionClick" small color="primary" style="width: 100px; float: right;">Create</v-btn>
+              <v-checkbox
+                v-model="isPublicCollection"
+                label="Public"
+                style="width: 100px; float: left;"
+              ></v-checkbox>
+              <v-btn
+                @click="onCreateCollectionClick"
+                small
+                color="primary"
+                style="width: 100px; float: right;"
+              >Create</v-btn>
               <br clear="both" />
             </div>
           </v-col>
@@ -68,6 +77,8 @@ import Map from "./components/Map.vue";
 import Code from "./components/Code.vue";
 import Tree from "./components/Tree.vue";
 import leafletImage from "leaflet-image";
+import collection from "./services/collection";
+import modify from "./services/modify";
 
 export default {
   name: "App",
@@ -88,14 +99,12 @@ export default {
       selectedCollection: null,
       bounds: null,
       dataBounds: null,
-      addedItems: [],
-      modifiedItems: [],
-      removedItems: [],
       fetchController: null,
       isFetchingItems: false,
       collectionName: null,
       isPublicCollection: false,
-      collectionColors: {}
+      collectionColors: {},
+      modCtx: modify.createContext()
     };
   },
   watch: {
@@ -173,97 +182,25 @@ export default {
         }
       }
     },
-    async putAddedItems() {
-      await fetch(
-        `https://dev.gia.fpx.se/collections/${this.selectedCollection.uuid}/items/geojson`,
-        {
-          method: "PUT",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-          },
-          body: JSON.stringify({
-            type: "FeatureCollection",
-            features: this.addedItems
-          })
-        }
-      );
-    },
-    async removeItems() {
-      for (const item of this.removedItems) {
-        await fetch(`https://dev.gia.fpx.se/items/${item.id}`, {
-          method: "DELETE",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-          }
-        });
-      }
-    },
-    async modifyItems() {
-      await fetch(`https://dev.gia.fpx.se/items/geojson`, {
-        method: "PUT",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-        },
-        body: JSON.stringify({
-          type: "FeatureCollection",
-          features: this.modifiedItems
-        })
-      });
-    },
     itemRemovedFromMap(item) {
-      let i;
-
-      for (i = this.addedItems.length - 1; i >= 0; i--) {
-        if (this.addedItems[i] == item) {
-          this.addedItems.splice(i, 1);
-        }
-      }
-
-      for (i = this.modifiedItems.length - 1; i >= 0; i--) {
-        if (this.modifiedItems[i].id == item.id) {
-          this.modifiedItems.splice(i, 1);
-        }
-      }
-
-      this.removedItems.push(item);
+      modify.onItemRemoved(this.modCtx, item);
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
-      i = fc.features.indexOf(item);
+      let i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.code = fc;
     },
     itemAddedToMap(item) {
-      this.addedItems.push(item);
+      modify.onItemAdded(this.modCtx, item);
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
       fc.features.push(item);
       this.code = fc;
     },
     itemModified(item) {
-      this.modifiedItems.push(item);
+      modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      if (this.addedItems.length > 0) {
-        await this.putAddedItems();
-        this.addedItems = [];
-      }
-
-      if (this.removedItems.length > 0) {
-        await this.removeItems();
-        this.removedItems = [];
-      }
-
-      if (this.modifiedItems.length > 0) {
-        await this.modifyItems();
-        this.modifiedItems = [];
-      }
+      await modify.commit(this.modCtx, this.selectedCollection.uuid);
+      this.modCtx = modify.createContext();
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
@@ -276,19 +213,7 @@ export default {
       });
     },
     async onCreateCollectionClick() {
-      await fetch(`https://dev.gia.fpx.se/collections`, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-        },
-        body: JSON.stringify({
-          name: this.collectionName,
-          is_public: this.isPublicCollection
-        })
-      });
+      await collection.create(this.collectionName, this.isPublicCollection);
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
@@ -306,17 +231,12 @@ export default {
 
       for (let id of ids) {
         try {
-          const response = await fetch(
-            `https://dev.gia.fpx.se/collections/${id}/items/geojson?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${this.dataBounds.minX}&spatial_filter.envelope.ymin=${this.dataBounds.minY}&spatial_filter.envelope.xmax=${this.dataBounds.maxX}&spatial_filter.envelope.ymax=${this.dataBounds.maxY}&simplify=${simplify}`,
-            {
-              headers: {
-                Authorization:
-                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-              },
-              signal: signal
-            }
+          const data = await collection.fetchById(
+            signal,
+            id,
+            this.dataBounds,
+            simplify
           );
-          const data = await response.json();
 
           this.$set(this.geojson, id, {
             id: id,
@@ -339,14 +259,7 @@ export default {
     }
   },
   async created() {
-    const response = await fetch("https://dev.gia.fpx.se/collections", {
-      headers: {
-        Authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-      }
-    });
-    const data = await response.json();
-    this.collections = data;
+    this.collections = await collection.fetchCollections();
     let sortedCollections = groupBy(this.collections, "name");
     const len = Object.keys(sortedCollections).length;
     let i = 1;
