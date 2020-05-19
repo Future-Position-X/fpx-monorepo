@@ -241,7 +241,7 @@ export default {
 
       for (let id of ids) {
         try {
-          const data = await collection.fetchById(
+          const data = await collection.fetchItems(
             signal,
             id,
             this.dataBounds,
