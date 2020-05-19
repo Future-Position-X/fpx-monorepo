@@ -64,6 +64,13 @@
             <div class="my-2 export-image-button">
               <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
             </div>
+            <div class="my-2 export-image-button">
+              <v-btn
+                small
+                color="primary"
+                @click="onRemoveCollectionClick"
+              >Remove selected collection</v-btn>
+            </div>
           </v-col>
         </v-row>
       </v-container>
@@ -211,6 +218,9 @@ export default {
         a.href = canvas.toDataURL("image/png");
         a.click();
       });
+    },
+    onRemoveCollectionClick() {
+      collection.remove(this.selectedCollection.uuid);
     },
     async onCreateCollectionClick() {
       await collection.create(this.collectionName, this.isPublicCollection);

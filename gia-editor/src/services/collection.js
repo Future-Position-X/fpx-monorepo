@@ -87,5 +87,15 @@ export default {
                 is_public: isPublic
             })
         });
+    },
+    async remove(collectionId) {
+        await fetch(`https://dev.gia.fpx.se/collections/${collectionId}`, {
+            method: "DELETE",
+            mode: "cors",
+            headers: {
+                Authorization:
+                    `Bearer ${GIA_TOKEN}`
+            }
+        });
     }
 };
