@@ -304,8 +304,8 @@ export default {
       this.renderedCollections = this.collections.filter(c =>
         ids.some(id => id == c.uuid)
       );
-      this.selectedCollectionId = this.collections.filter(
-        c => c.uuid == ids[0]
+      this.selectedCollection = this.collections.filter(
+        c => c.uuid == ids[ids.length - 1]
       )[0];
       this.isFetchingItems = false;
     }
