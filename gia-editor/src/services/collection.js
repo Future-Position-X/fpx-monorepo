@@ -12,6 +12,17 @@ export default {
         const data = await response.json();
         return data;
     },
+    async fetchCollection(collectionId) {
+        const response = await fetch(`https://dev.gia.fpx.se/collections/${collectionId}`, {
+            headers: {
+                Authorization:
+                    `Bearer ${GIA_TOKEN}`
+            }
+        });
+
+        const data = await response.json();
+        return data;
+    },
     async fetchItems(signal, collectionId, bounds, simplify) {
         const response = await fetch(
             `https://dev.gia.fpx.se/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}&format=geojson`,
@@ -74,7 +85,7 @@ export default {
         });
     },
     async create(collectionName, isPublic) {
-        await fetch(`https://dev.gia.fpx.se/collections`, {
+        return await fetch(`https://dev.gia.fpx.se/collections`, {
             method: "POST",
             mode: "cors",
             headers: {

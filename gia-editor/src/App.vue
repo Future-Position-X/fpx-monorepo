@@ -4,7 +4,11 @@
       <v-container :fluid="true" style="padding: 0px">
         <v-row no-gutter>
           <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden;">
-            <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
+            <Tree
+              v-bind:sortedCollections="sortedCollections"
+              @selectionUpdate="selectionUpdate"
+              ref="collectionTree"
+            />
             <div style="background-color: #EEE">
               <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
               <v-checkbox
@@ -223,7 +227,16 @@ export default {
       collection.remove(this.selectedCollection.uuid);
     },
     async onCreateCollectionClick() {
-      await collection.create(this.collectionName, this.isPublicCollection);
+      const res = await collection.create(
+        this.collectionName,
+        this.isPublicCollection
+      );
+
+      if (res.status == 201) {
+        const id = await res.text();
+        const coll = await collection.fetchCollection(id);
+        this.$refs.collectionTree.addCollection(coll);
+      }
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
