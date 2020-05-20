@@ -25,6 +25,15 @@ class CollectionStore(Store):
         c.execute('SELECT * FROM collections')
         return [Collection(**row) for row in c.fetchall()]
 
+
+    def get_by_uuid(self, collection_uuid):
+        c = self.cursor()
+        c.execute("SELECT * FROM collections WHERE uuid = %(uuid)s", {
+            "uuid": collection_uuid
+        })
+        return Collection(**c.fetchall()[0])
+
+
     def get_uuid_by_name(self, name):
         c = self.cursor()
         c.execute("SELECT uuid FROM collections WHERE name=%(name)s", {'name': name})

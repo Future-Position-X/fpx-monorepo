@@ -15,6 +15,13 @@ def get_all_collections():
         return collections
 
 
+def get_collection_by_uuid(collection_uuid):
+    with CollectionStore() as collection_store:
+        collection = collection_store.get_by_uuid(collection_uuid)
+        collection_store.complete()
+        return collection
+
+
 def get_collection_uuid_by_collection_name(collection_name):
     with CollectionStore() as collection_store:
         uuid = collection_store.get_uuid_by_name(collection_name)
