@@ -9,6 +9,28 @@
               @selectionUpdate="selectionUpdate"
               ref="collectionTree"
             />
+            <div class="my-2 export-image-button">
+              <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290">
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    small
+                    color="primary"
+                    v-on="on"
+                    @click="onDeleteCollectionsClick"
+                  >Delete selected collections</v-btn>
+                </template>
+                <v-card>
+                  <v-card-title class="headline">Delete collections?</v-card-title>
+                  <v-card-text v-html="deleteConfirmationContent" />
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" text @click="showDeleteConfirmationDialog = false">No</v-btn>
+                    <v-btn color="primary" text @click="onConfirmDeleteCollections">Yes</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </div>
+
             <div style="background-color: #EEE">
               <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
               <v-checkbox
@@ -27,6 +49,7 @@
           </v-col>
           <v-col sm="7" style="padding: 0px;">
             <Map
+              v-show="!showDeleteConfirmationDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               @geojsonUpdate="geojsonUpdateFromMap"
@@ -68,13 +91,6 @@
             <div class="my-2 export-image-button">
               <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
             </div>
-            <div class="my-2 export-image-button">
-              <v-btn
-                small
-                color="primary"
-                @click="onRemoveCollectionClick"
-              >Remove selected collection</v-btn>
-            </div>
           </v-col>
         </v-row>
       </v-container>
@@ -115,7 +131,9 @@ export default {
       collectionName: null,
       isPublicCollection: false,
       collectionColors: {},
-      modCtx: modify.createContext()
+      modCtx: modify.createContext(),
+      showDeleteConfirmationDialog: false,
+      deleteConfirmationContent: null
     };
   },
   watch: {
@@ -223,8 +241,19 @@ export default {
         a.click();
       });
     },
-    onRemoveCollectionClick() {
-      collection.remove(this.selectedCollection.uuid);
+    onDeleteCollectionsClick() {
+      this.deleteConfirmationContent = `Are you sure you want to delete the following collections?</br></br>${this.renderedCollections
+        .map(c => c.name)
+        .join("</br>")}</br></br>This cannot be undone.`;
+      this.showDeleteConfirmationDialog = true;
+    },
+    async onConfirmDeleteCollections() {
+      this.showDeleteConfirmationDialog = false;
+
+      for (let coll of this.renderedCollections) {
+        await collection.remove(coll.uuid);
+        this.$refs.collectionTree.removeCollection(coll);
+      }
     },
     async onCreateCollectionClick() {
       const res = await collection.create(

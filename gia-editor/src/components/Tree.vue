@@ -34,6 +34,9 @@ export default {
       collection.id = collection.uuid;
       item.children.push(collection);
       this.items.push(item);
+    },
+    removeCollection(collection) {
+      this.items.splice(this.items.indexOf(collection), 1);
     }
   },
   watch: {
