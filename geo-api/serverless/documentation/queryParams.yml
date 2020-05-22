@@ -57,3 +57,9 @@ starting_points_collection_uuid:
 environment_collection_uuid:
   name: "environment_collection_uuid"
   description: "Collection to be used for environment."
+startdate:
+  name: "startdate"
+  description: "A date presented in YY-mm-dd format"
+enddate:
+  name: "enddate"
+  description: "A date presented in YY-mm-dd format"
