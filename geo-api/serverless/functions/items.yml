@@ -325,3 +325,19 @@ walking-paths-generate:
           - ${file(serverless/documentation/queryParams.yml):environment_collection_uuid}
         pathParams:
           - ${file(serverless/documentation/pathParams.yml):collection_uuid}
+
+sensor-data-sequence:
+  handler: app.handlers.geo_items.prediction_for_sensor_item
+  events:
+    - http:
+        path: items/{item_uuid}/ai/sequence
+        method: get
+        cors: true
+        authorizer: authorizer
+        summary: "Get true and predicted data for a GSC sensor, within a give date range."
+        description: "Get true and predicted data for a GSC sensor, within a give date range. Predictions extend current time with 48 hours."
+        queryParams:
+          - ${file(serverless/documentation/queryParams.yml):startdate}
+          - ${file(serverless/documentation/queryParams.yml):enddate}
+        pathParams:
+          - ${file(serverless/documentation/pathParams.yml):item_uuid}

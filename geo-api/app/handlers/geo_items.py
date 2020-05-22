@@ -30,8 +30,10 @@ from app.services.item import (
     )
 
 from app.services.ai import (
-    generate_paths_from_points
+    generate_paths_from_points,
+    get_sequence_for_sensor
 )
+
 
 
 def get_collection_uuid_from_event(event):
@@ -329,3 +331,12 @@ def delete_items(event, context):
     collection_uuid = get_collection_uuid_from_event(event)
     delete_items_by_collection_uuid(collection_uuid)
     return response(204)
+
+
+def prediction_for_sensor_item(event, context):
+    item_uuid = event['pathParameters']['item_uuid']
+    filters = get_filters_from_event(event)
+    start_date = event["queryStringParameters"]["startdate"]
+    end_date = event["queryStringParameters"]["enddate"]
+    sequence_data = get_sequence_for_sensor(item_uuid, filters, start_date, end_date)
+    return response(200, sequence_data)
