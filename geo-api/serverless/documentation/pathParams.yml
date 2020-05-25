@@ -10,3 +10,7 @@ item_uuid:
   name: "item_uuid"
   description: "Item uuid"
   required: true
+provider_uuid:
+  name: "provider_uuid"
+  description: "provider uuid"
+  required: true

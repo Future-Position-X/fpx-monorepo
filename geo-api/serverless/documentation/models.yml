@@ -54,6 +54,40 @@
     items:
       $ref: "{{model: Collection}}"
 -
+  name: "Provider"
+  description: "This is an Provider object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      uuid:
+        type: "string"
+      name:
+        type: "string"
+      revision:
+        type: "number"
+      created_at:
+        type: "string"
+      updated_at:
+        type: "string"
+-
+  name: "UpdateProvider"
+  description: "This is an Provider object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+-
+  name: "Providers"
+  description: "Array of Provider objects"
+  contentType: "application/json"
+  schema:
+    type: "array"
+    items:
+      $ref: "{{model: Provider}}"
+-
   name: "UpdateItem"
   description: "This is an Item object"
   contentType: "application/json"
