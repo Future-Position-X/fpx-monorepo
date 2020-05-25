@@ -19,6 +19,26 @@ collections-index:
               responseModels:
                 "application/json": "Collections"
 
+collections-get:
+  handler: app.handlers.geo_collections.get
+  events:
+    - http:
+        path: collections/{collection_uuid}
+        method: get
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Get collection"
+          description: "Get collection"
+          tags:
+            - collections
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):collection_uuid}
+          methodResponses:
+            - statusCode: "200"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
 collections-delete:
   handler: app.handlers.geo_collections.delete
   events:

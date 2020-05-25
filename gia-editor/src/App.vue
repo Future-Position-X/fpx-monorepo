@@ -4,7 +4,33 @@
       <v-container :fluid="true" style="padding: 0px">
         <v-row no-gutter>
           <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden;">
-            <Tree v-bind:sortedCollections="sortedCollections" @selectionUpdate="selectionUpdate" />
+            <Tree
+              v-bind:sortedCollections="sortedCollections"
+              @selectionUpdate="selectionUpdate"
+              ref="collectionTree"
+            />
+            <div class="my-2 export-image-button">
+              <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290">
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    small
+                    color="primary"
+                    v-on="on"
+                    @click="onDeleteCollectionsClick"
+                  >Delete selected collections</v-btn>
+                </template>
+                <v-card>
+                  <v-card-title class="headline">Delete collections?</v-card-title>
+                  <v-card-text v-html="deleteConfirmationContent" />
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" text @click="showDeleteConfirmationDialog = false">No</v-btn>
+                    <v-btn color="primary" text @click="onConfirmDeleteCollections">Yes</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </div>
+
             <div style="background-color: #EEE">
               <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
               <v-checkbox
@@ -23,6 +49,7 @@
           </v-col>
           <v-col sm="7" style="padding: 0px;">
             <Map
+              v-show="!showDeleteConfirmationDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               @geojsonUpdate="geojsonUpdateFromMap"
@@ -104,7 +131,9 @@ export default {
       collectionName: null,
       isPublicCollection: false,
       collectionColors: {},
-      modCtx: modify.createContext()
+      modCtx: modify.createContext(),
+      showDeleteConfirmationDialog: false,
+      deleteConfirmationContent: null
     };
   },
   watch: {
@@ -212,8 +241,31 @@ export default {
         a.click();
       });
     },
+    onDeleteCollectionsClick() {
+      this.deleteConfirmationContent = `Are you sure you want to delete the following collections?</br></br>${this.renderedCollections
+        .map(c => c.name)
+        .join("</br>")}</br></br>This cannot be undone.`;
+      this.showDeleteConfirmationDialog = true;
+    },
+    async onConfirmDeleteCollections() {
+      this.showDeleteConfirmationDialog = false;
+
+      for (let coll of this.renderedCollections) {
+        await collection.remove(coll.uuid);
+        this.$refs.collectionTree.removeCollection(coll);
+      }
+    },
     async onCreateCollectionClick() {
-      await collection.create(this.collectionName, this.isPublicCollection);
+      const res = await collection.create(
+        this.collectionName,
+        this.isPublicCollection
+      );
+
+      if (res.status == 201) {
+        const id = await res.text();
+        const coll = await collection.fetchCollection(id);
+        this.$refs.collectionTree.addCollection(coll);
+      }
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
@@ -231,7 +283,7 @@ export default {
 
       for (let id of ids) {
         try {
-          const data = await collection.fetchById(
+          const data = await collection.fetchItems(
             signal,
             id,
             this.dataBounds,
@@ -252,8 +304,8 @@ export default {
       this.renderedCollections = this.collections.filter(c =>
         ids.some(id => id == c.uuid)
       );
-      this.selectedCollectionId = this.collections.filter(
-        c => c.uuid == ids[0]
+      this.selectedCollection = this.collections.filter(
+        c => c.uuid == ids[ids.length - 1]
       )[0];
       this.isFetchingItems = false;
     }
