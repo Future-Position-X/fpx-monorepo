@@ -17,7 +17,7 @@ providers-index:
               responseBody:
                 description: "providers"
               responseModels:
-                "application/json": "providers"
+                "application/json": "Providers"
 
 providers-get:
   handler: app.handlers.geo_providers.get
