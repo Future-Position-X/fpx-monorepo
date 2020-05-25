@@ -203,3 +203,50 @@
   contentType: "application/json"
   schema:
     type: "string"
+-
+  name: "User"
+  description: "This is a User object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      uuid:
+        type: "string"
+      provider_uuid:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      revision:
+        type: "number"
+      created_at:
+        type: "string"
+      updated_at:
+        type: "string"
+-
+  name: "CreateUser"
+  description: "This is a User object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      provider_uuid:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+-
+  name: "UpdateUser"
+  description: "This is a User object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      provider_uuid:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"

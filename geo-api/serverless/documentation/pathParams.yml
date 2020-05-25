@@ -10,3 +10,7 @@ item_uuid:
   name: "item_uuid"
   description: "Item uuid"
   required: true
+user_uuid:
+  name: "user_uuid"
+  description: "User uuid"
+  required: true
