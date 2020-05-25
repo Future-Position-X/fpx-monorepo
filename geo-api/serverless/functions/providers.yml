@@ -1,0 +1,63 @@
+providers-index:
+  handler: app.handlers.geo_providers.index
+  events:
+    - http:
+        path: providers
+        method: get
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Provider index"
+          description: "All accessable providers"
+          tags:
+            - providers
+          methodResponses:
+            -
+              statusCode: "200"
+              responseBody:
+                description: "providers"
+              responseModels:
+                "application/json": "providers"
+
+providers-get:
+  handler: app.handlers.geo_providers.get
+  events:
+    - http:
+        path: providers/{provider_uuid}
+        method: get
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Get provider"
+          description: "Get provider"
+          tags:
+            - providers
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):provider_uuid}
+          methodResponses:
+            - statusCode: "200"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
+providers-update:
+  handler: app.handlers.geo_providers.update
+  events:
+    - http:
+        path: providers/{provider_uuid}
+        method: put
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Update provider"
+          description: "Update provider"
+          tags:
+            - providers
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):provider_uuid}
+          requestModels:
+            "application/json": "UpdateProvider"
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
