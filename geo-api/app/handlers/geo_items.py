@@ -32,9 +32,6 @@ from app.services.ai import (
     generate_paths_from_points,
     get_sequence_for_sensor
 )
-
-
-
 def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
     return collection_uuid
@@ -318,55 +315,7 @@ def generate_walking_paths(event, context):
         filters
     )
     return response(201, rapidjson.dumps(uuids))
-
-def add_from_geojson(event, context):
-    # user_id = event['requestContext']['authorizer']['principalId']
-    # Get provider_uuid from user_id
-    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
-    collection_uuid = get_collection_uuid_from_event(event)
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    geojson = rapidjson.loads(payload)
-
-    uuids = add_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
-
-    return response(201, rapidjson.dumps(uuids))
-
-
-def create_from_geojson(event, context):
-    # user_id = event['requestContext']['authorizer']['principalId']
-    # Get provider_uuid from user_id
-    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
-    collection_uuid = get_collection_uuid_from_event(event)
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    geojson = rapidjson.loads(payload)
-
-    uuids = create_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
-
-    return response(201, rapidjson.dumps(uuids))
-
- 
-def update_from_geojson(event, context):
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    feature_collection = rapidjson.loads(payload)
-    update_items_from_geojson(feature_collection)
-    return response(204)
-
-
-def delete_items(event, context):
-    collection_uuid = get_collection_uuid_from_event(event)
-    delete_items_by_collection_uuid(collection_uuid)
-    return response(204)
-
-
+    
 def prediction_for_sensor_item(event, context):
     item_uuid = event['pathParameters']['item_uuid']
     filters = get_filters_from_event(event)
