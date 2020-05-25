@@ -28,7 +28,7 @@ SELECT uuid, geometry, properties
 FROM public.items
 WHERE collection_uuid = '08f8a8e1-f13a-4b61-9d27-4073aabfc976'
 OFFSET 0
-LIMIT 100000;
+LIMIT 1000000;
     ";
     let mut first = true;
     for row in client.query(sql, &[]).unwrap() {

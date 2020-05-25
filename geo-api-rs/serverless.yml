@@ -44,6 +44,8 @@ package:
 
 plugins:
   - serverless-rust
+  - serverless-apigw-binary
+  - serverless-apigwy-binary
 custom:
   # this section allows for customization of the default
   # serverless-rust plugin settings
@@ -52,6 +54,9 @@ custom:
     # cargoFlags: '--features enable-awesome'
     # custom docker tag
     dockerTag: 'latest'
+  apigwBinary:
+    types:
+      - 'application/*'
 functions:
   hello:
     # handler value syntax is `{cargo-package-name}.{bin-name}`
@@ -62,6 +67,7 @@ functions:
       - http:
           path: '/'
           method: GET
+          contentHandling: CONVERT_TO_BINARY
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
