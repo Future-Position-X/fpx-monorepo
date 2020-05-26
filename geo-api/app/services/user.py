@@ -1,8 +1,13 @@
 from app.stores.user import UserStore
-from app.models.user import User
+from app.services.provider import create_provider
+from app.models.provider import Provider
+
 
 def create_user(user):
     with UserStore() as user_store:
+        provider = Provider({"name": user.email})
+        provider_uuid = create_provider(provider)
+        user.provider_uuid = provider_uuid
         uuid = user_store.insert(user)
         user_store.complete()
         return uuid
