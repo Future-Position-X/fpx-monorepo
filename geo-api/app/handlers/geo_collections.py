@@ -11,7 +11,6 @@ from app.services.collection import (
     update_collection_by_uuid,
     get_collection_by_uuid
     )
-from app.services.sessions import get_provider_uuid_from_event
 
 
 def index(event, context):
@@ -43,7 +42,7 @@ def update(event, context):
 
 
 def create(event, context):
-    provider_uuid = get_provider_uuid_from_event(event)
+    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
     payload = base64.b64decode(
         event['body']) if event['isBase64Encoded'] else event['body']
     collection = rapidjson.loads(payload)

@@ -32,7 +32,6 @@ from app.services.ai import (
     generate_paths_from_points,
     get_sequence_for_sensor
 )
-from app.services.session import get_provider_uuid_from_event
 
 
 def get_collection_uuid_from_event(event):
@@ -175,7 +174,7 @@ def index_by_name(event, context):
     collection_name = event['pathParameters']['collection_name']
     filters = get_filters_from_event(event)
     format = get_format_from_event(event)
-    provider_uuid = get_provider_uuid_from_event(event)
+    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
 
     if format == "json":
         items = get_items_by_collection_name(collection_name, provider_uuid, filters)
@@ -238,7 +237,7 @@ def create(event, context):
 def create_from_geojson(event, context):
     # user_id = event['requestContext']['authorizer']['principalId']
     # Get provider_uuid from user_id
-    provider_uuid = get_provider_uuid_from_event(event)
+    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
     collection_uuid = get_collection_uuid_from_event(event)
     payload = base64.b64decode(
         event['body']) if event['isBase64Encoded'] else event['body']
@@ -283,7 +282,7 @@ def update_from_geojson(event, context):
 def add_from_geojson(event, context):
     # user_id = event['requestContext']['authorizer']['principalId']
     # Get provider_uuid from user_id
-    provider_uuid = get_provider_uuid_from_event(event)
+    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
     collection_uuid = get_collection_uuid_from_event(event)
     payload = base64.b64decode(
         event['body']) if event['isBase64Encoded'] else event['body']
@@ -297,7 +296,7 @@ def add_from_geojson(event, context):
     return response(201, rapidjson.dumps(uuids))
 
 def generate_walking_paths(event, context):
-    provider_uuid = get_provider_uuid_from_event(event)
+    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
     collection_uuid = get_collection_uuid_from_event(event)
     filters = {
         "offset": 0,
