@@ -35,6 +35,16 @@ class UserStore(Store):
 
         return User(**c.fetchall()[0])
 
+
+    def get_by_email(self, email):
+        c = self.cursor()
+        c.execute("SELECT * FROM users WHERE email = %(email)s", {
+            "email": email
+        })
+
+        return User(**c.fetchall()[0])
+
+
     def update(self, user_uuid, user):
         c = self.cursor()
         c.execute("""
