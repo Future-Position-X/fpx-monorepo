@@ -65,13 +65,13 @@ pub fn handler(req: Request, _: Context) -> Result<impl IntoResponse, HandlerErr
 
     let mut features = vec![];
 
-    for rec in items {
-        let geojson_geometry = geojson::Geometry::new(geojson::Value::from(&rec.geometry));
-        let properties = rec.properties.as_object().unwrap().to_owned();
+    for item in items {
+        let geojson_geometry = geojson::Geometry::new(geojson::Value::from(&item.geometry));
+        let properties = item.properties.as_object().unwrap().to_owned();
         let feature = geojson::Feature {
             bbox: None,
             geometry: Some(geojson_geometry),
-            id: Some(geojson::feature::Id::String(rec.id.to_string())),
+            id: Some(geojson::feature::Id::String(item.id.to_string())),
             properties: Some(properties),
             foreign_members: None,
         };
