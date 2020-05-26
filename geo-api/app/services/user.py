@@ -19,3 +19,9 @@ def update_user_by_uuid(user_uuid, user):
     with UserStore() as user_store:
         user_store.update(user_uuid, user)
         user_store.complete()
+
+
+def delete_user_by_uuid(user_uuid):
+    with UserStore() as user_store:
+        user_store.delete(user_uuid)
+        user_store.complete()

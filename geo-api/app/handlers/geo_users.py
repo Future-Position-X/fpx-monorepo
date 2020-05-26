@@ -7,7 +7,8 @@ from app.handlers import response
 from app.services.user import (
     create_user,
     get_user_by_uuid,
-    update_user_by_uuid
+    update_user_by_uuid,
+    delete_user_by_uuid
     )
 
 
@@ -35,4 +36,10 @@ def update(event, context):
     user = User(**json)
     update_user_by_uuid(user_uuid, user)
 
+    return response(204)
+
+
+def delete(event, context):
+    user_uuid = event['pathParameters']['user_uuid']
+    delete_user_by_uuid(user_uuid)
     return response(204)

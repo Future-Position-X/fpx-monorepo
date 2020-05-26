@@ -49,3 +49,9 @@ class UserStore(Store):
                 "password": bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
                 "user_uuid": user_uuid
             })
+
+    def delete(self, user_uuid):
+        c = self.cursor()
+        c.execute("DELETE FROM users WHERE uuid = %(user_uuid)s", {
+            "user_uuid": user_uuid
+        })
