@@ -284,3 +284,14 @@
         type: "string"
       password:
         type: "string"
+-
+  name: "CreateAccessToken"
+  description: "This is a Create Access Token object"
+  contentType: "application/json"
+  schema:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+      password:
+        type: "string"

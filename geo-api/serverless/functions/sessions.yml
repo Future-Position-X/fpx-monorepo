@@ -1,0 +1,19 @@
+sessions-create:
+  handler: app.handlers.geo_sessions.create
+  events:
+    - http:
+        path: sessions
+        method: post
+        cors: true
+        documentation:
+          summary: "Create access token"
+          description: "Create access token"
+          tags:
+            - sessions
+            - tokens
+          requestModels:
+            "application/json": "CreateAccessToken"
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):accessToken}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}

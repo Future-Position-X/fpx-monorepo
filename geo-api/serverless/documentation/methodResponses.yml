@@ -43,6 +43,12 @@ imagePng:
     description: "Png image"
   responseModels:
     "image/png": "ImagePng"
+accessToken: 
+  statusCode: "201"
+  responseBody:
+    description: "AccessToken"
+  responseModels:
+    "application/json": "AccessToken"
 error404:
   statusCode: "404"
   responseBody:

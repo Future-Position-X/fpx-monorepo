@@ -15,6 +15,13 @@ def get_user_by_uuid(user_uuid):
         return user
 
 
+def get_user_by_email(email):
+    with UserStore() as user_store:
+        user = user_store.get_by_email(email)
+        user_store.complete()
+        return user
+
+
 def update_user_by_uuid(user_uuid, user):
     with UserStore() as user_store:
         user_store.update(user_uuid, user)
