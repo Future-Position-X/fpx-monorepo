@@ -54,6 +54,7 @@ functions:
   - ${file(serverless/functions/items.yml)}
   - ${file(serverless/functions/providers.yml)}
   - ${file(serverless/functions/misc.yml)}
+  - ${file(serverless/functions/users.yml)}
 
 resources:
   Resources:

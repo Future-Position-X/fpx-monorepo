@@ -1,0 +1,81 @@
+users-get:
+  handler: app.handlers.geo_users.get
+  events:
+    - http:
+        path: users/{user_uuid}
+        method: get
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Get user"
+          description: "Get user"
+          tags:
+            - users
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):user_uuid}
+          methodResponses:
+            - statusCode: "200"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
+users-create:
+  handler: app.handlers.geo_users.create
+  events:
+    - http:
+        path: users
+        method: post
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Create user"
+          description: "Create user"
+          tags:
+            - users
+          requestModels:
+            "application/json": "CreateUser"
+          methodResponses:
+            - ${file(serverless/documentation/methodResponses.yml):uuid}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
+users-update:
+  handler: app.handlers.geo_users.update
+  events:
+    - http:
+        path: users/{user_uuid}
+        method: put
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Update user"
+          description: "Update user"
+          tags:
+            - users
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):user_uuid}
+          requestModels:
+            "application/json": "UpdateUser"
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}
+
+users-delete:
+  handler: app.handlers.geo_users.delete
+  events:
+    - http:
+        path: users/{user_uuid}
+        method: delete
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Delete user"
+          description: "Delete user"
+          tags:
+            - users
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):user_uuid}
+          methodResponses:
+            - statusCode: "204"
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}

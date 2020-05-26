@@ -14,3 +14,7 @@ provider_uuid:
   name: "provider_uuid"
   description: "provider uuid"
   required: true
+user_uuid:
+  name: "user_uuid"
+  description: "User uuid"
+  required: true
