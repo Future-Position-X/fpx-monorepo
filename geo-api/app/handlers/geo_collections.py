@@ -3,7 +3,10 @@ import base64
 from rapidjson import DM_ISO8601
 
 from app.models.collection import Collection
-from app.handlers import response
+from app.handlers import (
+    response,
+    get_provider_uuid_from_event
+)
 from app.services.collection import (
     get_all_collections, 
     create_collection,
@@ -42,7 +45,7 @@ def update(event, context):
 
 
 def create(event, context):
-    provider_uuid = "99aaeecb-ccb0-4342-9704-3dfa49d66174"
+    provider_uuid = get_provider_uuid_from_event(event)
     payload = base64.b64decode(
         event['body']) if event['isBase64Encoded'] else event['body']
     collection = rapidjson.loads(payload)
