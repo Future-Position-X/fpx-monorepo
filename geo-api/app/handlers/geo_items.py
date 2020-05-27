@@ -3,10 +3,13 @@ import base64
 from rapidjson import DM_ISO8601
 from uuid import UUID
 from shapely.geometry import Point
-from app.handlers import response
 from app.models.item import Item
 from distutils.util import strtobool
 
+from app.handlers import (
+    response,
+    get_provider_uuid_from_event
+)
 from app.services.collection import (
     get_collection_uuid_by_collection_name
 )
@@ -174,7 +177,7 @@ def index_by_name(event, context):
     collection_name = event['pathParameters']['collection_name']
     filters = get_filters_from_event(event)
     format = get_format_from_event(event)
-    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
+    provider_uuid = get_provider_uuid_from_event(event)
 
     if format == "json":
         items = get_items_by_collection_name(collection_name, provider_uuid, filters)
@@ -237,7 +240,7 @@ def create(event, context):
 def create_from_geojson(event, context):
     # user_id = event['requestContext']['authorizer']['principalId']
     # Get provider_uuid from user_id
-    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
+    provider_uuid = get_provider_uuid_from_event(event)
     collection_uuid = get_collection_uuid_from_event(event)
     payload = base64.b64decode(
         event['body']) if event['isBase64Encoded'] else event['body']
@@ -282,7 +285,7 @@ def update_from_geojson(event, context):
 def add_from_geojson(event, context):
     # user_id = event['requestContext']['authorizer']['principalId']
     # Get provider_uuid from user_id
-    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
+    provider_uuid = get_provider_uuid_from_event(event)
     collection_uuid = get_collection_uuid_from_event(event)
     payload = base64.b64decode(
         event['body']) if event['isBase64Encoded'] else event['body']
@@ -296,7 +299,7 @@ def add_from_geojson(event, context):
     return response(201, rapidjson.dumps(uuids))
 
 def generate_walking_paths(event, context):
-    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
+    provider_uuid = get_provider_uuid_from_event(event)
     collection_uuid = get_collection_uuid_from_event(event)
     filters = {
         "offset": 0,

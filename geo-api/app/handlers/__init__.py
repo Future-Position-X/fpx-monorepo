@@ -18,3 +18,7 @@ def response(status_code, payload=None):
             }
         )
     return resp
+
+def get_provider_uuid_from_event(event):
+    provider_uuid = event["requestContext"]["authorizer"]["provider_uuid"]
+    return provider_uuid
