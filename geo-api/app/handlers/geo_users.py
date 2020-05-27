@@ -25,7 +25,7 @@ def create(event, context):
     user = User(**json)
     uuid = create_user(user)
 
-    return response(201, uuid)
+    return response(201, str(uuid))
 
 
 def update(event, context):

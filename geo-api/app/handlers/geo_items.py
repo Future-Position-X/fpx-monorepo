@@ -1,6 +1,6 @@
 import rapidjson
 import base64
-from rapidjson import DM_ISO8601
+from rapidjson import DM_ISO8601, UM_CANONICAL
 from uuid import UUID
 from shapely.geometry import Point
 from app.models.item import Item
@@ -152,7 +152,7 @@ def index(event, context):
 
     if format == "json":
         items = get_items_by_collection_uuid(collection_uuid, filters)
-        return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601))
+        return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601, uuid_mode=UM_CANONICAL))
     elif format == "geojson":
         items = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
         return response(200, rapidjson.dumps(items))
