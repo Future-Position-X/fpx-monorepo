@@ -1,6 +1,6 @@
 import rapidjson
 import base64
-from rapidjson import DM_ISO8601
+from rapidjson import DM_ISO8601, UM_CANONICAL
 
 from app.models.provider import Provider
 from app.handlers import response
@@ -14,7 +14,7 @@ from app.services.provider import (
 def index(event, context):
     providers = get_all_providers()
 
-    return response(200, rapidjson.dumps([p.as_dict() for p in providers], datetime_mode=DM_ISO8601))
+    return response(200, rapidjson.dumps([p.as_dict() for p in providers], datetime_mode=DM_ISO8601, uuid_mode=UM_CANONICAL))
 
 
 def get(event, context):

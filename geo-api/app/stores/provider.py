@@ -1,21 +1,21 @@
 from app.stores.base_store import Store
 from app.models.provider import Provider
-
+from app.stores import session
 
 class ProviderStore(Store):
-    def insert(self, provider):
-        c = self.cursor()
-        c.execute("""
+    @staticmethod
+    def insert(provider):
+        result = session.execute("""
             INSERT INTO providers(
                 name
             ) VALUES (
-                %(name)s
+                :name
             )
             RETURNING uuid;
             """, {
             "name": provider.name
         })
-        return c.fetchone()["uuid"]
+        return result.fetchone()["uuid"]
 
     def find_all(self):
         c = self.cursor()

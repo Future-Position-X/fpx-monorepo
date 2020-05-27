@@ -1,20 +1,20 @@
 import bcrypt
 from app.stores.base_store import Store
 from app.models.user import User
-
+from app.stores import session
 
 class UserStore(Store):
-    def insert(self, user):
-        c = self.cursor()
-        c.execute("""
+    @staticmethod
+    def insert(user):
+        result = session.execute("""
             INSERT INTO users(
                 provider_uuid,
                 email,
                 password
             ) VALUES (
-                %(provider_uuid)s,
-                %(email)s,
-                %(password)s
+                :provider_uuid,
+                :email,
+                :password
             )
             RETURNING uuid;
             """, {
@@ -22,7 +22,7 @@ class UserStore(Store):
             "email": user.email,
             "password": bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         })
-        return c.fetchone()["uuid"]
+        return result.fetchone()["uuid"]
 
     def get_by_uuid(self, user_uuid):
         c = self.cursor()
