@@ -14,6 +14,7 @@ from app.services.collection import (
     update_collection_by_uuid,
     get_collection_by_uuid
     )
+from app.services.item import copy_items_by_collection_uuid
 
 
 def index(event, context):
@@ -52,5 +53,13 @@ def create(event, context):
     collection['provider_uuid'] = provider_uuid
     collection = Collection(**collection)
     uuid = create_collection(collection)
+
+    src_collection_uuid = None
+
+    if event['queryStringParameters'] is not None:
+        src_collection_uuid = event['queryStringParameters']['src_collection_uuid']
+
+    if src_collection_uuid is not None:
+        copy_items_by_collection_uuid(src_collection_uuid, uuid, provider_uuid)
 
     return response(201, uuid)
