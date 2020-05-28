@@ -1,15 +1,10 @@
 from app.stores.provider import ProviderStore
-from app.stores import session
+from app.stores import DB
 
 def create_provider(provider):
-    # with ProviderStore() as provider_store:
-    #     uuid = provider_store.insert(provider)
-    #     provider_store.complete()
-    #     return uuid
-    session.begin(subtransactions=True)
-    uuid = ProviderStore.insert(provider)
-    session.commit()
-    return uuid
+    with DB().session():
+        uuid = ProviderStore.insert(provider)
+        return uuid
 
 
 def get_all_providers():

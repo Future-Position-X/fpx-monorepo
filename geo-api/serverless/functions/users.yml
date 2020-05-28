@@ -25,7 +25,6 @@ users-create:
         path: users
         method: post
         cors: true
-        authorizer: authorizer
         documentation:
           summary: "Create user"
           description: "Create user"
