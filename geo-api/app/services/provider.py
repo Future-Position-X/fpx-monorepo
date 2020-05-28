@@ -2,7 +2,7 @@ from app.stores.provider import ProviderStore
 from app.stores import DB
 
 def create_provider(provider):
-    with DB().session():
+    with DB().transaction():
         uuid = ProviderStore.insert(provider)
         return uuid
 

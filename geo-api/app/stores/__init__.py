@@ -12,8 +12,11 @@ class DB:
         Session = sessionmaker(bind=pg)
         self._session = Session(autocommit=True)
 
+    def sesson(self):
+        self._session
+
     @contextmanager
-    def session(self):
+    def transaction(self):
         self._session.begin(subtransactions=True)
         try:
             yield self._session

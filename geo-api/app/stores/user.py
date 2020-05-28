@@ -6,24 +6,23 @@ from app.stores import DB
 class UserStore(Store):
     @staticmethod
     def insert(user):
-        with DB().session() as session:
-            result = session.execute("""
-                INSERT INTO users(
-                    provider_uuid,
-                    email,
-                    password
-                ) VALUES (
-                    :provider_uuid,
-                    :email,
-                    :password
-                )
-                RETURNING uuid;
-                """, {
-                "provider_uuid": user.provider_uuid,
-                "email": user.email,
-                "password": bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-            })
-            return result.fetchone()["uuid"]
+        result = DB().session().execute("""
+            INSERT INTO users(
+                provider_uuid,
+                email,
+                password
+            ) VALUES (
+                :provider_uuid,
+                :email,
+                :password
+            )
+            RETURNING uuid;
+            """, {
+            "provider_uuid": user.provider_uuid,
+            "email": user.email,
+            "password": bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        })
+        return result.fetchone()["uuid"]
 
     def get_by_uuid(self, user_uuid):
         c = self.cursor()
