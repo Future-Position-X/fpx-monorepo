@@ -60,6 +60,11 @@ def create(event, context):
         src_collection_uuid = event['queryStringParameters']['src_collection_uuid']
 
     if src_collection_uuid is not None:
+        src_collection = get_collection_by_uuid(src_collection_uuid)
+
+        if src_collection.provider_uuid != provider_uuid and not src_collection.is_public:
+            return response(403)
+            
         copy_items_by_collection_uuid(src_collection_uuid, uuid, provider_uuid)
 
     return response(201, uuid)
