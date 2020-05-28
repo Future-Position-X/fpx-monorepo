@@ -12,7 +12,7 @@ class DB:
         Session = sessionmaker(bind=pg)
         self._session = Session(autocommit=True)
 
-    def sesson(self):
+    def session(self):
         self._session
 
     @contextmanager
