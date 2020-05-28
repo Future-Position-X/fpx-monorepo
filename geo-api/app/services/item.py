@@ -2,8 +2,6 @@ from app.stores.item import ItemStore
 from app.models.item import Item
 from lib.visualizer.renderer import render_feature_collection, render_feature
 
-from app.services.collection import get_collection_uuid_by_collection_name
-from app.stores import session
 
 def get_item_by_uuid_as_geojson(item_uuid):
     with ItemStore() as item_store:
@@ -22,13 +20,10 @@ def get_item_by_uuid_as_png(item_uuid, width, height, map_id):
 
 
 def get_items_by_collection_uuid(collection_uuid, filters):
-    # with ItemStore() as item_store:
-    #     items = item_store.find_by_collection_uuid(collection_uuid, filters)
-    #     item_store.complete()
-    #     return items
-    items = ItemStore.find_by_collection_uuid(collection_uuid, filters)
-    return items
-
+    with ItemStore() as item_store:
+         items = item_store.find_by_collection_uuid(collection_uuid, filters)
+         item_store.complete()
+         return items
 
 def get_items_by_collection_name(collection_name, current_provider_uuid, filters):
     with ItemStore() as item_store:

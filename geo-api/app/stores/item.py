@@ -1,7 +1,7 @@
 import rapidjson
 from app.stores.base_store import Store
 from app.models.item import Item
-from app.stores import session
+
 
 def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
     params = filter.split(",")
@@ -121,9 +121,9 @@ class ItemStore(Store):
         """)
         return [Item(**row) for row in c.fetchall()]
 
-    @staticmethod
-    def find_by_collection_uuid(collection_uuid, filters):
-        where = "collection_uuid = :collection_uuid"
+    def find_by_collection_uuid(self, collection_uuid, filters):
+        c = self.cursor()
+        where = "collection_uuid = %(collection_uuid)s"
 
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
@@ -139,7 +139,7 @@ class ItemStore(Store):
             where = append_property_filter_to_where_clause(
                 where, filters["property_filter"], exec_dict)
 
-        result = session.execute("""
+        c.execute("""
             SELECT uuid,
                 provider_uuid,
                 collection_uuid,
@@ -147,10 +147,10 @@ class ItemStore(Store):
                 ST_AsGeoJSON(geometry)::jsonb as geometry
             FROM items
             WHERE """ + where + """
-                OFFSET :offset
-                LIMIT :limit
+                OFFSET %(offset)s
+                LIMIT %(limit)s
             """, exec_dict)
-        return [Item(**row) for row in result.fetchall()]
+        return [Item(**row) for row in c.fetchall()]
 
     def find_by_collection_name(self, collection_name, current_provider_uuid, filters):
         c = self.cursor()
