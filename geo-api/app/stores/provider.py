@@ -5,18 +5,17 @@ from app.stores import DB
 class ProviderStore(Store):
     @staticmethod
     def insert(provider):
-        with DB().session() as session:
-            result = session.execute("""
-                INSERT INTO providers(
-                    name
-                ) VALUES (
-                    :name
-                )
-                RETURNING uuid;
-                """, {
-                "name": provider.name
-            })
-            return result.fetchone()["uuid"]
+        result = DB().session().execute("""
+            INSERT INTO providers(
+                name
+            ) VALUES (
+                :name
+            )
+            RETURNING uuid;
+            """, {
+            "name": provider.name
+        })
+        return result.fetchone()["uuid"]
 
     def find_all(self):
         c = self.cursor()

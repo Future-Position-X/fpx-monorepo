@@ -4,7 +4,7 @@ from app.services.provider import create_provider
 from app.models.provider import Provider
 
 def create_user(user):
-    with DB().session():
+    with DB().transaction():
         provider_uuid = create_provider(Provider(**{"name": user.email}))
         user.provider_uuid = provider_uuid
         uuid = UserStore.insert(user)
