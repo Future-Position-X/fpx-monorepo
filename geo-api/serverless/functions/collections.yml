@@ -100,3 +100,25 @@ collections-create:
             - ${file(serverless/documentation/methodResponses.yml):uuid}
             - ${file(serverless/documentation/methodResponses.yml):error404}
             - ${file(serverless/documentation/methodResponses.yml):error500}
+
+collections-copy:
+  handler: app.handlers.geo_collections.copy
+  events:
+    - http:
+        path: collections/{src_collection_uuid}/copy/{dst_collection_uuid?}
+        method: post
+        cors: true
+        authorizer: authorizer
+        documentation:
+          summary: "Copy collection"
+          description: "Copy collection"
+          tags:
+            - collections
+          pathParams:
+            - ${file(serverless/documentation/pathParams.yml):src_collection_uuid}
+            - ${file(serverless/documentation/pathParams.yml):dst_collection_uuid}
+          methodResponses:
+            - statusCode: "201"
+            - ${file(serverless/documentation/methodResponses.yml):error403}
+            - ${file(serverless/documentation/methodResponses.yml):error404}
+            - ${file(serverless/documentation/methodResponses.yml):error500}

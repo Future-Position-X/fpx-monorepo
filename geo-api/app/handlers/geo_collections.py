@@ -12,8 +12,10 @@ from app.services.collection import (
     create_collection,
     delete_collection_by_uuid,
     update_collection_by_uuid,
-    get_collection_by_uuid
+    get_collection_by_uuid,
+    copy_collection_from
     )
+from app.services.item import copy_items_by_collection_uuid
 
 
 def index(event, context):
@@ -54,3 +56,15 @@ def create(event, context):
     uuid = create_collection(collection)
 
     return response(201, uuid)
+
+def copy(event, context):
+    provider_uuid = get_provider_uuid_from_event(event)
+    src_collection_uuid = event['pathParameters']['src_collection_uuid']
+    dst_collection_uuid = event['pathParameters'].get('dst_collection_uuid', None)
+    
+    try:
+        dst_collection_uuid = copy_collection_from(src_collection_uuid, dst_collection_uuid, provider_uuid)
+    except PermissionError as e:
+        return response(403)
+    
+    return response(201, dst_collection_uuid)

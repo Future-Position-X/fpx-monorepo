@@ -331,3 +331,16 @@ class ItemStore(Store):
             inputs) features;
             """, exec_dict)
         return c.fetchone()['geojson']
+
+
+    def copy_items(self, src_collection_uuid, dest_collection_uuid, provider_uuid):
+        c = self.cursor()
+        c.execute("""
+            INSERT INTO items (provider_uuid, collection_uuid, geometry, properties) 
+                SELECT %(provider_uuid)s, %(dest_collection_uuid)s, geometry, properties
+                FROM items WHERE collection_uuid = %(src_collection_uuid)s
+            """, {
+                "provider_uuid": provider_uuid,
+                "src_collection_uuid": src_collection_uuid,
+                "dest_collection_uuid": dest_collection_uuid
+            })
