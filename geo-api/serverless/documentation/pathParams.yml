@@ -18,3 +18,11 @@ user_uuid:
   name: "user_uuid"
   description: "User uuid"
   required: true
+src_collection_uuid:
+  name: "src_collection_uuid"
+  description: "source collection uuid"
+  required: true
+dst_collection_uuid:
+  name: "dst_collection_uuid"
+  description: "destination collection uuid"
+  required: false

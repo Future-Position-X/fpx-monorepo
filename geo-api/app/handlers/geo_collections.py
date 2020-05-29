@@ -12,7 +12,8 @@ from app.services.collection import (
     create_collection,
     delete_collection_by_uuid,
     update_collection_by_uuid,
-    get_collection_by_uuid
+    get_collection_by_uuid,
+    copy_collection_from
     )
 from app.services.item import copy_items_by_collection_uuid
 
@@ -54,17 +55,16 @@ def create(event, context):
     collection = Collection(**collection)
     uuid = create_collection(collection)
 
-    src_collection_uuid = None
-
-    if event['queryStringParameters'] is not None:
-        src_collection_uuid = event['queryStringParameters']['src_collection_uuid']
-
-    if src_collection_uuid is not None:
-        src_collection = get_collection_by_uuid(src_collection_uuid)
-
-        if src_collection.provider_uuid != provider_uuid and not src_collection.is_public:
-            return response(403)
-            
-        copy_items_by_collection_uuid(src_collection_uuid, uuid, provider_uuid)
-
     return response(201, uuid)
+
+def copy(event, context):
+    provider_uuid = get_provider_uuid_from_event(event)
+    src_collection_uuid = event['pathParameters']['src_collection_uuid']
+    dst_collection_uuid = event['pathParameters'].get('dst_collection_uuid', None)
+    
+    try:
+        dst_collection_uuid = copy_collection_from(src_collection_uuid, dst_collection_uuid, provider_uuid)
+    except PermissionError as e:
+        return response(403)
+    
+    return response(201, dst_collection_uuid)

@@ -57,3 +57,7 @@ error500:
   statusCode: "500"
   responseBody:
     description: "internal server error"
+error403:
+  statusCode: "403"
+  responseBody:
+    description: "forbidden"
