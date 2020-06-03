@@ -1,78 +1,124 @@
 import rapidjson
-import base64
-from rapidjson import DM_ISO8601
-from app import app
+from app import app, api
+from flask_restx import Resource, fields
 from app.models.collection import Collection
 from app.handlers.flask import (
-    response,
     get_provider_uuid_from_request,
 
 )
 from app.services.collection import (
-    get_all_collections, 
+    get_all_collections,
     create_collection,
     delete_collection_by_uuid,
     update_collection_by_uuid,
     get_collection_by_uuid,
     copy_collection_from
-    )
-from app.services.item import copy_items_by_collection_uuid
-from flask import request
+)
 from flask_jwt_extended import jwt_required
 
+ns = api.namespace('collections', 'Collection operations')
 
-@app.route('/collections')
-@jwt_required
-def index():
-    collections = get_all_collections()
-    return response(200, rapidjson.dumps([c.as_dict() for c in collections], datetime_mode=DM_ISO8601))
+collection = api.model('Collection', {
+    'uuid': fields.String(description='uuid'),
+    'provider_uuid': fields.String(description='provider_uuid'),
+    'name': fields.String(description='name'),
+    'is_public': fields.String(description='is_public'),
+    'revision': fields.String(description='revision'),
+    'created_at': fields.String(description='created_at'),
+    'updated_at': fields.String(description='updated_at'),
+})
 
-@app.route('/collections/<collection_uuid>')
-@jwt_required
-def get(collection_uuid):
-    collection = get_collection_by_uuid(collection_uuid)
-    return response(200, rapidjson.dumps(collection.as_dict(), datetime_mode=DM_ISO8601))
+create_collection = api.model('CreateCollection', {
+    'provider_uuid': fields.String(description='provider_uuid'),
+    'name': fields.String(description='name'),
+    'is_public': fields.String(description='is_public'),
+})
+
+update_collection = api.model('UpdateCollection', {
+    'provider_uuid': fields.String(description='provider_uuid'),
+    'name': fields.String(description='name'),
+    'is_public': fields.String(description='is_public'),
+})
+
+@ns.route('/')
+class CollectionList(Resource):
+    @jwt_required
+    @ns.doc('list_collections')
+    @ns.marshal_list_with(collection)
+    def get(self):
+        collections = get_all_collections()
+        # return response(200, rapidjson.dumps([c.as_dict() for c in collections], datetime_mode=DM_ISO8601))
+        return collections
+
+    @jwt_required
+    @ns.doc('create_collection')
+    @ns.expect(create_collection)
+    @ns.marshal_with(collection, 201)
+    def post(self):
+        provider_uuid = get_provider_uuid_from_request()
+        payload = api.playload
+        collection = rapidjson.loads(payload)
+        collection['provider_uuid'] = provider_uuid
+        collection = Collection(**collection)
+        uuid = create_collection(collection)
+        collection = get_collection_by_uuid(uuid)
+        # return response(201, uuid)
+        return collection
 
 
-@app.route('/collections/<collection_uuid>', methods=['DELETE'])
-@jwt_required
-def delete(collection_uuid):
-    delete_collection_by_uuid(collection_uuid)
-    return response(204)
+@ns.route('/<uuid:collection_uuid>')
+@ns.response(404, 'Collection not found')
+@ns.param('collection_uuid', 'The collection identifier')
+class Collection(Resource):
+    @jwt_required
+    @ns.doc('get_collection')
+    @ns.marshal_with(collection)
+    def get(self, collection_uuid):
+        collection = get_collection_by_uuid(collection_uuid)
+
+        return collection
+
+    @jwt_required
+    @ns.doc('delete_collection')
+    @ns.response(204, 'Collection deleted')
+    def delete(self, collection_uuid):
+        delete_collection_by_uuid(collection_uuid)
+
+        return '', 204
+
+    @jwt_required
+    @ns.doc('update_collection')
+    @ns.expect(update_collection)
+    @ns.marshal_with(collection)
+    @ns.response(200, 'Collection updated')
+    def put(self, collection_uuid):
+        payload = api.playload
+        collection_dict = rapidjson.loads(payload)
+        collection = Collection(**collection_dict)
+        update_collection_by_uuid(collection_uuid, collection)
+        collection = get_collection_by_uuid(collection_uuid)
+
+        return collection
 
 
-@app.route('/collections/<collection_uuid>', methods=['PUT'])
-@jwt_required
-def update(collection_uuid):
-    collection_dict = request.json
-    collection = Collection(**collection_dict)
-    update_collection_by_uuid(collection_uuid, collection)
-    return response(204)
+@ns.route('/<src_collection_uuid>/copy')
+@ns.route('/<src_collection_uuid>/copy/<dst_collection_uuid>')
+@ns.param('src_collection_uuid', 'The src collection identifier')
+@ns.param('dst_collection_uuid', 'The dst collection identifier')
+class CollectionCopy(Resource):
+    @jwt_required
+    @ns.doc('copy_collection')
+    @ns.marshal_with(collection, 201)
+    def post(src_collection_uuid, dst_collection_uuid=None):
+        provider_uuid = get_provider_uuid_from_request()
+        try:
+            dst_collection_uuid = copy_collection_from(
+                src_collection_uuid,
+                dst_collection_uuid,
+                provider_uuid)
+        except PermissionError as e:
+            return '', 403
 
+        collection = get_collection_by_uuid(dst_collection_uuid)
 
-@app.route('/collections', methods=['POST'])
-@jwt_required
-def create():
-    provider_uuid = get_provider_uuid_from_request()
-    collection = request.json
-    collection['provider_uuid'] = provider_uuid
-    collection = Collection(**collection)
-    uuid = create_collection(collection)
-
-    return response(201, uuid)
-
-
-@app.route('/collections/<src_collection_uuid>/copy')
-@app.route('/collections/<src_collection_uuid>/copy/<dst_collection_uuid>')
-@jwt_required
-def copy(src_collection_uuid, dst_collection_uuid=None):
-    provider_uuid = get_provider_uuid_from_request()
-    try:
-        dst_collection_uuid = copy_collection_from(
-            src_collection_uuid,
-            dst_collection_uuid,
-            provider_uuid)
-    except PermissionError as e:
-        return response(403, e)
-
-    return response(201, dst_collection_uuid)
+        return collection, 201
