@@ -122,15 +122,10 @@ def get_filters_from_request():
     }
 
 
-def get_visualizer_params_from_event(event):
-    width = 1280
-    height = 1280
-    map_id = 'dark-v10'
-
-    if event['queryStringParameters'] is not None:
-        width = int(event['queryStringParameters'].get('width', width))
-        height = int(event['queryStringParameters'].get('height', height))
-        map_id = event['queryStringParameters'].get('mapid', map_id)
+def get_visualizer_params_from_request():
+    width = int(request.args.get('width', 1280))
+    height = int(request.args.get('height', 1280))
+    map_id = request.args.get('mapid', 'dark-v10')
 
     return {
         "width": width,
@@ -142,6 +137,7 @@ def get_visualizer_params_from_event(event):
 def get_format_from_request():
     format = request.args.get('format', "geojson")
     return format
+
 
 @app.route('/collections/<collection_uuid>/items')
 @jwt_required
@@ -157,7 +153,7 @@ def items_index(collection_uuid):
         items = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
         return response(200, rapidjson.dumps(items))
     elif format == "png":
-        vis_params = get_visualizer_params_from_event(event)
+        vis_params = get_visualizer_params_from_request()
         png_bytes = get_items_by_collection_uuid_as_png(
             collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'], transforms)
 
@@ -186,7 +182,7 @@ def index_by_name(collection_name):
         items = get_items_by_collection_name_as_geojson(collection_name, provider_uuid, filters)
         return response(200, rapidjson.dumps(items))
     elif format == "png":
-        vis_params = get_visualizer_params_from_event(event)
+        vis_params = get_visualizer_params_from_request()
         png_bytes = get_items_by_collection_name_as_png(
             collection_name, provider_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
 
@@ -210,7 +206,7 @@ def get(item_uuid):
         item = get_item_by_uuid_as_geojson(item_uuid)
         return response(200, rapidjson.dumps(item))
     elif format == "png":
-        params = get_visualizer_params_from_event(event)
+        params = get_visualizer_params_from_request()
         png_bytes = get_item_by_uuid_as_png(
             item_uuid, params['width'], params['height'], params['map_id'])
 
@@ -225,25 +221,21 @@ def get(item_uuid):
     else:
         return response(400, "invalid format")
 
-
-def create(event, context):
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    item_hash = rapidjson.loads(payload)
+@app.route('/collections/<collection_uuid>/items')
+@jwt_required
+def create(collection_uuid):
+    item_hash = request.json()
     item = Item(**item_hash)
     uuid = create_item(item)
 
     return response(201, uuid)
 
 
-def create_from_geojson(event, context):
-    # user_id = event['requestContext']['authorizer']['principalId']
-    # Get provider_uuid from user_id
+@app.route('/collections/<collection_uuid>/items/geojson')
+@jwt_required
+def create_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
-    collection_uuid = get_collection_uuid_from_event(event)
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    geojson = rapidjson.loads(payload)
+    geojson = request.json()
 
     uuids = create_items_from_geojson(
         geojson=geojson,
