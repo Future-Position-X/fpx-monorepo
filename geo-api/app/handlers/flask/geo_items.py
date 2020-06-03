@@ -39,6 +39,8 @@ from app.services.ai import (
     get_sequence_for_sensor
 )
 
+from flask_jwt_extended import jwt_required
+
 
 def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
@@ -85,9 +87,9 @@ def get_spatial_filter(params):
         else:
             None
 
-def get_transforms_from_event(event):
+def get_transforms_from_request():
     simplify = 0.0
-    params = event['queryStringParameters']
+    params = request.args
 
     if params is not None:
         simplify = float(params.get('simplify', simplify))
@@ -137,20 +139,16 @@ def get_visualizer_params_from_event(event):
     }
 
 
-def get_format_from_event(event):
-    format = "geojson"
-
-    if event['queryStringParameters'] is not None:
-        format = event['queryStringParameters'].get('format', format)
-    
+def get_format_from_request():
+    format = request.args.get('format', "geojson")
     return format
 
-
-def index(event, context):
-    collection_uuid = get_collection_uuid_from_event(event)
-    filters = get_filters_from_event(event)
-    transforms = get_transforms_from_event(event)
-    format = get_format_from_event(event)
+@app.route('/collections/<collection_uuid>/items')
+@jwt_required
+def items_index(collection_uuid):
+    filters = get_filters_from_request()
+    transforms = get_transforms_from_request()
+    format = get_format_from_request()
 
     if format == "json":
         items = get_items_by_collection_uuid(collection_uuid, filters)
@@ -174,11 +172,11 @@ def index(event, context):
     else:
         return response(400, "invalid format")
 
-
-def index_by_name(event, context):
-    collection_name = event['pathParameters']['collection_name']
-    filters = get_filters_from_event(event)
-    format = get_format_from_event(event)
+@app.route('/collections/by_name/<collection_name>/items')
+@jwt_required
+def index_by_name(collection_name):
+    filters = get_filters_from_request()
+    format = get_format_from_request()
     provider_uuid = get_provider_uuid_from_request()
 
     if format == "json":
@@ -201,10 +199,9 @@ def index_by_name(event, context):
             }
         }
     
-
-def get(event, context):
-    item_uuid = event['pathParameters']['item_uuid']
-    format = get_format_from_event(event)
+@app.route('/items/<item_uuid>')
+def get(item_uuid):
+    format = get_format_from_request()
 
     if format == "json":
         # not implemented yet

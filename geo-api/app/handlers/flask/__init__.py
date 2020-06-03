@@ -2,7 +2,7 @@ from app import app
 from flask import request
 import jwt
 import os
-from flask_jwt_extended import get_jwt_claims
+from flask_jwt_extended import get_raw_jwt
 
 def response(status_code, payload=None):
     response = app.response_class(
@@ -13,6 +13,5 @@ def response(status_code, payload=None):
     return response
 
 def get_provider_uuid_from_request():
-    claims = get_jwt_claims()
-    print(claims)
+    claims = get_raw_jwt()
     return claims['provider_uuid']
