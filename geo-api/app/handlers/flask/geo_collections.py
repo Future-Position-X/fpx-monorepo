@@ -44,9 +44,7 @@ def delete(collection_uuid):
 @app.route('/collections/<collection_uuid>', methods=['PUT'])
 @jwt_required
 def update(collection_uuid):
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    collection_dict = rapidjson.loads(payload)
+    collection_dict = request.json
     collection = Collection(**collection_dict)
     update_collection_by_uuid(collection_uuid, collection)
     return response(204)
@@ -54,11 +52,9 @@ def update(collection_uuid):
 
 @app.route('/collections', methods=['POST'])
 @jwt_required
-def create(event, context):
+def create():
     provider_uuid = get_provider_uuid_from_request()
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    collection = rapidjson.loads(payload)
+    collection = request.json
     collection['provider_uuid'] = provider_uuid
     collection = Collection(**collection)
     uuid = create_collection(collection)
