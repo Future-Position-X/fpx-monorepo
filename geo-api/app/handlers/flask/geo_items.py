@@ -196,7 +196,8 @@ def index_by_name(collection_name):
         }
     
 @app.route('/items/<item_uuid>')
-def get(item_uuid):
+@jwt_required
+def items_get(item_uuid):
     format = get_format_from_request()
 
     if format == "json":
@@ -221,21 +222,21 @@ def get(item_uuid):
     else:
         return response(400, "invalid format")
 
-@app.route('/collections/<collection_uuid>/items')
+@app.route('/collections/<collection_uuid>/items', methods=['POST'])
 @jwt_required
-def create(collection_uuid):
-    item_hash = request.json()
+def items_create(collection_uuid):
+    item_hash = request.json
     item = Item(**item_hash)
     uuid = create_item(item)
 
     return response(201, uuid)
 
 
-@app.route('/collections/<collection_uuid>/items/geojson')
+@app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])
 @jwt_required
 def create_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
-    geojson = request.json()
+    geojson = request.json
 
     uuids = create_items_from_geojson(
         geojson=geojson,
@@ -245,42 +246,40 @@ def create_from_geojson(collection_uuid):
     return response(201, rapidjson.dumps(uuids))
 
 
-def delete(event, context):
-    item_uuid = event['pathParameters']['item_uuid']
+@app.route('/items/<item_uuid>', methods=['DELETE'])
+@jwt_required
+def items_delete(item_uuid):
     delete_item(item_uuid)
     return response(204)
 
 
-def delete_items(event, context):
-    collection_uuid = get_collection_uuid_from_event(event)
+@app.route('/collections/<collection_uuid>/items', methods=['DELETE'])
+@jwt_required
+def delete_items(collection_uuid):
     delete_items_by_collection_uuid(collection_uuid)
     return response(204)
 
 
-def update(event, context):
-    item_uuid = event['pathParameters']['item_uuid']
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    item_hash = rapidjson.loads(payload)
+@app.route('/items/<item_uuid>', methods=['PUT'])
+@jwt_required
+def items_update(item_uuid):
+    item_hash = request.json
     item = Item(**item_hash)
     update_item(item_uuid, item)
     return response(204)
 
-def update_from_geojson(event, context):
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    feature_collection = rapidjson.loads(payload)
+@app.route('/items/geojson', methods=['PUT'])
+@jwt_required
+def update_from_geojson():
+    feature_collection = request.json
     update_items_from_geojson(feature_collection)
     return response(204)
 
-def add_from_geojson(event, context):
-    # user_id = event['requestContext']['authorizer']['principalId']
-    # Get provider_uuid from user_id
+@app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
+@jwt_required
+def add_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
-    collection_uuid = get_collection_uuid_from_event(event)
-    payload = base64.b64decode(
-        event['body']) if event['isBase64Encoded'] else event['body']
-    geojson = rapidjson.loads(payload)
+    geojson = request.json
 
     uuids = add_items_from_geojson(
         geojson=geojson,
@@ -289,19 +288,20 @@ def add_from_geojson(event, context):
 
     return response(201, rapidjson.dumps(uuids))
 
-def generate_walking_paths(event, context):
+@app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
+@jwt_required
+def generate_walking_paths(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
-    collection_uuid = get_collection_uuid_from_event(event)
     filters = {
         "offset": 0,
         "limit": 1000,
         "property_filter": None,
         "valid": False
     }
-    steps = min(int(event['queryStringParameters']['steps']), 200)
-    n_agents = min(int(event['queryStringParameters']['agents']), 50) 
-    starting_points_collection_uuid = event['queryStringParameters']['starting_points_collection_uuid']
-    environment_collection_uuid = event['queryStringParameters']['environment_collection_uuid']
+    steps = min(int(request.args.get('steps')), 200)
+    n_agents = min(int(request.args.get('agents')), 50) 
+    starting_points_collection_uuid = request.args.get('starting_points_collection_uuid')
+    environment_collection_uuid = request.args.get('environment_collection_uuid')
     uuids = generate_paths_from_points(
         starting_points_collection_uuid, 
         environment_collection_uuid, 
@@ -314,8 +314,8 @@ def generate_walking_paths(event, context):
     return response(201, rapidjson.dumps(uuids))
 
 @app.route('/items/<item_uuid>/ai/sequence')
+@jwt_required
 def prediction_for_sensor_item(item_uuid):
-    print(item_uuid)
     filters = get_filters_from_request()
     start_date = request.args.get('startdate')
     end_date = request.args.get('enddate')
