@@ -1,7 +1,8 @@
 import rapidjson
-from app import app, api
+from app import app, api, db
 from flask_restx import Resource, fields
-from app.models.collection import Collection
+from app.models.collection import Collection as CollectionModel
+from app.models import Collection as CollectionDB
 from app.handlers.flask import (
     get_provider_uuid_from_request,
 
@@ -15,10 +16,11 @@ from app.services.collection import (
     copy_collection_from
 )
 from flask_jwt_extended import jwt_required
+from flask import request, abort
 
 ns = api.namespace('collections', 'Collection operations')
 
-collection = api.model('Collection', {
+collection_model = api.model('Collection', {
     'uuid': fields.String(description='uuid'),
     'provider_uuid': fields.String(description='provider_uuid'),
     'name': fields.String(description='name'),
@@ -28,13 +30,13 @@ collection = api.model('Collection', {
     'updated_at': fields.String(description='updated_at'),
 })
 
-create_collection = api.model('CreateCollection', {
+create_collection_model = api.model('CreateCollection', {
     'provider_uuid': fields.String(description='provider_uuid'),
     'name': fields.String(description='name'),
     'is_public': fields.String(description='is_public'),
 })
 
-update_collection = api.model('UpdateCollection', {
+update_collection_model = api.model('UpdateCollection', {
     'provider_uuid': fields.String(description='provider_uuid'),
     'name': fields.String(description='name'),
     'is_public': fields.String(description='is_public'),
@@ -44,26 +46,24 @@ update_collection = api.model('UpdateCollection', {
 class CollectionList(Resource):
     @jwt_required
     @ns.doc('list_collections')
-    @ns.marshal_list_with(collection)
+    @ns.marshal_list_with(collection_model)
     def get(self):
-        collections = get_all_collections()
-        # return response(200, rapidjson.dumps([c.as_dict() for c in collections], datetime_mode=DM_ISO8601))
+        collections = db.session.query(CollectionDB).all()
         return collections
 
     @jwt_required
     @ns.doc('create_collection')
-    @ns.expect(create_collection)
-    @ns.marshal_with(collection, 201)
+    @ns.expect(create_collection_model)
+    @ns.marshal_with(collection_model, 201)
     def post(self):
         provider_uuid = get_provider_uuid_from_request()
-        payload = api.playload
-        collection = rapidjson.loads(payload)
+        collection = request.get_json()
         collection['provider_uuid'] = provider_uuid
-        collection = Collection(**collection)
-        uuid = create_collection(collection)
-        collection = get_collection_by_uuid(uuid)
-        # return response(201, uuid)
-        return collection
+        collection = CollectionDB(**collection)
+        db.session.add(collection)
+        db.session.commit()
+        collection = db.session.query(CollectionDB).get(collection.uuid)
+        return collection, 201
 
 
 @ns.route('/<uuid:collection_uuid>')
@@ -72,32 +72,37 @@ class CollectionList(Resource):
 class Collection(Resource):
     @jwt_required
     @ns.doc('get_collection')
-    @ns.marshal_with(collection)
+    @ns.marshal_with(collection_model)
     def get(self, collection_uuid):
-        collection = get_collection_by_uuid(collection_uuid)
-
+        collection = db.session.query(CollectionDB).get(collection_uuid)
+        if not collection:
+            abort(404)
         return collection
 
     @jwt_required
     @ns.doc('delete_collection')
     @ns.response(204, 'Collection deleted')
     def delete(self, collection_uuid):
-        delete_collection_by_uuid(collection_uuid)
-
+        collection = db.session.query(CollectionDB).filter_by(uuid=collection_uuid).first()
+        db.session.delete(collection)
+        db.session.commit()
         return '', 204
 
     @jwt_required
     @ns.doc('update_collection')
-    @ns.expect(update_collection)
-    @ns.marshal_with(collection)
+    @ns.expect(update_collection_model)
+    @ns.marshal_with(collection_model)
     @ns.response(200, 'Collection updated')
     def put(self, collection_uuid):
-        payload = api.playload
-        collection_dict = rapidjson.loads(payload)
-        collection = Collection(**collection_dict)
-        update_collection_by_uuid(collection_uuid, collection)
-        collection = get_collection_by_uuid(collection_uuid)
+        collection_dict = request.get_json()
+        collection_new = CollectionModel(**collection_dict)
 
+        collection = db.session.query(CollectionDB).get(collection_uuid)
+
+        collection.name = collection_new.name
+        collection.is_public = collection_new.is_public
+
+        db.session.commit()
         return collection
 
 
@@ -108,7 +113,7 @@ class Collection(Resource):
 class CollectionCopy(Resource):
     @jwt_required
     @ns.doc('copy_collection')
-    @ns.marshal_with(collection, 201)
+    @ns.marshal_with(collection_model, 201)
     def post(src_collection_uuid, dst_collection_uuid=None):
         provider_uuid = get_provider_uuid_from_request()
         try:
