@@ -4,8 +4,9 @@ from rapidjson import DM_ISO8601, UM_CANONICAL
 from uuid import UUID
 from shapely.geometry import Point
 from app.models.item import Item
+from app.models import Item as ItemDB
 from distutils.util import strtobool
-from app import app
+from app import app, api, db
 from app.handlers.flask import (
     response,
     get_provider_uuid_from_request,
@@ -40,7 +41,24 @@ from app.services.ai import (
 )
 
 from flask_jwt_extended import jwt_required
+from flask_restx import Resource, fields
 
+from geoalchemy2.shape import to_shape
+from shapely.geometry import mapping
+class MyFormat(fields.Raw):
+    def format(self, value):
+        return mapping(to_shape(value))
+
+item_model = api.model('Item', {
+    'uuid': fields.String(description='uuid'),
+    'provider_uuid': fields.String(description='provider_uuid'),
+    'collection_uuid': fields.String(description='collection_uuid'),
+    'geometry': MyFormat(), #fields.String(description='geometry'),
+    'properties': fields.Wildcard(fields.String, description='properties'),
+    'revision': fields.String(description='revision'),
+    'created_at': fields.String(description='created_at'),
+    'updated_at': fields.String(description='updated_at'),
+})
 
 def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
@@ -138,8 +156,18 @@ def get_format_from_request():
     format = request.args.get('format', "geojson")
     return format
 
+ns = api.namespace('items', description='Item operations', path='/')
 
-@app.route('/collections/<collection_uuid>/items')
+@ns.route('/collections/<collection_uuid>/items')
+class ItemList(Resource):
+    @jwt_required
+    @ns.doc('list_collections')
+    @ns.marshal_list_with(item_model)
+    def get(self, collection_uuid):
+        items = db.session.query(ItemDB).all()
+        return items
+
+#@app.route('/collections/<collection_uuid>/items')
 @jwt_required
 def items_index(collection_uuid):
     filters = get_filters_from_request()
@@ -168,7 +196,7 @@ def items_index(collection_uuid):
     else:
         return response(400, "invalid format")
 
-@app.route('/collections/by_name/<collection_name>/items')
+#@app.route('/collections/by_name/<collection_name>/items')
 @jwt_required
 def index_by_name(collection_name):
     filters = get_filters_from_request()
@@ -195,7 +223,7 @@ def index_by_name(collection_name):
             }
         }
     
-@app.route('/items/<item_uuid>')
+#@app.route('/items/<item_uuid>')
 @jwt_required
 def items_get(item_uuid):
     format = get_format_from_request()
@@ -222,7 +250,7 @@ def items_get(item_uuid):
     else:
         return response(400, "invalid format")
 
-@app.route('/collections/<collection_uuid>/items', methods=['POST'])
+#@app.route('/collections/<collection_uuid>/items', methods=['POST'])
 @jwt_required
 def items_create(collection_uuid):
     item_hash = request.json
@@ -232,7 +260,7 @@ def items_create(collection_uuid):
     return response(201, uuid)
 
 
-@app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])
+#@app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])
 @jwt_required
 def create_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
@@ -246,21 +274,21 @@ def create_from_geojson(collection_uuid):
     return response(201, rapidjson.dumps(uuids))
 
 
-@app.route('/items/<item_uuid>', methods=['DELETE'])
+#@app.route('/items/<item_uuid>', methods=['DELETE'])
 @jwt_required
 def items_delete(item_uuid):
     delete_item(item_uuid)
     return response(204)
 
 
-@app.route('/collections/<collection_uuid>/items', methods=['DELETE'])
+#@app.route('/collections/<collection_uuid>/items', methods=['DELETE'])
 @jwt_required
 def delete_items(collection_uuid):
     delete_items_by_collection_uuid(collection_uuid)
     return response(204)
 
 
-@app.route('/items/<item_uuid>', methods=['PUT'])
+#@app.route('/items/<item_uuid>', methods=['PUT'])
 @jwt_required
 def items_update(item_uuid):
     item_hash = request.json
@@ -268,14 +296,14 @@ def items_update(item_uuid):
     update_item(item_uuid, item)
     return response(204)
 
-@app.route('/items/geojson', methods=['PUT'])
+#@app.route('/items/geojson', methods=['PUT'])
 @jwt_required
 def update_from_geojson():
     feature_collection = request.json
     update_items_from_geojson(feature_collection)
     return response(204)
 
-@app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
+#@app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
 @jwt_required
 def add_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
@@ -288,7 +316,7 @@ def add_from_geojson(collection_uuid):
 
     return response(201, rapidjson.dumps(uuids))
 
-@app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
+#@app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
 @jwt_required
 def generate_walking_paths(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
@@ -313,7 +341,7 @@ def generate_walking_paths(collection_uuid):
     )
     return response(201, rapidjson.dumps(uuids))
 
-@app.route('/items/<item_uuid>/ai/sequence')
+#@app.route('/items/<item_uuid>/ai/sequence')
 @jwt_required
 def prediction_for_sensor_item(item_uuid):
     filters = get_filters_from_request()

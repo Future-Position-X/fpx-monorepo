@@ -18,7 +18,7 @@ class Store():
         try:
             self.conn = get_connection()
         except Exception as e:
-            raise StoreException(*e.args, **e.kwargs)
+            raise StoreException(*e.args)
         self._complete = False
 
     def cursor(self):
