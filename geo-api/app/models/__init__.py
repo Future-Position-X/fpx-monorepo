@@ -4,48 +4,111 @@ from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 import uuid
 
-class Collection(db.Model):
-    __tablename__ = 'collections'
+from sqlalchemy_mixins import AllFeaturesMixin, TimestampsMixin
 
-    uuid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    provider_uuid = db.Column(UUID(as_uuid=True))
-    name = db.Column(db.Text(), unique=True)
-    is_public = db.Column(db.Boolean, default=False)
+class BaseModel2(db.Model, AllFeaturesMixin, TimestampsMixin):
+    __abstract__ = True
+    __datetime_callback__ = db.func.now()
+
     revision = db.Column(db.Integer, nullable=False)
-    created_at = db.Column('created_at', db.DateTime, default=db.func.now())
-    updated_at = db.Column('updated_at', db.DateTime, default=db.func.now(), onupdate=db.func.utc_timestamp())
+
     __mapper_args__ = {
         "version_id_col": revision
     }
 
-    def __init__(self, provider_uuid, name, is_public):
-        self.provider_uuid = provider_uuid
-        self.name = name
-        self.is_public = is_public
+    pass
 
-    def __repr__(self):
-        return '<Collection uuid={}, name={}, is_public={}>'.format(self.uuid, self.name, self.is_public)
+class Provider(BaseModel2):
+    __tablename__ = 'providers'
 
-class Item(db.Model):
+    uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True,
+                     nullable=False)
+    name = db.Column(db.Text(), unique=True)
+
+    collections = db.relationship('Collection', backref='provider', lazy=True)
+
+
+class User(BaseModel2):
+    __tablename__ = 'users'
+
+    uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True,
+                     nullable=False)
+    email = db.Column(db.Text(), unique=True)
+    password = db.Column(db.Text())
+
+    provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
+
+class Collection(BaseModel2):
+    __tablename__ = 'collections'
+    __table_args__ = (
+        db.UniqueConstraint('provider_uuid', 'name'),)
+    uuid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    name = db.Column(db.Text())
+    is_public = db.Column(db.Boolean, default=False)
+
+    items = db.relationship('Item', backref='collection', lazy=True)
+
+    provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
+
+def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
+    params = filter.split(",")
+
+    for i, p in enumerate(params):
+        tokens = p.split("=")
+        name = "name_" + str(i)
+        value = "value_" + str(i)
+
+        where_clause += " properties->>%(" + \
+            name + ")s = %(" + value + ")s"
+        execute_dict[name] = tokens[0]
+        execute_dict[value] = tokens[1]
+
+        if i < (len(params) - 1):
+            where_clause += " AND"
+
+    return where_clause
+
+class Item(BaseModel2):
     __tablename__ = 'items'
 
-    uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True, nullable=False)
-    provider_uuid = db.Column(UUID(as_uuid=True))
-    collection_uuid = db.Column(UUID(as_uuid=True))
-    geometry = db.Column(Geometry(geometry_type='GEOMETRY', srid=4326))
+    uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True,
+                     nullable=False)
+    geometry = db.Column(Geometry(geometry_type='GEOMETRY'))
     properties = db.Column(JSONB)
-    revision = db.Column(db.Integer, nullable=False)
-    created_at = db.Column('created_at', db.DateTime, default=db.func.now())
-    updated_at = db.Column('updated_at', db.DateTime, default=db.func.now(), onupdate=db.func.utc_timestamp())
-    __mapper_args__ = {
-        "version_id_col": revision
-    }
 
-    def __init__(self, provider_uuid, collection_uuid, geometry, properties):
-        self.provider_uuid = provider_uuid
-        self.collection_uuid = collection_uuid
-        self.geometry = geometry
-        self.properties = properties
+    collection_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('collections.uuid'), index=True, nullable=False)
+    provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
-    def __repr__(self):
-        return '<Item uuid={}, provider_uuid={}, collection_uuid={}, geometry=SNIP, properties={}>'.format(self.uuid, self.provider_uuid, self.collection_uuid, self.properties)
+    @classmethod
+    def find_by_collection_uuid(cls, collection_uuid, filters):
+        where = "collection_uuid = :collection_uuid"
+
+        if filters["valid"]:
+            where += " AND ST_IsValid(geometry)"
+
+        exec_dict = {
+            "collection_uuid": collection_uuid,
+            "offset": filters["offset"],
+            "limit": filters["limit"]
+        }
+
+        if filters["property_filter"] is not None:
+            where += " AND "
+            where = append_property_filter_to_where_clause(
+                where, filters["property_filter"], exec_dict)
+
+        result = cls.query.from_statement(db.text("""
+            SELECT uuid,
+                provider_uuid,
+                collection_uuid,
+                properties,
+                ST_AsGeoJSON(geometry)::jsonb as geometry
+            FROM items
+            WHERE """ + where + """
+                OFFSET :offset
+                LIMIT :limit
+            """)).params(exec_dict).all()
+
+        return result
+        #print(result)
+        #return [Item(**row) for row in result]
