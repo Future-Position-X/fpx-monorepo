@@ -4,7 +4,7 @@ import pytest
 from app import create_app
 from app import db as _db
 from sqlalchemy import event
-from sqlalchemy.orm import sessionmaker
+
 
 @pytest.fixture(scope="session")
 def app(request):
@@ -14,14 +14,6 @@ def app(request):
     return create_app("testing")
 
 @pytest.fixture(scope="session")
-def client(app, request):
-    client = app.test_client()
-    client.environ_base[
-        'HTTP_AUTHORIZATION'] = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1MmZhZGRiZC01NmZjLTQyZjQtOGU4Yi04M2E1ZGYxMDg3NmEiLCJleHAiOjE1OTE5NDQ5MjksInByb3ZpZGVyX3V1aWQiOiI0NTQ2MjY3NS0xYjBjLTQ1NmYtOTU2My1jZmM3Y2MzMjA4YzMifQ.vWcBBZ-CLaoaVlOFeVZHng-YCG3yxdA3y1FiQI_1_38'
-    client.environ_base['HTTP_CONTENT_TYPE'] = 'application/json'
-    return client
-
-@pytest.fixture(scope="session")
 def db(app, request):
     """
     Returns session-wide initialised database.
@@ -29,6 +21,41 @@ def db(app, request):
     with app.app_context():
         _db.drop_all()
         _db.create_all()
+
+@pytest.fixture(scope="session")
+def provider(app, db, request):
+    """
+    Returns session-wide initialised database.
+    """
+    from app.models import Provider
+    with app.app_context():
+        provider = Provider.create(name='test-provider')
+        Provider.session().commit()
+        return provider.to_dict()
+
+@pytest.fixture(scope="session")
+def collection(app, provider, request):
+    """
+    Returns session-wide initialised database.
+    """
+    from app.models import Collection
+    with app.app_context():
+        collection = Collection.create(name='test-provider-collection', is_public=True, provider_uuid=provider['uuid'])
+        Collection.session().commit()
+        return collection.to_dict()
+
+@pytest.fixture(scope="session")
+def client(app, provider, request):
+    from app.services.session import create_access_token
+    provider_uuid = str(provider['uuid'])
+    with app.app_context():
+        token = create_access_token('abc123', provider_uuid)
+    client = app.test_client()
+    client.environ_base[
+        'HTTP_AUTHORIZATION'] = 'Bearer ' + token
+    client.environ_base['HTTP_CONTENT_TYPE'] = 'application/json'
+    return client
+
 
 
 @pytest.fixture(scope="function", autouse=True)
