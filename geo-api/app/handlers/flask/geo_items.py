@@ -1,10 +1,13 @@
 import rapidjson
 import base64
+
+import sqlalchemy_mixins
 from rapidjson import DM_ISO8601, UM_CANONICAL
-from uuid import UUID
+
 from shapely.geometry import Point
 from app.models.item import Item
 from app.models import Item as ItemDB
+from app.models import Collection as CollectionDB
 from distutils.util import strtobool
 from app import app, api, db
 from app.handlers.flask import (
@@ -12,7 +15,7 @@ from app.handlers.flask import (
     get_provider_uuid_from_request,
 
 )
-from flask import request
+from flask import request, abort
 
 from app.services.collection import (
     get_collection_uuid_by_collection_name
@@ -45,7 +48,7 @@ from flask_restx import Resource, fields
 
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
-class MyFormat(fields.Raw):
+class GeometryFormatter(fields.Raw):
     def format(self, value):
         return mapping(to_shape(value))
 
@@ -53,11 +56,21 @@ item_model = api.model('Item', {
     'uuid': fields.String(description='uuid'),
     'provider_uuid': fields.String(description='provider_uuid'),
     'collection_uuid': fields.String(description='collection_uuid'),
-    'geometry': MyFormat(), #fields.String(description='geometry'),
+    'geometry': GeometryFormatter(description='geometry'),
     'properties': fields.Wildcard(fields.String, description='properties'),
     'revision': fields.String(description='revision'),
     'created_at': fields.String(description='created_at'),
     'updated_at': fields.String(description='updated_at'),
+})
+
+create_item_model = api.model('Item', {
+    'geometry': GeometryFormatter(description='geometry'),
+    'properties': fields.Wildcard(fields.String, description='properties'),
+})
+
+update_item_model = api.model('Item', {
+    'geometry': GeometryFormatter(description='geometry'),
+    'properties': fields.Wildcard(fields.String, description='properties'),
 })
 
 def get_collection_uuid_from_event(event):
@@ -158,14 +171,42 @@ def get_format_from_request():
 
 ns = api.namespace('items', description='Item operations', path='/')
 
-@ns.route('/collections/<collection_uuid>/items')
+@ns.route('/collections/<uuid:collection_uuid>/items')
 class ItemList(Resource):
     @jwt_required
-    @ns.doc('list_collections')
+    @ns.doc('list_items')
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
-        items = db.session.query(ItemDB).all()
+        items = ItemDB.where(collection_uuid=collection_uuid).all()
         return items
+
+    @jwt_required
+    @ns.doc('create_item')
+    @ns.expect(create_item_model)
+    @ns.marshal_with(item_model, 201)
+    def post(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        coll = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+        item_hash = request.get_json()
+        item_hash['provider_uuid'] = coll.provider_uuid
+        item_hash['collection_uuid'] = coll.uuid
+        item = ItemDB(**item_hash)
+
+        item.save()
+
+        return item, 201
+
+@ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
+@ns.response(404, 'Item not found')
+@ns.param('collection_uuid', 'The collection identifier')
+@ns.param('item_uuid', 'The item identifier')
+class Item(Resource):
+    @jwt_required
+    @ns.doc('get_item')
+    @ns.marshal_with(item_model)
+    def get(self, collection_uuid, item_uuid):
+        item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
+        return item
 
 #@app.route('/collections/<collection_uuid>/items')
 @jwt_required
@@ -251,13 +292,13 @@ def items_get(item_uuid):
         return response(400, "invalid format")
 
 #@app.route('/collections/<collection_uuid>/items', methods=['POST'])
-@jwt_required
-def items_create(collection_uuid):
-    item_hash = request.json
-    item = Item(**item_hash)
-    uuid = create_item(item)
-
-    return response(201, uuid)
+# @jwt_required
+# def items_create(collection_uuid):
+#     item_hash = request.json
+#     item = Item(**item_hash)
+#     uuid = create_item(item)
+#
+#     return response(201, uuid)
 
 
 #@app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])

@@ -45,7 +45,7 @@ def collection(app, provider, request):
         return collection.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, provider, request):
+def client(app, provider, collection, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
@@ -69,6 +69,9 @@ def session(app, db, request):
 
         options = dict(bind=conn, binds={})
         sess = _db.create_scoped_session(options=options)
+
+        from app.models import BaseModel2
+        BaseModel2.set_session(sess)
 
         # establish  a SAVEPOINT just before beginning the test
         # (http://docs.sqlalchemy.org/en/latest/orm/session_transaction.html#using-savepoint)
