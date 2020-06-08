@@ -10,7 +10,7 @@ def collection():
 
 def item():
     return {
-        'geometry': None,
+        'geometry': 'POINT(1 1)',
         'properties': {
             'name': 'somename',
         },
@@ -31,6 +31,26 @@ def test_item_creation(client):
 
     res = client.get(
         '/collections/{}/items/{}'.format(item_hash['collection_uuid'], item_hash['uuid']))
+
+    assert res.status_code == 200
+    print(res.data)
+    assert ('somename' in str(res.data))
+
+
+def test_get_items(client):
+    res = client.post('/collections', json=collection())
+    assert res.status_code == 201
+    collection_hash = json.loads(res.data.decode('utf-8'))
+
+    res = client.get('/collections/{}'.format(collection_hash['uuid']))
+    assert res.status_code == 200
+
+    res = client.post('/collections/{}/items'.format(collection_hash['uuid']), json=item())
+    assert res.status_code == 201
+    item_hash = json.loads(res.data.decode('utf-8'))
+
+    res = client.get(
+        '/collections/{}/items'.format(item_hash['collection_uuid']))
 
     assert res.status_code == 200
     assert ('somename' in str(res.data))

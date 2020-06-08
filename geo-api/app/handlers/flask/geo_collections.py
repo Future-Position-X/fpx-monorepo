@@ -60,7 +60,7 @@ class CollectionList(Resource):
         collection['provider_uuid'] = provider_uuid
         collection = CollectionDB(**collection)
         collection.save()
-
+        collection.session().commit()
         return collection, 201
 
 
@@ -81,6 +81,7 @@ class Collection(Resource):
     def delete(self, collection_uuid):
         collection = CollectionDB.find_or_fail(collection_uuid)
         collection.delete()
+        collection.session().commit()
         return '', 204
 
     @jwt_required
@@ -98,18 +99,20 @@ class Collection(Resource):
         collection.is_public = collection_new.is_public
 
         collection.save()
+        collection.session().commit()
+
         return collection
 
 
-@ns.route('/<src_collection_uuid>/copy')
-@ns.route('/<src_collection_uuid>/copy/<dst_collection_uuid>')
+@ns.route('/<uuid:src_collection_uuid>/copy')
+@ns.route('/<uuid:src_collection_uuid>/copy/<uuid:dst_collection_uuid>')
 @ns.param('src_collection_uuid', 'The src collection identifier')
 @ns.param('dst_collection_uuid', 'The dst collection identifier')
 class CollectionCopy(Resource):
     @jwt_required
     @ns.doc('copy_collection')
     @ns.marshal_with(collection_model, 201)
-    def post(src_collection_uuid, dst_collection_uuid=None):
+    def post(self, src_collection_uuid, dst_collection_uuid=None):
         provider_uuid = get_provider_uuid_from_request()
         try:
             dst_collection_uuid = copy_collection_from(
@@ -119,6 +122,6 @@ class CollectionCopy(Resource):
         except PermissionError as e:
             return '', 403
 
-        collection = get_collection_by_uuid(dst_collection_uuid)
+        collection = CollectionDB.find_or_fail(dst_collection_uuid)
 
         return collection, 201

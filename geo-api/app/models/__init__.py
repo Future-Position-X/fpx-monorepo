@@ -4,11 +4,11 @@ from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 import uuid
 
-from sqlalchemy_mixins import TimestampsMixin, ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
+from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
     ModelNotFoundError
 
 
-class OurActiveRecordMixin(ActiveRecordMixin):
+class FPXActiveRecordMixin(ActiveRecordMixin):
     __abstract__ = True
 
     @classmethod
@@ -20,12 +20,29 @@ class OurActiveRecordMixin(ActiveRecordMixin):
             raise ModelNotFoundError("{} with matching '{}' was not found"
                                      .format(cls.__name__, kwargs))
 
-
-class BaseModel2(db.Model, OurActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, TimestampsMixin):
+class FPXTimestampsMixin:
     __abstract__ = True
+
     __datetime_callback__ = db.func.now
 
-    revision = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime,
+                           server_default=db.text('now()'),
+                           nullable=False)
+
+    updated_at = db.Column(db.DateTime,
+                           server_default=db.text('now()'),
+                           nullable=False)
+
+@db.event.listens_for(FPXTimestampsMixin, 'before_update', propagate=True)
+def _receive_before_update(mapper, connection, target):
+    """Listen for updates and update `updated_at` column."""
+    target.updated_at = target.__datetime_callback__()
+
+
+class BaseModel2(db.Model, FPXActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, FPXTimestampsMixin):
+    __abstract__ = True
+
+    revision = db.Column(db.Integer, server_default=db.text('1'), nullable=False)
 
     __mapper_args__ = {
         "version_id_col": revision
@@ -129,5 +146,15 @@ class Item(BaseModel2):
             """)).params(exec_dict).all()
 
         return result
-        # print(result)
-        # return [Item(**row) for row in result]
+
+    @classmethod
+    def copy_items(cls, src_collection_uuid, dest_collection_uuid, provider_uuid):
+        result = cls.session().execute("""
+            INSERT INTO items (provider_uuid, collection_uuid, geometry, properties) 
+                SELECT :provider_uuid, :dest_collection_uuid, geometry, properties
+                FROM items WHERE collection_uuid = :src_collection_uuid
+            """, {
+            "provider_uuid": provider_uuid,
+            "src_collection_uuid": src_collection_uuid,
+            "dest_collection_uuid": dest_collection_uuid
+        })

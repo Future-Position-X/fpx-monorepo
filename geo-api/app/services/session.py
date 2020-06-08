@@ -9,9 +9,9 @@ def authenticate(user, password):
 
 def create_access_token(user_uuid, provider_uuid):
     claims = {
-        "sub": user_uuid,
+        "sub": str(user_uuid),
         "exp": datetime.utcnow() + timedelta(days=14),
-        "provider_uuid": provider_uuid
+        "provider_uuid": str(provider_uuid)
     }
 
     token = jwt.encode(claims, current_app.config['SECRET_KEY'], algorithm='HS256')

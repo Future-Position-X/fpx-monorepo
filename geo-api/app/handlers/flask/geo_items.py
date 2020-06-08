@@ -48,15 +48,19 @@ from flask_restx import Resource, fields
 
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
+
+
 class GeometryFormatter(fields.Raw):
     def format(self, value):
+        #return value
         return mapping(to_shape(value))
+
 
 item_model = api.model('Item', {
     'uuid': fields.String(description='uuid'),
     'provider_uuid': fields.String(description='provider_uuid'),
     'collection_uuid': fields.String(description='collection_uuid'),
-    'geometry': GeometryFormatter(description='geometry'),
+    'geometry': GeometryFormatter(),
     'properties': fields.Wildcard(fields.String, description='properties'),
     'revision': fields.String(description='revision'),
     'created_at': fields.String(description='created_at'),
@@ -64,12 +68,12 @@ item_model = api.model('Item', {
 })
 
 create_item_model = api.model('Item', {
-    'geometry': GeometryFormatter(description='geometry'),
+    'geometry': GeometryFormatter(),
     'properties': fields.Wildcard(fields.String, description='properties'),
 })
 
 update_item_model = api.model('Item', {
-    'geometry': GeometryFormatter(description='geometry'),
+    'geometry': GeometryFormatter(),
     'properties': fields.Wildcard(fields.String, description='properties'),
 })
 
@@ -193,7 +197,7 @@ class ItemList(Resource):
         item = ItemDB(**item_hash)
 
         item.save()
-
+        item.session().commit()
         return item, 201
 
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')

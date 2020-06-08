@@ -11,3 +11,12 @@ services:
       - POSTGRES_PASSWORD=master
     ports:
       - 5432:5432
+  webserver:
+    build: .
+    volumes:
+    - ./:/app
+    ports:
+    - 80:80
+    environment:
+      - DATABASE_URL=postgresql://master:master@postgis:5432/development
+      - JWT_SECRET=mRJZQrLE6HlStXd4eEQcMLNDDIltgo1eYUzA5TbAcaRlwCX6FI2SLYKjgq19
