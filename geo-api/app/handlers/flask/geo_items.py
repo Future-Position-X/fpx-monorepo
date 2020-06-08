@@ -253,9 +253,14 @@ def items_get(item_uuid):
 #@app.route('/collections/<collection_uuid>/items', methods=['POST'])
 @jwt_required
 def items_create(collection_uuid):
-    item_hash = request.json
-    item = Item(**item_hash)
-    uuid = create_item(item)
+    format = get_format_from_request()
+
+    if format == "json":
+        item_hash = request.json
+        item = Item(**item_hash)
+        uuid = create_item(item)
+    elif format == "geojson":
+        return response(501)
 
     return response(201, uuid)
 
@@ -264,12 +269,17 @@ def items_create(collection_uuid):
 @jwt_required
 def create_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
-    geojson = request.json
+    format = get_format_from_request()
 
-    uuids = create_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
+    if format == "geojson":
+        geojson = request.json
+
+        uuids = create_items_from_geojson(
+            geojson=geojson,
+            collection_uuid=collection_uuid,
+            provider_uuid=provider_uuid)
+    elif format == "json":
+        return response(501)
 
     return response(201, rapidjson.dumps(uuids))
 
@@ -291,28 +301,45 @@ def delete_items(collection_uuid):
 #@app.route('/items/<item_uuid>', methods=['PUT'])
 @jwt_required
 def items_update(item_uuid):
-    item_hash = request.json
-    item = Item(**item_hash)
-    update_item(item_uuid, item)
+    format = get_format_from_request()
+
+    if format = "json":
+        item_hash = request.json
+        item = Item(**item_hash)
+        update_item(item_uuid, item)
+    elif format == "geojson":
+        return response(501)
+
     return response(204)
 
 #@app.route('/items/geojson', methods=['PUT'])
 @jwt_required
 def update_from_geojson():
-    feature_collection = request.json
-    update_items_from_geojson(feature_collection)
+    format = get_format_from_request()
+
+    if format == "geojson":
+        feature_collection = request.json
+        update_items_from_geojson(feature_collection)
+    elif format == "json":
+        return response(501)
+
     return response(204)
 
 #@app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
 @jwt_required
 def add_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
-    geojson = request.json
+    format = get_format_from_request()
 
-    uuids = add_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
+    if format == "geojson":
+        geojson = request.json
+
+        uuids = add_items_from_geojson(
+            geojson=geojson,
+            collection_uuid=collection_uuid,
+            provider_uuid=provider_uuid)
+    elif format == "json":
+        return response(501)
 
     return response(201, rapidjson.dumps(uuids))
 
