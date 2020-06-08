@@ -29,7 +29,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'postgresql://master:master@localhost:5432/testing'
-    SQLALCHEMY_ECHO = False
+    SQLALCHEMY_ECHO = True
 
 app_config = {
     'development': DevelopmentConfig,

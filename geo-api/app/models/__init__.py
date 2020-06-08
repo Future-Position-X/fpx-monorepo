@@ -4,9 +4,24 @@ from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 import uuid
 
-from sqlalchemy_mixins import AllFeaturesMixin, TimestampsMixin
+from sqlalchemy_mixins import TimestampsMixin, ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
+    ModelNotFoundError
 
-class BaseModel2(db.Model, AllFeaturesMixin, TimestampsMixin):
+
+class OurActiveRecordMixin(ActiveRecordMixin):
+    __abstract__ = True
+
+    @classmethod
+    def first_or_fail(cls, **kwargs):
+        result = cls.where(**kwargs).first()
+        if result:
+            return result
+        else:
+            raise ModelNotFoundError("{} with matching '{}' was not found"
+                                     .format(cls.__name__, kwargs))
+
+
+class BaseModel2(db.Model, OurActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, TimestampsMixin):
     __abstract__ = True
     __datetime_callback__ = db.func.now
 
@@ -17,6 +32,7 @@ class BaseModel2(db.Model, AllFeaturesMixin, TimestampsMixin):
     }
 
     pass
+
 
 class Provider(BaseModel2):
     __tablename__ = 'providers'
@@ -38,6 +54,7 @@ class User(BaseModel2):
 
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
+
 class Collection(BaseModel2):
     __tablename__ = 'collections'
     __table_args__ = (
@@ -50,6 +67,7 @@ class Collection(BaseModel2):
 
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
+
 def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
     params = filter.split(",")
 
@@ -59,7 +77,7 @@ def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
         value = "value_" + str(i)
 
         where_clause += " properties->>%(" + \
-            name + ")s = %(" + value + ")s"
+                        name + ")s = %(" + value + ")s"
         execute_dict[name] = tokens[0]
         execute_dict[value] = tokens[1]
 
@@ -67,6 +85,7 @@ def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
             where_clause += " AND"
 
     return where_clause
+
 
 class Item(BaseModel2):
     __tablename__ = 'items'
@@ -110,5 +129,5 @@ class Item(BaseModel2):
             """)).params(exec_dict).all()
 
         return result
-        #print(result)
-        #return [Item(**row) for row in result]
+        # print(result)
+        # return [Item(**row) for row in result]

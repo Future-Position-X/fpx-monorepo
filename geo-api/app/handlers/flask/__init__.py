@@ -4,6 +4,9 @@ import jwt
 import os
 from flask_jwt_extended import get_raw_jwt
 
+def handle_model_not_found_error(e):
+    return 'not found', 404
+
 def response(status_code, payload=None):
     response = app.response_class(
         response=payload,

@@ -4,6 +4,8 @@ from flask_restx import Api
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+import sqlalchemy_mixins
+
 from app.config import app_config
 
 api = Api()
@@ -31,6 +33,9 @@ def create_app(config_name=None):
 
     from app.models import BaseModel2
     BaseModel2.set_session(db.session)
+
+    from app.handlers.flask import handle_model_not_found_error
+    app.register_error_handler(sqlalchemy_mixins.ModelNotFoundError, handle_model_not_found_error)
 
     from app.handlers.flask import geo_collections, geo_items
     return app
