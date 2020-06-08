@@ -8,7 +8,7 @@ from sqlalchemy_mixins import AllFeaturesMixin, TimestampsMixin
 
 class BaseModel2(db.Model, AllFeaturesMixin, TimestampsMixin):
     __abstract__ = True
-    __datetime_callback__ = db.func.now()
+    __datetime_callback__ = db.func.now
 
     revision = db.Column(db.Integer, nullable=False)
 
