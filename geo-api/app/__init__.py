@@ -37,5 +37,5 @@ def create_app(config_name=None):
     from app.handlers.flask import handle_model_not_found_error
     app.register_error_handler(sqlalchemy_mixins.ModelNotFoundError, handle_model_not_found_error)
 
-    from app.handlers.flask import geo_collections, geo_items
+    from app.handlers.flask import geo_collections, geo_items, geo_sessions
     return app

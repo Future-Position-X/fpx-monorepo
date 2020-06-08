@@ -1,8 +1,6 @@
 from app import app
-from flask import request
-import jwt
-import os
 from flask_jwt_extended import get_raw_jwt
+from uuid import UUID
 
 def handle_model_not_found_error(e):
     return 'not found', 404
@@ -17,4 +15,4 @@ def response(status_code, payload=None):
 
 def get_provider_uuid_from_request():
     claims = get_raw_jwt()
-    return claims['provider_uuid']
+    return UUID(claims['provider_uuid'])

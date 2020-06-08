@@ -2,7 +2,7 @@ import rapidjson
 import base64
 from rapidjson import DM_ISO8601
 
-from app import app
+from app import app, api
 from app.handlers.flask import (
     response
 )
@@ -13,17 +13,22 @@ from app.services.session import (
     )
 from flask import request
 from flask_jwt_extended import jwt_required
+from flask_restx import Resource, fields
 
+ns = api.namespace('sessions', 'Session operations', path="/")
 
-@app.route('/sessions', methods=['POST'])
-def sessions_create():
-    json = request.json
-    email = json["email"]
-    password = json["password"]
-    user = get_user_by_email(email)
+from app.models import User as UserDB
 
-    if authenticate(user, password):
-        token = create_access_token(user.uuid, user.provider_uuid)
-        return response(201, token)
+@ns.route('/sessions')
+class Session(Resource):
+    def post(self):
+        json = request.get_json()
+        email = json["email"]
+        password = json["password"]
+        user = UserDB.first_or_fail(email=email)
     
-    return response(401)
+        if authenticate(user, password):
+            token = create_access_token(user.uuid, user.provider_uuid)
+            return str(token), 201
+        
+        return '', 401
