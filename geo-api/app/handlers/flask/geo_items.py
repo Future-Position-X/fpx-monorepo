@@ -49,19 +49,16 @@ from flask_restx import Resource, fields
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
 
-
 class GeometryFormatter(fields.Raw):
     def format(self, value):
-        #return value
         return mapping(to_shape(value))
-
 
 item_model = api.model('Item', {
     'uuid': fields.String(description='uuid'),
     'provider_uuid': fields.String(description='provider_uuid'),
     'collection_uuid': fields.String(description='collection_uuid'),
     'geometry': GeometryFormatter(),
-    'properties': fields.Wildcard(fields.String, description='properties'),
+    'properties': fields.Raw(description='properties'),
     'revision': fields.String(description='revision'),
     'created_at': fields.String(description='created_at'),
     'updated_at': fields.String(description='updated_at'),
