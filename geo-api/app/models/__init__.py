@@ -4,19 +4,52 @@ from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 import uuid
 
-from sqlalchemy_mixins import AllFeaturesMixin, TimestampsMixin
+from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
+    ModelNotFoundError
 
-class BaseModel2(db.Model, AllFeaturesMixin, TimestampsMixin):
+
+class FPXActiveRecordMixin(ActiveRecordMixin):
     __abstract__ = True
+
+    @classmethod
+    def first_or_fail(cls, **kwargs):
+        result = cls.where(**kwargs).first()
+        if result:
+            return result
+        else:
+            raise ModelNotFoundError("{} with matching '{}' was not found"
+                                     .format(cls.__name__, kwargs))
+
+class FPXTimestampsMixin:
+    __abstract__ = True
+
     __datetime_callback__ = db.func.now
 
-    revision = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime,
+                           server_default=db.text('now()'),
+                           nullable=False)
+
+    updated_at = db.Column(db.DateTime,
+                           server_default=db.text('now()'),
+                           nullable=False)
+
+@db.event.listens_for(FPXTimestampsMixin, 'before_update', propagate=True)
+def _receive_before_update(mapper, connection, target):
+    """Listen for updates and update `updated_at` column."""
+    target.updated_at = target.__datetime_callback__()
+
+
+class BaseModel2(db.Model, FPXActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, FPXTimestampsMixin):
+    __abstract__ = True
+
+    revision = db.Column(db.Integer, server_default=db.text('1'), nullable=False)
 
     __mapper_args__ = {
         "version_id_col": revision
     }
 
     pass
+
 
 class Provider(BaseModel2):
     __tablename__ = 'providers'
@@ -38,6 +71,7 @@ class User(BaseModel2):
 
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
+
 class Collection(BaseModel2):
     __tablename__ = 'collections'
     __table_args__ = (
@@ -50,6 +84,7 @@ class Collection(BaseModel2):
 
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
+
 def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
     params = filter.split(",")
 
@@ -59,7 +94,7 @@ def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
         value = "value_" + str(i)
 
         where_clause += " properties->>%(" + \
-            name + ")s = %(" + value + ")s"
+                        name + ")s = %(" + value + ")s"
         execute_dict[name] = tokens[0]
         execute_dict[value] = tokens[1]
 
@@ -67,6 +102,7 @@ def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
             where_clause += " AND"
 
     return where_clause
+
 
 class Item(BaseModel2):
     __tablename__ = 'items'
@@ -110,5 +146,15 @@ class Item(BaseModel2):
             """)).params(exec_dict).all()
 
         return result
-        #print(result)
-        #return [Item(**row) for row in result]
+
+    @classmethod
+    def copy_items(cls, src_collection_uuid, dest_collection_uuid, provider_uuid):
+        result = cls.session().execute("""
+            INSERT INTO items (provider_uuid, collection_uuid, geometry, properties) 
+                SELECT :provider_uuid, :dest_collection_uuid, geometry, properties
+                FROM items WHERE collection_uuid = :src_collection_uuid
+            """, {
+            "provider_uuid": provider_uuid,
+            "src_collection_uuid": src_collection_uuid,
+            "dest_collection_uuid": dest_collection_uuid
+        })

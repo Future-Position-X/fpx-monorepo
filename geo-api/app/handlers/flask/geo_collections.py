@@ -31,16 +31,15 @@ collection_model = api.model('Collection', {
 })
 
 create_collection_model = api.model('CreateCollection', {
-    'provider_uuid': fields.String(description='provider_uuid'),
     'name': fields.String(description='name'),
     'is_public': fields.String(description='is_public'),
 })
 
 update_collection_model = api.model('UpdateCollection', {
-    'provider_uuid': fields.String(description='provider_uuid'),
     'name': fields.String(description='name'),
     'is_public': fields.String(description='is_public'),
 })
+
 
 @ns.route('/')
 class CollectionList(Resource):
@@ -48,7 +47,7 @@ class CollectionList(Resource):
     @ns.doc('list_collections')
     @ns.marshal_list_with(collection_model)
     def get(self):
-        collections = db.session.query(CollectionDB).all()
+        collections = CollectionDB.all()
         return collections
 
     @jwt_required
@@ -60,9 +59,8 @@ class CollectionList(Resource):
         collection = request.get_json()
         collection['provider_uuid'] = provider_uuid
         collection = CollectionDB(**collection)
-        db.session.add(collection)
-        db.session.commit()
-        collection = db.session.query(CollectionDB).get(collection.uuid)
+        collection.save()
+        collection.session().commit()
         return collection, 201
 
 
@@ -74,18 +72,16 @@ class Collection(Resource):
     @ns.doc('get_collection')
     @ns.marshal_with(collection_model)
     def get(self, collection_uuid):
-        collection = db.session.query(CollectionDB).get(collection_uuid)
-        if not collection:
-            abort(404)
+        collection = CollectionDB.find_or_fail(collection_uuid)
         return collection
 
     @jwt_required
     @ns.doc('delete_collection')
     @ns.response(204, 'Collection deleted')
     def delete(self, collection_uuid):
-        collection = db.session.query(CollectionDB).filter_by(uuid=collection_uuid).first()
-        db.session.delete(collection)
-        db.session.commit()
+        collection = CollectionDB.find_or_fail(collection_uuid)
+        collection.delete()
+        collection.session().commit()
         return '', 204
 
     @jwt_required
@@ -97,24 +93,26 @@ class Collection(Resource):
         collection_dict = request.get_json()
         collection_new = CollectionModel(**collection_dict)
 
-        collection = db.session.query(CollectionDB).get(collection_uuid)
+        collection = CollectionDB.find_or_fail(collection_uuid)
 
         collection.name = collection_new.name
         collection.is_public = collection_new.is_public
 
-        db.session.commit()
+        collection.save()
+        collection.session().commit()
+
         return collection
 
 
-@ns.route('/<src_collection_uuid>/copy')
-@ns.route('/<src_collection_uuid>/copy/<dst_collection_uuid>')
+@ns.route('/<uuid:src_collection_uuid>/copy')
+@ns.route('/<uuid:src_collection_uuid>/copy/<uuid:dst_collection_uuid>')
 @ns.param('src_collection_uuid', 'The src collection identifier')
 @ns.param('dst_collection_uuid', 'The dst collection identifier')
 class CollectionCopy(Resource):
     @jwt_required
     @ns.doc('copy_collection')
     @ns.marshal_with(collection_model, 201)
-    def post(src_collection_uuid, dst_collection_uuid=None):
+    def post(self, src_collection_uuid, dst_collection_uuid=None):
         provider_uuid = get_provider_uuid_from_request()
         try:
             dst_collection_uuid = copy_collection_from(
@@ -124,6 +122,6 @@ class CollectionCopy(Resource):
         except PermissionError as e:
             return '', 403
 
-        collection = get_collection_by_uuid(dst_collection_uuid)
+        collection = CollectionDB.find_or_fail(dst_collection_uuid)
 
         return collection, 201

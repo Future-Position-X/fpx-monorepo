@@ -40,12 +40,23 @@ def collection(app, provider, request):
     """
     from app.models import Collection
     with app.app_context():
-        collection = Collection.create(name='test-provider-collection', is_public=True, provider_uuid=provider['uuid'])
+        collection = Collection.create(name='test-collection', is_public=True, provider_uuid=provider['uuid'])
         Collection.session().commit()
         return collection.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, provider, request):
+def item(app, provider, collection, request):
+    """
+    Returns session-wide initialised database.
+    """
+    from app.models import Item
+    with app.app_context():
+        item = Item.create(collection_uuid=collection['uuid'], provider_uuid=provider['uuid'], geometry='POINT(1 1)', properties={'name': 'test-item'})
+        Item.session().commit()
+        return item.to_dict()
+
+@pytest.fixture(scope="session")
+def client(app, provider, collection, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
@@ -69,6 +80,9 @@ def session(app, db, request):
 
         options = dict(bind=conn, binds={})
         sess = _db.create_scoped_session(options=options)
+
+        from app.models import BaseModel2
+        BaseModel2.set_session(sess)
 
         # establish  a SAVEPOINT just before beginning the test
         # (http://docs.sqlalchemy.org/en/latest/orm/session_transaction.html#using-savepoint)

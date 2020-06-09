@@ -2,6 +2,8 @@ from app.stores.collection import CollectionStore
 from app.services.item import copy_items_by_collection_uuid
 from app.models.collection import Collection
 
+from app.models import Collection as CollectionDB
+
 def create_collection(collection):
     with CollectionStore() as collection_store:
         uuid = collection_store.insert(collection)
@@ -42,19 +44,20 @@ def update_collection_by_uuid(collection_uuid, collection):
         collection_store.complete()
 
 def copy_collection_from(src_collection_uuid, dst_collection_uuid, provider_uuid):
-    src_collection = get_collection_by_uuid(src_collection_uuid)
-
+    src_collection = CollectionDB.find_or_fail(src_collection_uuid)
     if src_collection.provider_uuid != provider_uuid and not src_collection.is_public:
         raise PermissionError()
 
     if dst_collection_uuid is None:
         dst_collection = {
             "provider_uuid": provider_uuid,
-            "name": src_collection.name,
+            "name": src_collection.name + '_copy',
             "is_public": False
         }
 
-        dst_collection_uuid = create_collection(Collection(**dst_collection))
-    
+        dst_collection = CollectionDB.create(**dst_collection)
+        dst_collection_uuid = dst_collection.uuid
+
     copy_items_by_collection_uuid(src_collection_uuid, dst_collection_uuid, provider_uuid)
+    src_collection.session().commit()
     return dst_collection_uuid

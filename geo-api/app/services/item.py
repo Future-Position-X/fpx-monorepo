@@ -2,6 +2,7 @@ from app.stores.item import ItemStore
 from app.models.item import Item
 from lib.visualizer.renderer import render_feature_collection, render_feature
 
+from app.models import Item as ItemDB
 
 def get_item_by_uuid_as_geojson(item_uuid):
     with ItemStore() as item_store:
@@ -132,6 +133,4 @@ def delete_items_by_collection_uuid(collection_uuid):
 
 
 def copy_items_by_collection_uuid(src_collection_uuid, dest_collection_uuid, provider_uuid):
-    with ItemStore() as item_store:
-        item_store.copy_items(src_collection_uuid, dest_collection_uuid, provider_uuid)
-        item_store.complete()
+    ItemDB.copy_items(src_collection_uuid, dest_collection_uuid, provider_uuid)
