@@ -120,21 +120,62 @@ class Item(BaseModel2):
 
     def create_where(collection_uuid, filters):
         where = "collection_uuid = :collection_uuid"
-
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
+
+        if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "within-distance":
+            where += """
+            AND ST_DWithin(
+                geometry,
+                :distance_point,
+                :distance_d,
+                False
+            )
+            """
+
+        if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "intersect":
+            where += """
+            AND ST_Intersects(
+                geometry,
+                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax, 4326)
+            )
+            """
+
+        if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "within":
+            where += """
+            AND ST_Within(
+                geometry,
+                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax, 4326)
+            )
+            """
 
         exec_dict = {
             "collection_uuid": collection_uuid,
             "offset": filters["offset"],
-            "limit": filters["limit"]
+            "limit": filters["limit"],
         }
+
+        if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within', 'intersect']:
+            exec_dict.update({
+                "envelope_xmin": filters['spatial_filter']['envelope']['xmin'],
+                "envelope_ymin": filters['spatial_filter']['envelope']['ymin'],
+                "envelope_xmax": filters['spatial_filter']['envelope']['xmax'],
+                "envelope_ymax": filters['spatial_filter']['envelope']['ymax'],
+            })
+
+        if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within-distance']:
+            exec_dict.update({
+                "distance_point": filters['spatial_filter']['distance']['point'].wkt,
+                "distance_d": filters['spatial_filter']['distance']['d'],
+            })
 
         if filters["property_filter"] is not None:
             where += " AND "
             where = append_property_filter_to_where_clause(
                 where, filters["property_filter"], exec_dict)
+
         return where, exec_dict
+
 
     @classmethod
     def find_by_collection_uuid(cls, collection_uuid, filters):
