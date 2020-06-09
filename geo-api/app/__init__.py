@@ -7,7 +7,6 @@ from flask_migrate import Migrate
 import sqlalchemy_mixins
 
 from app.config import app_config
-
 api = Api()
 db = SQLAlchemy()
 migrate = Migrate()
@@ -38,4 +37,5 @@ def create_app(config_name=None):
     app.register_error_handler(sqlalchemy_mixins.ModelNotFoundError, handle_model_not_found_error)
 
     from app.handlers.flask import geo_collections, geo_items, geo_sessions
+
     return app

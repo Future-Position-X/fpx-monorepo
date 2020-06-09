@@ -6,7 +6,7 @@ services:
     volumes:
       - ./postgis-data:/var/lib/postgresql
     environment:
-      - POSTGRES_DB=gia
+      - POSTGRES_DB=development
       - POSTGRES_USER=master
       - POSTGRES_PASSWORD=master
     ports:
@@ -20,3 +20,4 @@ services:
     environment:
       - DATABASE_URL=postgresql://master:master@postgis:5432/development
       - JWT_SECRET=mRJZQrLE6HlStXd4eEQcMLNDDIltgo1eYUzA5TbAcaRlwCX6FI2SLYKjgq19
+      - MAPBOX_TOKEN=pk.eyJ1IjoidGVmcHgiLCJhIjoiY2s3dTg3N2YzMDB2MjNvbW92b3g2dGpybyJ9.PVGtG461oWUisZPnfZx-uw

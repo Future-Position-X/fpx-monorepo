@@ -76,36 +76,34 @@ def test_collection_can_be_copied_to_new_collection(client, collection):
     result = client.get(
         '/collections/{}/items'.format(collection_hash['uuid']))
     assert result.status_code == 200
-    #collection_hash = json.loads(res.data.decode('utf-8'))
-    #print(collection_hash)
-    #assert ('somename' in str(result.data))
+    assert ('somename' in str(result.data))
 
 
-# def test_collection_can_be_copied_to_other_collection(client, collection):
-#     res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes())
-#     assert res.status_code == 201
-#
-#     res = client.post(
-#         '/collections',
-#         json={
-#             "name": "othercollection",
-#             "is_public": True,
-#         })
-#     assert res.status_code == 201
-#     other_collection_hash = json.loads(res.data.decode('utf-8'))
-#
-#
-#     res = client.post(
-#         '/collections/{}/copy/{}'.format(collection['uuid'], other_collection_hash['uuid']), data=None)
-#     assert res.status_code == 201
-#     collection_hash = json.loads(res.data.decode('utf-8'))
-#
-#     assert other_collection_hash['uuid'] == collection_hash['uuid']
-#
-#     result = client.get(
-#         '/collections/{}/items'.format(other_collection_hash['uuid']))
-#     assert result.status_code == 200
-#     assert ('somename' in str(result.data))
+def test_collection_can_be_copied_to_other_collection(client, collection):
+    res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes())
+    assert res.status_code == 201
+
+    res = client.post(
+        '/collections',
+        json={
+            "name": "othercollection",
+            "is_public": True,
+        })
+    assert res.status_code == 201
+    other_collection_hash = json.loads(res.data.decode('utf-8'))
+
+
+    res = client.post(
+        '/collections/{}/copy/{}'.format(collection['uuid'], other_collection_hash['uuid']), data=None)
+    assert res.status_code == 201
+    collection_hash = json.loads(res.data.decode('utf-8'))
+
+    assert other_collection_hash['uuid'] == collection_hash['uuid']
+
+    result = client.get(
+        '/collections/{}/items'.format(other_collection_hash['uuid']))
+    assert result.status_code == 200
+    assert ('somename' in str(result.data))
 
 
 

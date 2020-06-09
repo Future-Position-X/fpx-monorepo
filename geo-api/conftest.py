@@ -34,7 +34,7 @@ def provider(app, db, request):
         return provider.to_dict()
 
 @pytest.fixture(scope="session")
-def collection(app, provider, request):
+def collection(app, db, provider, request):
     """
     Returns session-wide initialised database.
     """
@@ -45,7 +45,7 @@ def collection(app, provider, request):
         return collection.to_dict()
 
 @pytest.fixture(scope="session")
-def item(app, provider, collection, request):
+def item(app, db, provider, collection, request):
     """
     Returns session-wide initialised database.
     """
@@ -56,7 +56,7 @@ def item(app, provider, collection, request):
         return item.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, provider, collection, request):
+def client(app, db, provider, collection, item, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
@@ -65,6 +65,7 @@ def client(app, provider, collection, request):
     client.environ_base[
         'HTTP_AUTHORIZATION'] = 'Bearer ' + token
     client.environ_base['HTTP_CONTENT_TYPE'] = 'application/json'
+    client.environ_base['HTTP_ACCEPT'] = 'application/json'
     return client
 
 

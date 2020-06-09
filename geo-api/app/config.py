@@ -10,6 +10,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'postgresql://master:master@localhost:5432/development')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_IDENTITY_CLAIM = 'sub'
+    MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1IjoidGVmcHgiLCJhIjoiY2s3dTg3N2YzMDB2MjNvbW92b3g2dGpybyJ9.PVGtG461oWUisZPnfZx-uw')
 
 
 class ProductionConfig(Config):
