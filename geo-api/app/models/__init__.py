@@ -1,3 +1,5 @@
+from sqlalchemy.orm import aliased
+
 from app import db
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql import JSONB
@@ -118,8 +120,20 @@ class Item(BaseModel2):
     collection_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('collections.uuid'), index=True, nullable=False)
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
-    def create_where(collection_uuid, filters):
-        where = "collection_uuid = :collection_uuid"
+    def create_where(filters):
+        where = ""
+        if filters.get('collection_uuid'):
+            if len(where) == 0:
+                where = "collection_uuid = :collection_uuid"
+            else:
+                where = " AND collection_uuid = :collection_uuid"
+
+        if filters.get('collection_name'):
+            if len(where) == 0:
+                where = "collections.name = :collection_name"
+            else:
+                where = " AND collections.name = :collection_name"
+
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
 
@@ -150,7 +164,8 @@ class Item(BaseModel2):
             """
 
         exec_dict = {
-            "collection_uuid": collection_uuid,
+            "collection_uuid": filters.get('collection_uuid'),
+            "collection_name": filters.get('collection_name'),
             "offset": filters["offset"],
             "limit": filters["limit"],
         }
@@ -176,16 +191,35 @@ class Item(BaseModel2):
 
         return where, exec_dict
 
+    @classmethod
+    def find_by_collection_name(cls, collection_name, filters):
+        filters['collection_name'] = collection_name
+        where, exec_dict = cls.create_where(filters)
+        result = cls.query.join(Item.collection).filter(db.text(where)).params(exec_dict).limit(filters['limit']).offset(filters['offset']).all()
+        return result
+
+    @classmethod
+    def find_by_collection_name_with_simplify(cls, collection_name, filters, transforms):
+        filters['collection_name'] = collection_name
+        where, exec_dict = cls.create_where(filters)
+        result = cls.session().query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+                                     cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
+                                     cls.updated_at, cls.revision).join(Item.collection).filter(db.text(where)).params(exec_dict).limit(
+            filters['limit']).offset(filters['offset']).all()
+        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result]
+        return result
 
     @classmethod
     def find_by_collection_uuid(cls, collection_uuid, filters):
-        where, exec_dict = cls.create_where(collection_uuid, filters)
+        filters['collection_uuid'] = collection_uuid
+        where, exec_dict = cls.create_where(filters)
         result = cls.query.filter(db.text(where)).params(exec_dict).limit(filters['limit']).offset(filters['offset']).all()
         return result
 
     @classmethod
     def find_by_collection_uuid_with_simplify(cls, collection_uuid, filters, transforms):
-        where, exec_dict = cls.create_where(collection_uuid, filters)
+        filters['collection_uuid'] = collection_uuid
+        where, exec_dict = cls.create_where(filters)
         result = cls.session().query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
                                      cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
                                      cls.updated_at, cls.revision).filter(db.text(where)).params(exec_dict).limit(

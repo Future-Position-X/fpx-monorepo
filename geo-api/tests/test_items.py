@@ -83,6 +83,24 @@ def test_get_items_png(client, collection):
     mime = magic.from_buffer(res.data, mime=True)
     assert mime == 'image/png'
 
+def test_get_items_by_name(client, collection):
+    res = client.get('/collections/by_name/{}/items'.format(collection['name']), headers={'accept': 'application/json'})
+    assert res.status_code == 200
+    assert not ('FeatureCollection' in str(res.data))
+    assert ('test-item' in str(res.data))
+
+def test_get_items_by_name_geojson(client, collection):
+    res = client.get('/collections/by_name/{}/items'.format(collection['name']), headers={'accept': 'application/geojson'})
+    assert res.status_code == 200
+    assert ('FeatureCollection' in str(res.data))
+    assert ('test-item' in str(res.data))
+
+def test_get_items_by_name_png(client, collection):
+    res = client.get('/collections/by_name/{}/items?map_id=transparent'.format(collection['name']), headers={'accept': 'image/png'})
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.data, mime=True)
+    assert mime == 'image/png'
+
 def test_item_creation(client):
     res = client.post('/collections', json=collection_attributes())
     assert res.status_code == 201

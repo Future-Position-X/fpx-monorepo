@@ -270,37 +270,39 @@ class ItemApi(Resource):
         return flask.make_response(data, 200, {'content-type': 'image/png'})
 
 
-# @app.route('/collections/<collection_uuid>/items')
-@jwt_required
-def items_index(collection_uuid):
-    filters = get_filters_from_request()
-    transforms = get_transforms_from_request()
-    format = get_format_from_request()
+@ns.route('/collections/by_name/<collection_name>/items')
+class ItemListByName(Resource):
+    @accept_fallback
+    @jwt_required
+    @ns.doc('list_items_by_name')
+    @ns.marshal_list_with(item_model)
+    def get(self, collection_name):
+        filters = get_filters_from_request()
+        items = ItemDB.find_by_collection_name(collection_name, filters)
+        return items
 
-    if format == "json":
-        items = get_items_by_collection_uuid(collection_uuid, filters)
-        return response(200,
-                        rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601, uuid_mode=UM_CANONICAL))
-    elif format == "geojson":
-        items = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
-        return response(200, rapidjson.dumps(items))
-    elif format == "png":
-        vis_params = get_visualizer_params_from_request()
-        png_bytes = get_items_by_collection_uuid_as_png(
-            collection_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'], transforms)
+    @get.support('application/geojson')
+    @jwt_required
+    @ns.doc('list_items_by_name')
+    def get_geojson(self, collection_name):
+        filters = get_filters_from_request()
+        transforms = get_transforms_from_request()
+        items = ItemDB.find_by_collection_name_with_simplify(collection_name, filters, transforms)
+        features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
+        feature_collection = dumps(FeatureCollection(features))
+        return flask.make_response(feature_collection, 200)
 
-        return {
-            "statusCode": 200,
-            "body": base64.b64encode(png_bytes).decode('utf-8'),
-            "isBase64Encoded": "true",
-            "headers": {
-                "Content-Type": "image/png"
-            }
-        }
-    else:
-        return response(400, "invalid format")
-
-
+    @get.support('image/png')
+    @jwt_required
+    @ns.doc('list_items_by_name')
+    def get_png(self, collection_name):
+        filters = get_filters_from_request()
+        items = ItemDB.find_by_collection_name(collection_name, filters)
+        features = [Feature(to_shape(item.geometry), item.properties) for item in items]
+        feature_collection = FeatureCollection(features).__geo_interface__
+        params = get_visualizer_params_from_request()
+        data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
+        return flask.make_response(data, 200, {'content-type': 'image/png'})
 # @app.route('/collections/by_name/<collection_name>/items')
 @jwt_required
 def index_by_name(collection_name):
