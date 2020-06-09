@@ -15,8 +15,7 @@ from app.handlers.flask import (
     get_provider_uuid_from_request,
 
 )
-from flask import request, abort
-
+from flask import request
 from app.services.collection import (
     get_collection_uuid_by_collection_name
 )
@@ -36,7 +35,9 @@ from app.services.item import (
     create_items_from_geojson,
     update_items_from_geojson,
     delete_items_by_collection_uuid
-    )
+)
+
+from lib.visualizer.renderer import render_feature_collection, render_feature
 
 from app.services.ai import (
     generate_paths_from_points,
@@ -45,13 +46,18 @@ from app.services.ai import (
 
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource, fields
+from flask_accept import accept, accept_fallback
+import flask
 
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
+from shapely_geojson import dumps, Feature, FeatureCollection
+
 
 class GeometryFormatter(fields.Raw):
     def format(self, value):
         return mapping(to_shape(value))
+
 
 item_model = api.model('Item', {
     'uuid': fields.String(description='uuid'),
@@ -73,6 +79,7 @@ update_item_model = api.model('Item', {
     'geometry': GeometryFormatter(),
     'properties': fields.Wildcard(fields.String, description='properties'),
 })
+
 
 def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
@@ -102,7 +109,8 @@ def get_spatial_filter(params):
                 return {
                     'filter': params.get('spatial_filter'),
                     'distance': {
-                        'point': Point(float(params.get('spatial_filter.distance.x')), float(params.get('spatial_filter.distance.y'))),
+                        'point': Point(float(params.get('spatial_filter.distance.x')),
+                                       float(params.get('spatial_filter.distance.y'))),
                         'd': float(params.get('spatial_filter.distance.d')),
                     }
                 }
@@ -119,6 +127,7 @@ def get_spatial_filter(params):
         else:
             None
 
+
 def get_transforms_from_request():
     simplify = 0.0
     params = request.args
@@ -129,6 +138,7 @@ def get_transforms_from_request():
     return {
         "simplify": simplify,
     }
+
 
 def get_filters_from_request():
     offset = 0
@@ -157,7 +167,7 @@ def get_filters_from_request():
 def get_visualizer_params_from_request():
     width = int(request.args.get('width', 1280))
     height = int(request.args.get('height', 1280))
-    map_id = request.args.get('mapid', 'dark-v10')
+    map_id = request.args.get('map_id', 'dark-v10')
 
     return {
         "width": width,
@@ -170,16 +180,44 @@ def get_format_from_request():
     format = request.args.get('format', "geojson")
     return format
 
+
 ns = api.namespace('items', description='Item operations', path='/')
+
+from shapely.geometry.collection import GeometryCollection
 
 @ns.route('/collections/<uuid:collection_uuid>/items')
 class ItemList(Resource):
+    @accept_fallback
     @jwt_required
     @ns.doc('list_items')
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
-        items = ItemDB.where(collection_uuid=collection_uuid).all()
+        filters = get_filters_from_request()
+        items = ItemDB.find_by_collection_uuid(collection_uuid, filters)
         return items
+
+    @get.support('application/geojson')
+    @jwt_required
+    @ns.doc('list_items')
+    def get_geojson(self, collection_uuid):
+        filters = get_filters_from_request()
+        transforms = get_transforms_from_request()
+        items = ItemDB.find_by_collection_uuid_with_simplify(collection_uuid, filters, transforms)
+        features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
+        feature_collection = dumps(FeatureCollection(features))
+        return flask.make_response(feature_collection, 200)
+
+    @get.support('image/png')
+    @jwt_required
+    @ns.doc('list_items')
+    def get_png(self, collection_uuid):
+        filters = get_filters_from_request()
+        items = ItemDB.find_by_collection_uuid(collection_uuid, filters)
+        features = [Feature(to_shape(item.geometry), item.properties) for item in items]
+        feature_collection = FeatureCollection(features).__geo_interface__
+        params = get_visualizer_params_from_request()
+        data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
+        return flask.make_response(data, 200, {'content-type': 'image/png'})
 
     @jwt_required
     @ns.doc('create_item')
@@ -197,11 +235,15 @@ class ItemList(Resource):
         item.session().commit()
         return item, 201
 
+
+
+
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
 @ns.param('collection_uuid', 'The collection identifier')
 @ns.param('item_uuid', 'The item identifier')
-class Item(Resource):
+class ItemApi(Resource):
+    @accept_fallback
     @jwt_required
     @ns.doc('get_item')
     @ns.marshal_with(item_model)
@@ -209,7 +251,26 @@ class Item(Resource):
         item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
         return item
 
-#@app.route('/collections/<collection_uuid>/items')
+    @get.support('application/geojson')
+    @jwt_required
+    @ns.doc('get_item')
+    def get_geojson(self, collection_uuid, item_uuid):
+        item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
+        feature = Feature(to_shape(item.geometry), item.properties)
+        return flask.make_response(dumps(feature), 200)
+
+    @get.support('image/png')
+    @jwt_required
+    @ns.doc('get_item')
+    def get_png(self, collection_uuid, item_uuid):
+        item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
+        feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
+        params = get_visualizer_params_from_request()
+        data = render_feature(feature, params['width'], params['height'], params['map_id'])
+        return flask.make_response(data, 200, {'content-type': 'image/png'})
+
+
+# @app.route('/collections/<collection_uuid>/items')
 @jwt_required
 def items_index(collection_uuid):
     filters = get_filters_from_request()
@@ -218,7 +279,8 @@ def items_index(collection_uuid):
 
     if format == "json":
         items = get_items_by_collection_uuid(collection_uuid, filters)
-        return response(200, rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601, uuid_mode=UM_CANONICAL))
+        return response(200,
+                        rapidjson.dumps([i.as_dict() for i in items], datetime_mode=DM_ISO8601, uuid_mode=UM_CANONICAL))
     elif format == "geojson":
         items = get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
         return response(200, rapidjson.dumps(items))
@@ -238,7 +300,8 @@ def items_index(collection_uuid):
     else:
         return response(400, "invalid format")
 
-#@app.route('/collections/by_name/<collection_name>/items')
+
+# @app.route('/collections/by_name/<collection_name>/items')
 @jwt_required
 def index_by_name(collection_name):
     filters = get_filters_from_request()
@@ -264,8 +327,9 @@ def index_by_name(collection_name):
                 "Content-Type": "image/png"
             }
         }
-    
-#@app.route('/items/<item_uuid>')
+
+
+# @app.route('/items/<item_uuid>')
 @jwt_required
 def items_get(item_uuid):
     format = get_format_from_request()
@@ -292,7 +356,8 @@ def items_get(item_uuid):
     else:
         return response(400, "invalid format")
 
-#@app.route('/collections/<collection_uuid>/items', methods=['POST'])
+
+# @app.route('/collections/<collection_uuid>/items', methods=['POST'])
 # @jwt_required
 # def items_create(collection_uuid):
 #     item_hash = request.json
@@ -302,7 +367,7 @@ def items_get(item_uuid):
 #     return response(201, uuid)
 
 
-#@app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])
+# @app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])
 @jwt_required
 def create_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
@@ -316,21 +381,21 @@ def create_from_geojson(collection_uuid):
     return response(201, rapidjson.dumps(uuids))
 
 
-#@app.route('/items/<item_uuid>', methods=['DELETE'])
+# @app.route('/items/<item_uuid>', methods=['DELETE'])
 @jwt_required
 def items_delete(item_uuid):
     delete_item(item_uuid)
     return response(204)
 
 
-#@app.route('/collections/<collection_uuid>/items', methods=['DELETE'])
+# @app.route('/collections/<collection_uuid>/items', methods=['DELETE'])
 @jwt_required
 def delete_items(collection_uuid):
     delete_items_by_collection_uuid(collection_uuid)
     return response(204)
 
 
-#@app.route('/items/<item_uuid>', methods=['PUT'])
+# @app.route('/items/<item_uuid>', methods=['PUT'])
 @jwt_required
 def items_update(item_uuid):
     item_hash = request.json
@@ -338,14 +403,16 @@ def items_update(item_uuid):
     update_item(item_uuid, item)
     return response(204)
 
-#@app.route('/items/geojson', methods=['PUT'])
+
+# @app.route('/items/geojson', methods=['PUT'])
 @jwt_required
 def update_from_geojson():
     feature_collection = request.json
     update_items_from_geojson(feature_collection)
     return response(204)
 
-#@app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
+
+# @app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
 @jwt_required
 def add_from_geojson(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
@@ -358,7 +425,8 @@ def add_from_geojson(collection_uuid):
 
     return response(201, rapidjson.dumps(uuids))
 
-#@app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
+
+# @app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
 @jwt_required
 def generate_walking_paths(collection_uuid):
     provider_uuid = get_provider_uuid_from_request()
@@ -369,21 +437,22 @@ def generate_walking_paths(collection_uuid):
         "valid": False
     }
     steps = min(int(request.args.get('steps')), 200)
-    n_agents = min(int(request.args.get('agents')), 50) 
+    n_agents = min(int(request.args.get('agents')), 50)
     starting_points_collection_uuid = request.args.get('starting_points_collection_uuid')
     environment_collection_uuid = request.args.get('environment_collection_uuid')
     uuids = generate_paths_from_points(
-        starting_points_collection_uuid, 
-        environment_collection_uuid, 
+        starting_points_collection_uuid,
+        environment_collection_uuid,
         collection_uuid,
-        n_agents, 
-        steps, 
+        n_agents,
+        steps,
         provider_uuid,
         filters
     )
     return response(201, rapidjson.dumps(uuids))
 
-#@app.route('/items/<item_uuid>/ai/sequence')
+
+# @app.route('/items/<item_uuid>/ai/sequence')
 @jwt_required
 def prediction_for_sensor_item(item_uuid):
     filters = get_filters_from_request()

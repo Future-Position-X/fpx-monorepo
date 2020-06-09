@@ -17,7 +17,7 @@ from app.services.collection import (
 )
 from flask_jwt_extended import jwt_required
 from flask import request, abort
-
+from flask_accept import accept
 ns = api.namespace('collections', 'Collection operations')
 
 collection_model = api.model('Collection', {

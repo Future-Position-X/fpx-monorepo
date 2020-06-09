@@ -1,8 +1,9 @@
 from app import db
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql import JSONB
-from geoalchemy2 import Geometry
+from geoalchemy2 import Geometry, WKTElement, WKBElement
 import uuid
+from app.models.item import Item as ItemModel
 
 from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
     ModelNotFoundError
@@ -20,6 +21,7 @@ class FPXActiveRecordMixin(ActiveRecordMixin):
             raise ModelNotFoundError("{} with matching '{}' was not found"
                                      .format(cls.__name__, kwargs))
 
+
 class FPXTimestampsMixin:
     __abstract__ = True
 
@@ -32,6 +34,7 @@ class FPXTimestampsMixin:
     updated_at = db.Column(db.DateTime,
                            server_default=db.text('now()'),
                            nullable=False)
+
 
 @db.event.listens_for(FPXTimestampsMixin, 'before_update', propagate=True)
 def _receive_before_update(mapper, connection, target):
@@ -102,8 +105,8 @@ def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
             where_clause += " AND"
 
     return where_clause
-
-
+from sqlalchemy import func, column
+from sqlalchemy.sql import select
 class Item(BaseModel2):
     __tablename__ = 'items'
 
@@ -115,8 +118,7 @@ class Item(BaseModel2):
     collection_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('collections.uuid'), index=True, nullable=False)
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
-    @classmethod
-    def find_by_collection_uuid(cls, collection_uuid, filters):
+    def create_where(collection_uuid, filters):
         where = "collection_uuid = :collection_uuid"
 
         if filters["valid"]:
@@ -132,24 +134,27 @@ class Item(BaseModel2):
             where += " AND "
             where = append_property_filter_to_where_clause(
                 where, filters["property_filter"], exec_dict)
+        return where, exec_dict
 
-        result = cls.query.from_statement(db.text("""
-            SELECT uuid,
-                provider_uuid,
-                collection_uuid,
-                properties,
-                ST_AsGeoJSON(geometry)::jsonb as geometry
-            FROM items
-            WHERE """ + where + """
-                OFFSET :offset
-                LIMIT :limit
-            """)).params(exec_dict).all()
+    @classmethod
+    def find_by_collection_uuid(cls, collection_uuid, filters):
+        where, exec_dict = cls.create_where(collection_uuid, filters)
+        result = cls.query.filter(db.text(where)).params(exec_dict).limit(filters['limit']).offset(filters['offset']).all()
+        return result
 
+    @classmethod
+    def find_by_collection_uuid_with_simplify(cls, collection_uuid, filters, transforms):
+        where, exec_dict = cls.create_where(collection_uuid, filters)
+        result = cls.session().query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+                                     cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
+                                     cls.updated_at, cls.revision).filter(db.text(where)).params(exec_dict).limit(
+            filters['limit']).offset(filters['offset']).all()
+        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result]
         return result
 
     @classmethod
     def copy_items(cls, src_collection_uuid, dest_collection_uuid, provider_uuid):
-        result = cls.session().execute("""
+        cls.session().execute("""
             INSERT INTO items (provider_uuid, collection_uuid, geometry, properties) 
                 SELECT :provider_uuid, :dest_collection_uuid, geometry, properties
                 FROM items WHERE collection_uuid = :src_collection_uuid
