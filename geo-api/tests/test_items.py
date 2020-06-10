@@ -1,4 +1,6 @@
 import json
+import uuid
+
 import magic
 
 
@@ -18,7 +20,7 @@ def item_attributes():
     }
 
 
-def test_get_item_json(client, item):
+def test_get_collection_item_json(client, item):
     res = client.get(
         '/collections/{}/items/{}'.format(item['collection_uuid'], item['uuid']),
         headers={'accept': 'application/json'})
@@ -35,8 +37,15 @@ def test_get_item_json(client, item):
                }
            }.items() <= item_hash.items()
 
+def test_get_collection_item_json_404(client, item):
+    res = client.get(
+        '/collections/{}/items/{}'.format(item['collection_uuid'], uuid.uuid4()),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 404
+    assert ('not found' in str(res.data))
 
-def test_get_item_geojson(client, item):
+
+def test_get_collection_item_geojson(client, item):
     res = client.get(
         '/collections/{}/items/{}'.format(item['collection_uuid'], item['uuid']),
         headers={'accept': 'application/geojson'}, content_type='application/geojson')
@@ -56,9 +65,66 @@ def test_get_item_geojson(client, item):
                    "name": "test-item"
                }
            }.items() <= item_hash.items()
-def test_get_item_png(client, item):
+
+
+def test_get_collection_item_png(client, item):
     res = client.get(
         '/collections/{}/items/{}?map_id=transparent'.format(item['collection_uuid'], item['uuid']),
+        headers={'accept': 'image/png'}, content_type='image/png')
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.data, mime=True)
+    assert mime == 'image/png'
+
+def test_get_item_json(client, item):
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 200
+    item_hash = json.loads(res.data.decode('utf-8'))
+
+    assert {
+               "uuid": str(item['uuid']),
+               "provider_uuid": str(item['provider_uuid']),
+               "collection_uuid": str(item['collection_uuid']),
+               "geometry": {'type': 'Point', 'coordinates': [1.0, 1.0]},
+               "properties": {
+                   "name": "test-item"
+               }
+           }.items() <= item_hash.items()
+
+def test_get_item_json_404(client, item):
+    res = client.get(
+        '/items/{}'.format(uuid.uuid4()),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 404
+    assert ('not found' in str(res.data))
+
+
+def test_get_item_geojson(client, item):
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/geojson'}, content_type='application/geojson')
+    assert res.status_code == 200
+    item_hash = json.loads(res.data.decode('utf-8'))
+
+    assert {
+               "type": "Feature",
+               "geometry": {
+                   "type": "Point",
+                   "coordinates": [
+                       1.0,
+                       1.0
+                   ]
+               },
+               "properties": {
+                   "name": "test-item"
+               }
+           }.items() <= item_hash.items()
+
+
+def test_get_item_png(client, item):
+    res = client.get(
+        '/items/{}?map_id=transparent'.format(item['uuid']),
         headers={'accept': 'image/png'}, content_type='image/png')
     assert res.status_code == 200
     mime = magic.from_buffer(res.data, mime=True)
@@ -71,17 +137,21 @@ def test_get_items(client, collection):
     assert not ('FeatureCollection' in str(res.data))
     assert ('test-item' in str(res.data))
 
+
 def test_get_items_geojson(client, collection):
     res = client.get('/collections/{}/items'.format(collection['uuid']), headers={'accept': 'application/geojson'})
     assert res.status_code == 200
     assert ('FeatureCollection' in str(res.data))
     assert ('test-item' in str(res.data))
 
+
 def test_get_items_png(client, collection):
-    res = client.get('/collections/{}/items?map_id=transparent'.format(collection['uuid']), headers={'accept': 'image/png'})
+    res = client.get('/collections/{}/items?map_id=transparent'.format(collection['uuid']),
+                     headers={'accept': 'image/png'})
     assert res.status_code == 200
     mime = magic.from_buffer(res.data, mime=True)
     assert mime == 'image/png'
+
 
 def test_get_items_by_name(client, collection):
     res = client.get('/collections/by_name/{}/items'.format(collection['name']), headers={'accept': 'application/json'})
@@ -89,17 +159,22 @@ def test_get_items_by_name(client, collection):
     assert not ('FeatureCollection' in str(res.data))
     assert ('test-item' in str(res.data))
 
+
 def test_get_items_by_name_geojson(client, collection):
-    res = client.get('/collections/by_name/{}/items'.format(collection['name']), headers={'accept': 'application/geojson'})
+    res = client.get('/collections/by_name/{}/items'.format(collection['name']),
+                     headers={'accept': 'application/geojson'})
     assert res.status_code == 200
     assert ('FeatureCollection' in str(res.data))
     assert ('test-item' in str(res.data))
 
+
 def test_get_items_by_name_png(client, collection):
-    res = client.get('/collections/by_name/{}/items?map_id=transparent'.format(collection['name']), headers={'accept': 'image/png'})
+    res = client.get('/collections/by_name/{}/items?map_id=transparent'.format(collection['name']),
+                     headers={'accept': 'image/png'})
     assert res.status_code == 200
     mime = magic.from_buffer(res.data, mime=True)
     assert mime == 'image/png'
+
 
 def test_item_creation(client):
     res = client.post('/collections', json=collection_attributes())

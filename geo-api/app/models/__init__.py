@@ -1,3 +1,4 @@
+import sqlalchemy_mixins
 from sqlalchemy.orm import aliased
 
 from app import db
@@ -90,25 +91,9 @@ class Collection(BaseModel2):
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
 
-def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
-    params = filter.split(",")
+from sqlalchemy import func, or_
 
-    for i, p in enumerate(params):
-        tokens = p.split("=")
-        name = "name_" + str(i)
-        value = "value_" + str(i)
 
-        where_clause += " properties->>%(" + \
-                        name + ")s = %(" + value + ")s"
-        execute_dict[name] = tokens[0]
-        execute_dict[value] = tokens[1]
-
-        if i < (len(params) - 1):
-            where_clause += " AND"
-
-    return where_clause
-from sqlalchemy import func, column
-from sqlalchemy.sql import select
 class Item(BaseModel2):
     __tablename__ = 'items'
 
@@ -120,19 +105,36 @@ class Item(BaseModel2):
     collection_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('collections.uuid'), index=True, nullable=False)
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
+    def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
+        params = filter.split(",")
+
+        for i, p in enumerate(params):
+            tokens = p.split("=")
+            name = "name_" + str(i)
+            value = "value_" + str(i)
+
+            where_clause += " properties->>%(" + \
+                            name + ")s = %(" + value + ")s"
+            execute_dict[name] = tokens[0]
+            execute_dict[value] = tokens[1]
+
+            if i < (len(params) - 1):
+                where_clause += " AND"
+
+        return where_clause
+
     def create_where(filters):
-        where = ""
+        where = """
+        (
+            collections.is_public=true
+            OR collections.provider_uuid = :provider_uuid
+        )"""
+
         if filters.get('collection_uuid'):
-            if len(where) == 0:
-                where = "collection_uuid = :collection_uuid"
-            else:
-                where = " AND collection_uuid = :collection_uuid"
+            where += " AND collection_uuid = :collection_uuid"
 
         if filters.get('collection_name'):
-            if len(where) == 0:
-                where = "collections.name = :collection_name"
-            else:
-                where = " AND collections.name = :collection_name"
+            where += " AND collections.name = :collection_name"
 
         if filters["valid"]:
             where += " AND ST_IsValid(geometry)"
@@ -164,6 +166,7 @@ class Item(BaseModel2):
             """
 
         exec_dict = {
+            "provider_uuid": filters.get('provider_uuid'),
             "collection_uuid": filters.get('collection_uuid'),
             "collection_name": filters.get('collection_name'),
             "offset": filters["offset"],
@@ -186,46 +189,90 @@ class Item(BaseModel2):
 
         if filters["property_filter"] is not None:
             where += " AND "
-            where = append_property_filter_to_where_clause(
+            where = Item.append_property_filter_to_where_clause(
                 where, filters["property_filter"], exec_dict)
 
         return where, exec_dict
 
     @classmethod
-    def find_by_collection_name(cls, collection_name, filters):
+    def find_by_collection_name(cls, provider_uuid, collection_name, filters):
+        filters['provider_uuid'] = provider_uuid
         filters['collection_name'] = collection_name
         where, exec_dict = cls.create_where(filters)
-        result = cls.query.join(Item.collection).filter(db.text(where)).params(exec_dict).limit(filters['limit']).offset(filters['offset']).all()
+        result = cls.query \
+            .join(Item.collection) \
+            .filter(db.text(where)) \
+            .params(exec_dict) \
+            .limit(filters['limit']) \
+            .offset(filters['offset']) \
+            .all()
         return result
 
     @classmethod
-    def find_by_collection_name_with_simplify(cls, collection_name, filters, transforms):
+    def find_by_collection_name_with_simplify(cls, provider_uuid, collection_name, filters, transforms):
+        filters['provider_uuid'] = provider_uuid
         filters['collection_name'] = collection_name
         where, exec_dict = cls.create_where(filters)
-        result = cls.session().query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
-                                     cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
-                                     cls.updated_at, cls.revision).join(Item.collection).filter(db.text(where)).params(exec_dict).limit(
-            filters['limit']).offset(filters['offset']).all()
+        result = cls.session() \
+            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+                   cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
+                   cls.updated_at, cls.revision) \
+            .join(Item.collection) \
+            .filter(db.text(where)) \
+            .params(exec_dict) \
+            .limit(filters['limit']) \
+            .offset(filters['offset']) \
+            .all()
         result = [ItemModel(**dict(zip(res.keys(), res))) for res in result]
         return result
 
     @classmethod
-    def find_by_collection_uuid(cls, collection_uuid, filters):
+    def find_by_collection_uuid(cls, provider_uuid, collection_uuid, filters):
+        filters['provider_uuid'] = provider_uuid
         filters['collection_uuid'] = collection_uuid
         where, exec_dict = cls.create_where(filters)
-        result = cls.query.filter(db.text(where)).params(exec_dict).limit(filters['limit']).offset(filters['offset']).all()
+        result = cls.query \
+            .join(Item.collection) \
+            .filter(db.text(where)) \
+            .params(exec_dict) \
+            .limit(filters['limit']) \
+            .offset(filters['offset']) \
+            .all()
         return result
 
     @classmethod
-    def find_by_collection_uuid_with_simplify(cls, collection_uuid, filters, transforms):
+    def find_by_collection_uuid_with_simplify(cls, provider_uuid, collection_uuid, filters, transforms):
+        filters['provider_uuid'] = provider_uuid
         filters['collection_uuid'] = collection_uuid
         where, exec_dict = cls.create_where(filters)
-        result = cls.session().query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
-                                     cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
-                                     cls.updated_at, cls.revision).filter(db.text(where)).params(exec_dict).limit(
-            filters['limit']).offset(filters['offset']).all()
+        result = cls.session() \
+            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+                   cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
+                   cls.updated_at, cls.revision) \
+            .join(Item.collection) \
+            .filter(db.text(where)) \
+            .params(exec_dict) \
+            .limit(filters['limit']) \
+            .offset(filters['offset']) \
+            .all()
         result = [ItemModel(**dict(zip(res.keys(), res))) for res in result]
         return result
+
+    @classmethod
+    def find_accessible_or_fail(cls, provider_uuid, item_uuid, collection_uuid=None):
+        q = cls.query.filter(cls.uuid == item_uuid)
+        if collection_uuid is not None:
+            q = q.filter(cls.collection_uuid == collection_uuid)
+
+        res = q.filter(
+            or_(
+                Item.collection.has(is_public=True),
+                Item.collection.has(provider_uuid=provider_uuid)
+            )) \
+            .first()
+        if res is None:
+            raise sqlalchemy_mixins.ModelNotFoundError
+        return res
 
     @classmethod
     def copy_items(cls, src_collection_uuid, dest_collection_uuid, provider_uuid):
