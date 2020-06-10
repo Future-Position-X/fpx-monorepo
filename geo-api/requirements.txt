@@ -22,4 +22,4 @@ Flask-Migrate==2.5.3
 sqlalchemy_mixins==1.2.1
 flask-accept==0.0.6
 shapely-geojson==0.0.1
-python-magic==0.4.18
+python-magic-bin==0.4.14
