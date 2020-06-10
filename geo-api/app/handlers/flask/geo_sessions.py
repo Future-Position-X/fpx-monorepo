@@ -31,6 +31,8 @@ class Session(Resource):
     
         if authenticate(user, password):
             token = create_access_token(user.uuid, user.provider_uuid)
-            return str(token), 201
+            return {
+                       'token': str(token)
+                   }, 201
         
         return '', 401

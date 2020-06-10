@@ -9,3 +9,6 @@ def test_user_creation(client):
     assert res.status_code == 201
     assert ('apitester@fpx.se' in str(res.data))
 
+    res = client.post('/sessions', json=user_attributes())
+    assert res.status_code == 201
+    assert ('token' in str(res.data))

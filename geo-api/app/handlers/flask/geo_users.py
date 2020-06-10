@@ -1,3 +1,4 @@
+import bcrypt
 import rapidjson
 import base64
 from rapidjson import DM_ISO8601
@@ -45,6 +46,7 @@ class UserList(Resource):
     @ns.marshal_with(user_model, 201)
     def post(self):
         user = User(**request.get_json())
+        user.password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         provider = ProviderDB.create(name=user.email)
         user.provider_uuid = provider.uuid
         user = UserDB.create(**user.as_dict())
