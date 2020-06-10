@@ -5,6 +5,8 @@ import sqlalchemy_mixins
 from rapidjson import DM_ISO8601, UM_CANONICAL
 
 from shapely.geometry import Point
+from sqlalchemy import or_
+
 from app.models.item import Item
 from app.models import Item as ItemDB
 from app.models import Collection as CollectionDB
@@ -185,24 +187,27 @@ ns = api.namespace('items', description='Item operations', path='/')
 
 from shapely.geometry.collection import GeometryCollection
 
+
 @ns.route('/collections/<uuid:collection_uuid>/items')
-class ItemList(Resource):
+class CollectionItemList(Resource):
     @accept_fallback
     @jwt_required
     @ns.doc('list_items')
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_uuid(collection_uuid, filters)
+        items = ItemDB.find_by_collection_uuid(provider_uuid, collection_uuid, filters)
         return items
 
     @get.support('application/geojson')
     @jwt_required
     @ns.doc('list_items')
     def get_geojson(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
-        items = ItemDB.find_by_collection_uuid_with_simplify(collection_uuid, filters, transforms)
+        items = ItemDB.find_by_collection_uuid_with_simplify(provider_uuid, collection_uuid, filters, transforms)
         features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
@@ -211,8 +216,9 @@ class ItemList(Resource):
     @jwt_required
     @ns.doc('list_items')
     def get_png(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_uuid(collection_uuid, filters)
+        items = ItemDB.find_by_collection_uuid(provider_uuid, collection_uuid, filters)
         features = [Feature(to_shape(item.geometry), item.properties) for item in items]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
@@ -236,26 +242,26 @@ class ItemList(Resource):
         return item, 201
 
 
-
-
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
 @ns.param('collection_uuid', 'The collection identifier')
 @ns.param('item_uuid', 'The item identifier')
-class ItemApi(Resource):
+class CollectionItemApi(Resource):
     @accept_fallback
     @jwt_required
     @ns.doc('get_item')
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
-        item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
+        provider_uuid = get_provider_uuid_from_request()
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
         return item
 
     @get.support('application/geojson')
     @jwt_required
     @ns.doc('get_item')
     def get_geojson(self, collection_uuid, item_uuid):
-        item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
+        provider_uuid = get_provider_uuid_from_request()
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
         feature = Feature(to_shape(item.geometry), item.properties)
         return flask.make_response(dumps(feature), 200)
 
@@ -263,7 +269,8 @@ class ItemApi(Resource):
     @jwt_required
     @ns.doc('get_item')
     def get_png(self, collection_uuid, item_uuid):
-        item = ItemDB.first_or_fail(uuid=item_uuid, collection_uuid=collection_uuid)
+        provider_uuid = get_provider_uuid_from_request()
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
         feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature(feature, params['width'], params['height'], params['map_id'])
@@ -271,23 +278,25 @@ class ItemApi(Resource):
 
 
 @ns.route('/collections/by_name/<collection_name>/items')
-class ItemListByName(Resource):
+class CollectionByNameItemList(Resource):
     @accept_fallback
     @jwt_required
     @ns.doc('list_items_by_name')
     @ns.marshal_list_with(item_model)
     def get(self, collection_name):
+        provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_name(collection_name, filters)
+        items = ItemDB.find_by_collection_name(provider_uuid, collection_name, filters)
         return items
 
     @get.support('application/geojson')
     @jwt_required
     @ns.doc('list_items_by_name')
     def get_geojson(self, collection_name):
+        provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
-        items = ItemDB.find_by_collection_name_with_simplify(collection_name, filters, transforms)
+        items = ItemDB.find_by_collection_name_with_simplify(provider_uuid, collection_name, filters, transforms)
         features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
@@ -297,66 +306,47 @@ class ItemListByName(Resource):
     @ns.doc('list_items_by_name')
     def get_png(self, collection_name):
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_name(collection_name, filters)
+        provider_uuid = get_provider_uuid_from_request()
+        items = ItemDB.find_by_collection_name(provider_uuid, collection_name, filters)
         features = [Feature(to_shape(item.geometry), item.properties) for item in items]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
         return flask.make_response(data, 200, {'content-type': 'image/png'})
-# @app.route('/collections/by_name/<collection_name>/items')
-@jwt_required
-def index_by_name(collection_name):
-    filters = get_filters_from_request()
-    format = get_format_from_request()
-    provider_uuid = get_provider_uuid_from_request()
-
-    if format == "json":
-        items = get_items_by_collection_name(collection_name, provider_uuid, filters)
-        return response(200, rapidjson.dumps([i.as_dict() for i in items]))
-    elif format == "geojson":
-        items = get_items_by_collection_name_as_geojson(collection_name, provider_uuid, filters)
-        return response(200, rapidjson.dumps(items))
-    elif format == "png":
-        vis_params = get_visualizer_params_from_request()
-        png_bytes = get_items_by_collection_name_as_png(
-            collection_name, provider_uuid, filters, vis_params['width'], vis_params['height'], vis_params['map_id'])
-
-        return {
-            "statusCode": 200,
-            "body": base64.b64encode(png_bytes).decode('utf-8'),
-            "isBase64Encoded": "true",
-            "headers": {
-                "Content-Type": "image/png"
-            }
-        }
 
 
-# @app.route('/items/<item_uuid>')
-@jwt_required
-def items_get(item_uuid):
-    format = get_format_from_request()
+@ns.route('/items/<uuid:item_uuid>')
+@ns.response(404, 'Item not found')
+@ns.param('item_uuid', 'The item identifier')
+class ItemApi(Resource):
+    @accept_fallback
+    @jwt_required
+    @ns.doc('get_item')
+    @ns.marshal_with(item_model)
+    def get(self, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
+        return item
 
-    if format == "json":
-        # not implemented yet
-        return response(501)
-    elif format == "geojson":
-        item = get_item_by_uuid_as_geojson(item_uuid)
-        return response(200, rapidjson.dumps(item))
-    elif format == "png":
+    @get.support('application/geojson')
+    @jwt_required
+    @ns.doc('get_item')
+    def get_geojson(self, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
+        feature = Feature(to_shape(item.geometry), item.properties)
+        return flask.make_response(dumps(feature), 200)
+
+    @get.support('image/png')
+    @jwt_required
+    @ns.doc('get_item')
+    def get_png(self, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
+        feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
         params = get_visualizer_params_from_request()
-        png_bytes = get_item_by_uuid_as_png(
-            item_uuid, params['width'], params['height'], params['map_id'])
-
-        return {
-            "statusCode": 200,
-            "body": base64.b64encode(png_bytes).decode('utf-8'),
-            "isBase64Encoded": "true",
-            "headers": {
-                "Content-Type": "image/png"
-            }
-        }
-    else:
-        return response(400, "invalid format")
+        data = render_feature(feature, params['width'], params['height'], params['map_id'])
+        return flask.make_response(data, 200, {'content-type': 'image/png'})
 
 
 # @app.route('/collections/<collection_uuid>/items', methods=['POST'])
