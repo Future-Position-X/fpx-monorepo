@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from sqlalchemy_utils.functions import database_exists, create_database
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -68,6 +69,9 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+
+    if not database_exists(config.get_main_option("sqlalchemy.url")):
+        create_database(config.get_main_option("sqlalchemy.url"))
 
     # this callback is used to prevent an auto-migration from being generated
     # when there are no changes to the schema
