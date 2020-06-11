@@ -86,7 +86,7 @@ class Collection(BaseModel2):
     name = db.Column(db.Text())
     is_public = db.Column(db.Boolean, default=False)
 
-    items = db.relationship('Item', backref='collection', lazy=True)
+    items = db.relationship('Item', lazy=True)
 
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
@@ -103,7 +103,8 @@ class Item(BaseModel2):
     properties = db.Column(JSONB)
 
     collection_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('collections.uuid'), index=True, nullable=False)
-    provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
+
+    collection = db.relationship('Collection')
 
     def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
         params = filter.split(",")
@@ -215,7 +216,7 @@ class Item(BaseModel2):
         where, exec_dict = cls.create_where(filters)
         result = cls.session() \
             .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
-                   cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
+                   cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
             .join(Item.collection) \
             .filter(db.text(where)) \
@@ -247,7 +248,7 @@ class Item(BaseModel2):
         where, exec_dict = cls.create_where(filters)
         result = cls.session() \
             .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
-                   cls.properties, cls.collection_uuid, cls.provider_uuid, cls.created_at,
+                   cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
             .join(Item.collection) \
             .filter(db.text(where)) \
@@ -275,13 +276,25 @@ class Item(BaseModel2):
         return res
 
     @classmethod
-    def copy_items(cls, src_collection_uuid, dest_collection_uuid, provider_uuid):
+    def delete_owned(cls, provider_uuid, item_uuid, collection_uuid=None):
+        q = cls.query\
+            .filter(cls.uuid == item_uuid) \
+            .filter(Collection.uuid == cls.collection_uuid,
+                    Collection.provider_uuid == provider_uuid)
+        if collection_uuid is not None:
+            q = q.filter(Collection.uuid == collection_uuid)
+        q.delete(
+            synchronize_session=False)
+        cls.session().commit()
+        cls.session().expire_all()
+
+    @classmethod
+    def copy_items(cls, src_collection_uuid, dest_collection_uuid):
         cls.session().execute("""
-            INSERT INTO items (provider_uuid, collection_uuid, geometry, properties) 
-                SELECT :provider_uuid, :dest_collection_uuid, geometry, properties
+            INSERT INTO items (collection_uuid, geometry, properties) 
+                SELECT :dest_collection_uuid, geometry, properties
                 FROM items WHERE collection_uuid = :src_collection_uuid
             """, {
-            "provider_uuid": provider_uuid,
             "src_collection_uuid": src_collection_uuid,
             "dest_collection_uuid": dest_collection_uuid
         })

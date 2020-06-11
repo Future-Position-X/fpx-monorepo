@@ -58,6 +58,6 @@ def copy_collection_from(src_collection_uuid, dst_collection_uuid, provider_uuid
         dst_collection = CollectionDB.create(**dst_collection)
         dst_collection_uuid = dst_collection.uuid
 
-    copy_items_by_collection_uuid(src_collection_uuid, dst_collection_uuid, provider_uuid)
+    copy_items_by_collection_uuid(src_collection_uuid, dst_collection_uuid)
     src_collection.session().commit()
     return dst_collection_uuid

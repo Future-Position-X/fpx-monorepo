@@ -51,7 +51,7 @@ def item(app, db, provider, collection, request):
     """
     from app.models import Item
     with app.app_context():
-        item = Item.create(collection_uuid=collection['uuid'], provider_uuid=provider['uuid'], geometry='POINT(1 1)', properties={'name': 'test-item'})
+        item = Item.create(collection_uuid=collection['uuid'], geometry='POINT(1 1)', properties={'name': 'test-item'})
         Item.session().commit()
         return item.to_dict()
 

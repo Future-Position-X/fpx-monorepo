@@ -20,6 +20,48 @@ def item_attributes():
     }
 
 
+def item_attributes_geojson():
+    return {
+        "type": "FeatureCollection",
+        "name": "TESTAREAS",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                16.9904,
+                                60.6358
+                            ],
+                            [
+                                16.9897,
+                                60.6351
+                            ],
+                            [
+                                16.9884,
+                                60.6331
+                            ],
+                            [
+                                16.9879,
+                                60.6316
+                            ],
+                            [
+                                16.9877,
+                                60.6306
+                            ],
+                        ]
+                    ]
+                },
+                "properties": {
+                    "name": "somegeojson"
+                }
+            }
+        ]
+    }
+
+
 def test_get_collection_item_json(client, item):
     res = client.get(
         '/collections/{}/items/{}'.format(item['collection_uuid'], item['uuid']),
@@ -29,13 +71,13 @@ def test_get_collection_item_json(client, item):
 
     assert {
                "uuid": str(item['uuid']),
-               "provider_uuid": str(item['provider_uuid']),
                "collection_uuid": str(item['collection_uuid']),
                "geometry": {'type': 'Point', 'coordinates': [1.0, 1.0]},
                "properties": {
                    "name": "test-item"
                }
            }.items() <= item_hash.items()
+
 
 def test_get_collection_item_json_404(client, item):
     res = client.get(
@@ -75,6 +117,18 @@ def test_get_collection_item_png(client, item):
     mime = magic.from_buffer(res.data, mime=True)
     assert mime == 'image/png'
 
+
+def test_delete_collection_item(client, item):
+    res = client.delete('/collections/{}/items/{}'.format(item['collection_uuid'], item['uuid']), headers={'accept': 'application/json'})
+    assert res.status_code == 204
+
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 404
+    assert ('not found' in str(res.data))
+
+
 def test_get_item_json(client, item):
     res = client.get(
         '/items/{}'.format(item['uuid']),
@@ -84,13 +138,13 @@ def test_get_item_json(client, item):
 
     assert {
                "uuid": str(item['uuid']),
-               "provider_uuid": str(item['provider_uuid']),
                "collection_uuid": str(item['collection_uuid']),
                "geometry": {'type': 'Point', 'coordinates': [1.0, 1.0]},
                "properties": {
                    "name": "test-item"
                }
            }.items() <= item_hash.items()
+
 
 def test_get_item_json_404(client, item):
     res = client.get(
@@ -194,6 +248,25 @@ def test_item_creation(client):
     assert res.status_code == 200
     assert ('somename' in str(res.data))
 
+
+def test_item_creation_geojson(client, collection, item):
+    res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes_geojson(),
+                      headers={'accept': 'application/geojson', 'content-type': 'application/geojson'})
+    assert res.status_code == 201
+    items = json.loads(res.data.decode('utf-8'))
+
+    assert len(items) == 1
+    assert items[0]['uuid'] != item['uuid']
+
+def test_item_delete(client, item):
+    res = client.delete('/items/{}'.format(item['uuid']), headers={'accept': 'application/json'})
+    assert res.status_code == 204
+
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 404
+    assert ('not found' in str(res.data))
 
 def test_item_creation_in_non_existent_collection(client):
     import uuid

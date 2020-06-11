@@ -23,8 +23,6 @@ from app.models import User as UserDB
 class Session(Resource):
     def post(self):
         json = request.get_json()
-        print("###########################")
-        print(json)
         email = json["email"]
         password = json["password"]
         user = UserDB.first_or_fail(email=email)

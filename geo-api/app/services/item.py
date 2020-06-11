@@ -132,5 +132,5 @@ def delete_items_by_collection_uuid(collection_uuid):
         item_store.complete()
 
 
-def copy_items_by_collection_uuid(src_collection_uuid, dest_collection_uuid, provider_uuid):
-    ItemDB.copy_items(src_collection_uuid, dest_collection_uuid, provider_uuid)
+def copy_items_by_collection_uuid(src_collection_uuid, dest_collection_uuid):
+    ItemDB.copy_items(src_collection_uuid, dest_collection_uuid)

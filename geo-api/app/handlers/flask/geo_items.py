@@ -82,6 +82,10 @@ update_item_model = api.model('Item', {
     'properties': fields.Wildcard(fields.String, description='properties'),
 })
 
+bulk_create_item_response_model = api.model('Item', {
+    'uuid': fields.String(description='uuid'),
+})
+
 
 def get_collection_uuid_from_event(event):
     collection_uuid = event['pathParameters'].get('collection_uuid')
@@ -225,6 +229,7 @@ class CollectionItemList(Resource):
         data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
         return flask.make_response(data, 200, {'content-type': 'image/png'})
 
+    @accept('application/json')
     @jwt_required
     @ns.doc('create_item')
     @ns.expect(create_item_model)
@@ -233,13 +238,38 @@ class CollectionItemList(Resource):
         provider_uuid = get_provider_uuid_from_request()
         coll = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
         item_hash = request.get_json()
-        item_hash['provider_uuid'] = coll.provider_uuid
         item_hash['collection_uuid'] = coll.uuid
         item = ItemDB(**item_hash)
 
         item.save()
         item.session().commit()
         return item, 201
+
+    @post.support('application/geojson')
+    @jwt_required
+    @ns.doc('create_item')
+    @ns.expect(create_item_model)
+    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
+    def post_geojson(self, collection_uuid):
+        from shapely.geometry import shape
+        provider_uuid = get_provider_uuid_from_request()
+        coll = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+        geojson = request.get_json(force=True)
+
+        ItemDB.where(collection_uuid=coll.uuid).delete()
+
+        items = [
+            ItemDB(**{
+                'collection_uuid': coll.uuid,
+                'geometry': shape(feature['geometry']).to_wkt(),
+                'properties': feature['properties']
+            }) for feature in geojson['features']]
+
+        ItemDB.session().bulk_save_objects(items)
+        ItemDB.session().commit()
+
+        items = ItemDB.where(collection_uuid=coll.uuid).all()
+        return items, 201
 
 
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
@@ -275,6 +305,14 @@ class CollectionItemApi(Resource):
         params = get_visualizer_params_from_request()
         data = render_feature(feature, params['width'], params['height'], params['map_id'])
         return flask.make_response(data, 200, {'content-type': 'image/png'})
+
+    @accept_fallback
+    @jwt_required
+    @ns.doc('delete_item')
+    def delete(self, collection_uuid, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        ItemDB.delete_owned(provider_uuid, item_uuid, collection_uuid)
+        return '', 204
 
 
 @ns.route('/collections/by_name/<collection_name>/items')
@@ -348,29 +386,13 @@ class ItemApi(Resource):
         data = render_feature(feature, params['width'], params['height'], params['map_id'])
         return flask.make_response(data, 200, {'content-type': 'image/png'})
 
-
-# @app.route('/collections/<collection_uuid>/items', methods=['POST'])
-# @jwt_required
-# def items_create(collection_uuid):
-#     item_hash = request.json
-#     item = Item(**item_hash)
-#     uuid = create_item(item)
-#
-#     return response(201, uuid)
-
-
-# @app.route('/collections/<collection_uuid>/items/geojson', methods=['POST'])
-@jwt_required
-def create_from_geojson(collection_uuid):
-    provider_uuid = get_provider_uuid_from_request()
-    geojson = request.json
-
-    uuids = create_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
-
-    return response(201, rapidjson.dumps(uuids))
+    @accept_fallback
+    @jwt_required
+    @ns.doc('delete_item')
+    def delete(self, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        ItemDB.delete_owned(provider_uuid, item_uuid)
+        return '', 204
 
 
 # @app.route('/items/<item_uuid>', methods=['DELETE'])
