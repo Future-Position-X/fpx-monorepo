@@ -101,7 +101,6 @@ def seed_initial_user():
         email=os.environ.get('USER_EMAIL', 'info@fpx.se'),
         provider_uuid=provider.uuid,
         password=bcrypt.hashpw(password, bcrypt.gensalt()).decode("utf-8"))
-    user.session().commit()
     print("Your master user token: " + create_access_token(str(user.uuid), str(user.provider_uuid)))
 
 def downgrade():
