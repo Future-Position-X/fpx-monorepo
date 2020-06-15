@@ -12,6 +12,7 @@ services:
     ports:
       - 5432:5432
   webserver:
+    image: geo-api.dev:latest
     build: .
     volumes:
     - ./:/app
