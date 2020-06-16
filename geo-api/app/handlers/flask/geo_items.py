@@ -8,7 +8,7 @@ from shapely.geometry import Point
 from sqlalchemy import or_
 
 from app.models.item import Item
-from app.models import Item as ItemDB
+from app.models import Item as ItemDB, Feature
 from app.models import Collection as CollectionDB
 from distutils.util import strtobool
 from app import app, api, db
@@ -53,7 +53,7 @@ import flask
 
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
-from shapely_geojson import dumps, Feature, FeatureCollection
+from shapely_geojson import dumps, FeatureCollection
 
 
 class GeometryFormatter(fields.Raw):
@@ -189,9 +189,6 @@ def get_format_from_request():
 
 ns = api.namespace('items', description='Item operations', path='/')
 
-from shapely.geometry.collection import GeometryCollection
-
-
 @ns.route('/collections/<uuid:collection_uuid>/items')
 class CollectionItemList(Resource):
     @accept_fallback
@@ -223,7 +220,7 @@ class CollectionItemList(Resource):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
         items = ItemDB.find_by_collection_uuid(provider_uuid, collection_uuid, filters)
-        features = [Feature(to_shape(item.geometry), item.properties) for item in items]
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
@@ -322,7 +319,7 @@ class CollectionItemApi(Resource):
     def get_geojson(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
-        feature = Feature(to_shape(item.geometry), item.properties)
+        feature = Feature(to_shape(item.geometry), item.properties, str(item.uuid))
         return flask.make_response(dumps(feature), 200)
 
     @get.support('image/png')
@@ -365,7 +362,7 @@ class CollectionByNameItemList(Resource):
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = ItemDB.find_by_collection_name_with_simplify(provider_uuid, collection_name, filters, transforms)
-        features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
 
@@ -473,37 +470,42 @@ class ItemApi(Resource):
 
 
 
-# @app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
-@jwt_required
-def generate_walking_paths(collection_uuid):
-    provider_uuid = get_provider_uuid_from_request()
-    filters = {
-        "offset": 0,
-        "limit": 1000,
-        "property_filter": None,
-        "valid": False
-    }
-    steps = min(int(request.args.get('steps')), 200)
-    n_agents = min(int(request.args.get('agents')), 50)
-    starting_points_collection_uuid = request.args.get('starting_points_collection_uuid')
-    environment_collection_uuid = request.args.get('environment_collection_uuid')
-    uuids = generate_paths_from_points(
-        starting_points_collection_uuid,
-        environment_collection_uuid,
-        collection_uuid,
-        n_agents,
-        steps,
-        provider_uuid,
-        filters
-    )
-    return response(201, rapidjson.dumps(uuids))
+@ns.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths')
+class GenerateWalkingPaths(Resource):
+    @jwt_required
+    @ns.marshal_list_with(bulk_create_item_response_model)
+    def post(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        filters = get_filters_from_request()
+        filters.update({
+            "offset": 0,
+            "limit": 1000,
+            "property_filter": None,
+            "valid": False
+        })
+        steps = min(int(request.args.get('steps', '200')), 200)
+        n_agents = min(int(request.args.get('agents', '50')), 50)
+        starting_points_collection_uuid = request.args.get('starting_points_collection_uuid')
+        environment_collection_uuid = request.args.get('environment_collection_uuid')
+        items = generate_paths_from_points(
+            starting_points_collection_uuid,
+            environment_collection_uuid,
+            collection_uuid,
+            n_agents,
+            steps,
+            provider_uuid,
+            filters
+        )
+        return items, 201
 
 
-# @app.route('/items/<item_uuid>/ai/sequence')
-@jwt_required
-def prediction_for_sensor_item(item_uuid):
-    filters = get_filters_from_request()
-    start_date = request.args.get('startdate')
-    end_date = request.args.get('enddate')
-    sequence_data = get_sequence_for_sensor(item_uuid, filters, start_date, end_date)
-    return response(200, sequence_data)
+@ns.route('/items/<item_uuid>/ai/sequence')
+class PredictionForSensorItem(Resource):
+    @jwt_required
+    def get(self, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        filters = get_filters_from_request()
+        start_date = request.args.get('startdate')
+        end_date = request.args.get('enddate')
+        sequence_data = get_sequence_for_sensor(provider_uuid, item_uuid, filters, start_date, end_date)
+        return sequence_data, 200

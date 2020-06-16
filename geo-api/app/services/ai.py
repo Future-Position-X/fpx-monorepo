@@ -1,15 +1,22 @@
 import concurrent.futures
+import os
 import random
 import json
 import joblib
 import pandas as pd
 from datetime import date, datetime, timedelta
+
+from geoalchemy2.shape import to_shape
+from shapely_geojson import FeatureCollection
+
 from app.services.collection import (
     get_collection_uuid_by_collection_name
 )
 from app.services.item import (
     get_item_by_uuid_as_geojson
 )
+
+from app.models import Item as ItemDB, Feature
 
 from app.services.item import get_items_by_collection_uuid_as_geojson
 from app.models.ai.walking_agent import WalkingAgent
@@ -25,25 +32,31 @@ def move_agent(a):
     a.move(env)
     return a
 
-def generate_paths_from_points(points_uuid, obstacles_uuid, store_uuid, n_agents, steps, provider_uuid, filters):
+def generate_paths_from_points(points_collection_uuid, obstacles_collection_uuid, store_uuid, n_agents, steps, provider_uuid, filters):
     global env
-    starting_points = get_items_by_collection_uuid_as_geojson(points_uuid, filters)
-    obstacles = get_items_by_collection_uuid_as_geojson(obstacles_uuid, filters)
-    env = PolygonEnvironment(obstacles["features"])
-    agents = generate_agents(starting_points["features"], n_agents, steps)
+    starting_points = ItemDB.find_by_collection_uuid(provider_uuid, points_collection_uuid, filters)
+    obstacles = ItemDB.find_by_collection_uuid(provider_uuid, obstacles_collection_uuid, filters)
+
+    obstacle_features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)).__geo_interface__ for item in obstacles if item.geometry is not None]
+    env = PolygonEnvironment(obstacle_features)
+
+    starting_points_features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)).__geo_interface__ for item in starting_points if item.geometry is not None]
+    agents = generate_agents(starting_points_features, n_agents, steps)
     with concurrent.futures.ProcessPoolExecutor() as executor: 
         agents = list(executor.map(move_agent, agents))
         executor.shutdown(wait=True)
-        return [a.save_walking_path(provider_uuid, store_uuid) for a in agents if a.moved_distance > 0]
+        return [a.save_walking_path(store_uuid) for a in agents if a.moved_distance > 0]
 
-def get_sequence_for_sensor(uuid, filters, start_date, end_date):
+def get_sequence_for_sensor(provider_uuid, uuid, filters, start_date, end_date):
     pre_start_date = datetime.strptime(start_date, '%Y-%m-%d') - timedelta(hours=168, minutes=0)
-    sensor_item = get_item_by_uuid_as_geojson(uuid)
-    sid = sensor_item["properties"]["Cid"]
+    sensor_item = ItemDB.find_accessible_or_fail(provider_uuid, uuid)
+    sid = sensor_item.properties["Cid"]
     df, _ = SensorData.get_data(pre_start_date, end_date)
     end_datetime = pd.to_datetime(df.index.values[-1])
     df = df.loc[df.first_valid_index():df.last_valid_index()].fillna(0)
-    x_scaler = joblib.load('app/assets/scalers/all_features.joblib')
+    my_path = os.path.abspath(os.path.dirname(__file__))
+    path = os.path.join(my_path, "../assets/scalers/all_features.joblib")
+    x_scaler = joblib.load(path)
     X_scaled = x_scaler.transform(df.values)
     return_df = pd.date_range(start_date, end_datetime, freq='H', name='cDte').to_frame()
     predictions = SensorPrediction.make_prediction(sid, X_scaled, len(return_df))

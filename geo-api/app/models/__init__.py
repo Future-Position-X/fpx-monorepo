@@ -7,9 +7,32 @@ from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry, WKTElement, WKBElement
 import uuid
 from app.models.item import Item as ItemModel
-
+from shapely_geojson import Feature as BaseFeature
 from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
     ModelNotFoundError
+
+
+class Feature(BaseFeature):
+    def __init__(self, geometry, properties=None, id=None):
+        self.geometry = geometry
+        self.properties = properties
+        self.id = id
+
+    @property
+    def __geo_interface__(self):
+        if self.id is not None:
+            return {
+                'id': self.id,
+                'type': 'Feature',
+                'geometry': self.geometry.__geo_interface__,
+                'properties': self.properties,
+            }
+        else:
+            return {
+                'type': 'Feature',
+                'geometry': self.geometry.__geo_interface__,
+                'properties': self.properties,
+            }
 
 
 class FPXActiveRecordMixin(ActiveRecordMixin):
@@ -139,8 +162,8 @@ class Item(BaseModel2):
             name = "name_" + str(i)
             value = "value_" + str(i)
 
-            where_clause += " properties->>%(" + \
-                            name + ")s = %(" + value + ")s"
+            where_clause += " properties->>:" + \
+                            name + " = :" + value
             execute_dict[name] = tokens[0]
             execute_dict[value] = tokens[1]
 

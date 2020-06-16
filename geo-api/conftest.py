@@ -5,6 +5,21 @@ from app import create_app
 from app import db as _db
 from sqlalchemy import event
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--runslow", action="store_true", default=False, help="run slow tests"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--runslow"):
+        # --runslow given in cli: do not skip slow tests
+        return
+    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
+
 
 @pytest.fixture(scope="session")
 def app(request):
@@ -24,9 +39,6 @@ def db(app, request):
 
 @pytest.fixture(scope="session")
 def provider(app, db, request):
-    """
-    Returns session-wide initialised database.
-    """
     from app.models import Provider
     with app.app_context():
         provider = Provider.create(name='test-provider')
@@ -35,9 +47,6 @@ def provider(app, db, request):
 
 @pytest.fixture(scope="session")
 def collection(app, db, provider, request):
-    """
-    Returns session-wide initialised database.
-    """
     from app.models import Collection
     with app.app_context():
         collection = Collection.create(name='test-collection', is_public=True, provider_uuid=provider['uuid'])
@@ -45,10 +54,43 @@ def collection(app, db, provider, request):
         return collection.to_dict()
 
 @pytest.fixture(scope="session")
+def obstacles(app, db, provider, request):
+    import json
+    import os.path
+    from shapely.geometry.geo import shape
+    from app.models import Collection, Item
+    with app.app_context():
+        collection = Collection.create(name='obstacles', is_public=True, provider_uuid=provider['uuid'])
+
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(my_path, "data/obstacles.json")
+        with open(path) as f:
+            data = json.load(f)
+            for feature in data['features']:
+                Item.create(collection_uuid=collection.uuid, properties=feature['properties'], geometry=shape(feature['geometry']).to_wkt())
+        Collection.session().commit()
+        return collection.to_dict()
+
+@pytest.fixture(scope="session")
+def sensors(app, db, provider, request):
+    import json
+    import os.path
+    from shapely.geometry.geo import shape
+    from app.models import Collection, Item
+    with app.app_context():
+        collection = Collection.create(name='sensors', is_public=True, provider_uuid=provider['uuid'])
+        my_path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(my_path, "data/sensors.json")
+        with open(path) as f:
+            data = json.load(f)
+            for feature in data['features']:
+                Item.create(collection_uuid=collection.uuid, properties=feature['properties'], geometry=shape(feature['geometry']).to_wkt())
+        Collection.session().commit()
+        return collection.to_dict()
+
+
+@pytest.fixture(scope="session")
 def item(app, db, provider, collection, request):
-    """
-    Returns session-wide initialised database.
-    """
     from app.models import Item
     with app.app_context():
         item = Item.create(collection_uuid=collection['uuid'], geometry='POINT(1 1)', properties={'name': 'test-item'})
@@ -56,7 +98,7 @@ def item(app, db, provider, collection, request):
         return item.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, db, provider, collection, item, request):
+def client(app, db, provider, collection, obstacles, sensors, item, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():

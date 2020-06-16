@@ -2,6 +2,7 @@ import json
 import uuid
 
 import magic
+import pytest
 
 
 def collection_attributes():
@@ -335,6 +336,24 @@ def test_api_error_on_item_not_found(client, collection):
         '/collections/{}/items/{}'.format(collection['uuid'], collection['uuid']))
 
     assert res.status_code == 404
+
+@pytest.mark.slow
+def test_generate_walking_paths(client, obstacles, sensors, collection):
+    res = client.post(
+        '/collections/{}/items/ai/generate/walkingpaths?starting_points_collection_uuid={}&environment_collection_uuid={}'.format(collection['uuid'], sensors['uuid'], obstacles['uuid']))
+    assert res.status_code == 201
+
+@pytest.mark.slow
+def test_get_sequence(client, obstacles, sensors, collection):
+    res = client.get('/collections/{}/items?property_filter=Cid=6'.format(sensors['uuid']))
+    assert res.status_code == 200
+    print(res.data)
+    items_hash = json.loads(res.data.decode('utf-8'))
+
+    res = client.get(
+        '/items/{}/ai/sequence?startdate=2020-06-01&enddate=2020-06-07'.format(items_hash[0]['uuid']))
+    assert res.status_code == 200
+    assert ('predicted' in str(res.data))
 
 # def test_test(collection, session):
 #     from app.models import Item
