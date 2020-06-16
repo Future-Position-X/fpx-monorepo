@@ -1,8 +1,10 @@
 import random
 import math
 import rapidjson
-from shapely.geometry import mapping, LineString
+from shapely.geometry import mapping, LineString, shape
 from app.models.item import Item
+from app.models import Item as ItemDB
+
 from app.services.item import (
     create_item
 )
@@ -68,10 +70,10 @@ class WalkingAgent:
             self.direction += self.relative_dir
             self.__updatePosition(env)
 
-    def save_walking_path(self, provider_uuid, store_collection_uuid):
+    def save_walking_path(self, store_collection_uuid):
         item_hash = self.path_as_geo_dict()
         if item_hash["type"] != "Empty":
-            item_hash["provider_uuid"] = provider_uuid
             item_hash["collection_uuid"] = store_collection_uuid
+            item_hash["geometry"] = shape(item_hash['geometry']).to_wkt()
             item = Item(**item_hash)
-            return create_item(item)
+            return ItemDB.create(**item.as_dict())
