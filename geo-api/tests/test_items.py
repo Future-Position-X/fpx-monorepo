@@ -288,6 +288,30 @@ def test_item_update(client, item):
     assert res.status_code == 200
     assert ('somename' in str(res.data))
 
+def test_items_update_geojson(client, item):
+    geojson = item_attributes_geojson()
+    geojson['features'][0]['properties']['id'] = item['uuid']
+    res = client.put('/items', headers={'accept': 'application/geojson'}, json=geojson)
+    assert res.status_code == 201
+
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 200
+
+    assert ('somegeojson' in str(res.data))
+
+def test_collection_update_items_geojson(client, item):
+    res = client.put('/collections/{}/items'.format(item['collection_uuid']), headers={'accept': 'application/geojson'}, json=item_attributes_geojson())
+    assert res.status_code == 201
+
+    res = client.get(
+        '/collections/{}/items'.format(item['collection_uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 200
+    assert ('somegeojson' in str(res.data))
+    assert ('test-item' in str(res.data))
+
 def test_item_creation_in_non_existent_collection(client):
     import uuid
     res = client.post('/collections/{}/items'.format(uuid.uuid4()), json=item_attributes())

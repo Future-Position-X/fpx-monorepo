@@ -325,6 +325,18 @@ class Item(BaseModel2):
         return res
 
     @classmethod
+    def find_owned(cls, provider_uuid, item_uuids=None):
+        q = cls.query\
+            .filter(Collection.uuid == cls.collection_uuid,
+                    Collection.provider_uuid == provider_uuid)
+        if item_uuids is not None:
+            q = q.filter(cls.uuid.in_(item_uuids))
+
+        res = q.all()
+        return res
+
+
+    @classmethod
     def delete_by_collection_uuid(cls, provider_uuid, collection_uuid):
         q = cls.query \
             .filter(Collection.uuid == collection_uuid) \

@@ -253,14 +253,14 @@ class CollectionItemList(Resource):
     def post_geojson(self, collection_uuid):
         from shapely.geometry import shape
         provider_uuid = get_provider_uuid_from_request()
-        coll = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+        collection = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
         geojson = request.get_json(force=True)
 
-        ItemDB.where(collection_uuid=coll.uuid).delete()
+        ItemDB.where(collection_uuid=collection.uuid).delete()
 
         items = [
             ItemDB(**{
-                'collection_uuid': coll.uuid,
+                'collection_uuid': collection.uuid,
                 'geometry': shape(feature['geometry']).to_wkt(),
                 'properties': feature['properties']
             }) for feature in geojson['features']]
@@ -268,7 +268,7 @@ class CollectionItemList(Resource):
         ItemDB.session().bulk_save_objects(items)
         ItemDB.session().commit()
 
-        items = ItemDB.where(collection_uuid=coll.uuid).all()
+        items = ItemDB.where(collection_uuid=collection.uuid).all()
         return items, 201
 
     @accept_fallback
@@ -278,6 +278,29 @@ class CollectionItemList(Resource):
         provider_uuid = get_provider_uuid_from_request()
         ItemDB.delete_by_collection_uuid(provider_uuid, collection_uuid)
         return '', 204
+
+    @accept('application/geojson')
+    @jwt_required
+    @ns.doc('update_collection_items')
+    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
+    def put(self, collection_uuid):
+        from shapely.geometry import shape
+        provider_uuid = get_provider_uuid_from_request()
+        collection = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+        geojson = request.get_json(force=True)
+        items = [
+            ItemDB(**{
+                'collection_uuid': collection.uuid,
+                'geometry': shape(feature['geometry']).to_wkt(),
+                'properties': feature['properties']
+            }) for feature in geojson['features']]
+
+        ItemDB.session().bulk_save_objects(items)
+        ItemDB.session().commit()
+
+        items = ItemDB.where(collection_uuid=collection.uuid).all()
+
+        return items, 201
 
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
@@ -360,6 +383,35 @@ class CollectionByNameItemList(Resource):
         return flask.make_response(data, 200, {'content-type': 'image/png'})
 
 
+@ns.route('/items')
+class ItemListApi(Resource):
+    @accept('application/geojson')
+    @jwt_required
+    @ns.doc('update_items')
+    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
+    def put(self):
+        from shapely.geometry import shape
+        provider_uuid = get_provider_uuid_from_request()
+        geojson = request.get_json(force=True)
+        items_new = [
+            Item(**{
+                'uuid': feature['properties']['id'],
+                'geometry': shape(feature['geometry']).to_wkt(),
+                'properties': feature['properties']
+            }) for feature in geojson['features']]
+
+        items = ItemDB.find_owned(provider_uuid, [item.uuid for item in items_new])
+
+        for item in items:
+            item_new = [item_new for item_new in items_new if str(item_new.uuid) == str(item.uuid)][0]
+            item.properties = item_new.properties
+            item.geometry = item_new.geometry
+            item.save()
+
+        ItemDB.session().commit()
+
+        return items, 201
+
 @ns.route('/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
 @ns.param('item_uuid', 'The item identifier')
@@ -419,51 +471,6 @@ class ItemApi(Resource):
         item.session().commit()
         return '', 204
 
-    @put.support('application/geojson')
-    @jwt_required
-    @ns.doc('update_item')
-    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
-    def put_geojson(self, item_uuid):
-        from shapely.geometry import shape
-        provider_uuid = get_provider_uuid_from_request()
-        geojson = request.get_json(force=True)
-        feature = geojson['feature']
-        item = ItemDB.find_owned_or_fail(provider_uuid, item_uuid)
-
-        item_new = ItemDB(**{
-                'geometry': shape(feature['geometry']).to_wkt(),
-                'properties': feature['properties']
-            })
-
-        item.properties = item_new.properties
-        item.geometry = item_new.geometry
-
-        item.save
-        item.session().commit()
-
-        return '', 204
-
-
-# @app.route('/items/geojson', methods=['PUT'])
-@jwt_required
-def update_from_geojson():
-    feature_collection = request.json
-    update_items_from_geojson(feature_collection)
-    return response(204)
-
-
-# @app.route('/collections/<collection_uuid>/items/geojson', methods=['PUT'])
-@jwt_required
-def add_from_geojson(collection_uuid):
-    provider_uuid = get_provider_uuid_from_request()
-    geojson = request.json
-
-    uuids = add_items_from_geojson(
-        geojson=geojson,
-        collection_uuid=collection_uuid,
-        provider_uuid=provider_uuid)
-
-    return response(201, rapidjson.dumps(uuids))
 
 
 # @app.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths', methods=['POST'])
