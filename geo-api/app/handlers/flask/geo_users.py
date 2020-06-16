@@ -8,7 +8,7 @@ from flask_restx import Resource, fields
 from app import app, api
 from app.models.user import User
 from app.handlers.flask import (
-    response
+    response, get_provider_uuid_from_request
 )
 from app.services.user import (
     create_user,
@@ -38,8 +38,20 @@ create_user_model = api.model('User', {
     'password': fields.String(description='password')
 })
 
+update_user_model = api.model('User', {
+    'password': fields.String(description='password')
+})
+
+
 @ns.route('/')
 class UserList(Resource):
+    @jwt_required
+    @ns.doc('list_users')
+    @ns.marshal_list_with(user_model)
+    def get(self):
+        user = UserDB.all()
+        return user
+
     @jwt_required
     @ns.doc('create_user')
     @ns.expect(create_user_model)
@@ -55,32 +67,36 @@ class UserList(Resource):
 
 
 
-# @app.route('/users/<user_uuid>')
-# @jwt_required
-# def users_get(user_uuid):
-#     user = get_user_by_uuid(user_uuid)
-#     return response(200, rapidjson.dumps(user.as_dict(), datetime_mode=DM_ISO8601))
-
-# @app.route('/users', methods=['POST'])
-# @jwt_required
-# def users_create():
-#     user = User(**request.json)
-#     uuid = create_user(user)
-
-#     return response(201, str(uuid))
+@ns.route('/<uuid:user_uuid>')
+@ns.response(404, 'User not found')
+@ns.param('user_uuid', 'The user identifier')
+class UserApi(Resource):
+    @jwt_required
+    @ns.doc('get_user')
+    @ns.marshal_with(user_model)
+    def get(self, user_uuid):
+        user = UserDB.find_or_fail(user_uuid)
+        return user
 
 
-# @app.route('/users/<user_uuid>', methods=['PUT'])
-# @jwt_required
-# def users_update(user_uuid):
-#     user = User(**request.json)
-#     update_user_by_uuid(user_uuid, user)
+    @jwt_required
+    @ns.doc('update_user')
+    @ns.expect(update_user_model)
+    def put(self, user_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        user_dict = request.get_json()
+        user_new = User(**user_dict)
+        user = UserDB.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
+        user.password = bcrypt.hashpw(user_new.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        user.save()
+        user.session().commit()
+        return '', 204
 
-#     return response(204)
-
-
-# @app.route('/users/<user_uuid>', methods=['DELETE'])
-# @jwt_required
-# def users_delete(user_uuid):
-#     delete_user_by_uuid(user_uuid)
-#     return response(204)
+    @jwt_required
+    @ns.doc('delete_user')
+    def delete(self, user_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        user = UserDB.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
+        user.delete()
+        user.session().commit()
+        return '', 204

@@ -46,6 +46,14 @@ def provider(app, db, request):
         return provider.to_dict()
 
 @pytest.fixture(scope="session")
+def user(app, db, provider, request):
+    from app.models import User
+    with app.app_context():
+        user = User.create(email='test-user@test.se', password='test', provider_uuid=provider['uuid'])
+        user.session().commit()
+        return user.to_dict()
+
+@pytest.fixture(scope="session")
 def collection(app, db, provider, request):
     from app.models import Collection
     with app.app_context():
@@ -98,7 +106,7 @@ def item(app, db, provider, collection, request):
         return item.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, db, provider, collection, obstacles, sensors, item, request):
+def client(app, db, provider, user, collection, obstacles, sensors, item, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
