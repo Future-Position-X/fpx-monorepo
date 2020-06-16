@@ -47,7 +47,8 @@ class CollectionList(Resource):
     @ns.doc('list_collections')
     @ns.marshal_list_with(collection_model)
     def get(self):
-        collections = CollectionDB.all()
+        provider_uuid = get_provider_uuid_from_request()
+        collections = CollectionDB.find_accessible(provider_uuid)
         return collections
 
     @jwt_required
@@ -72,14 +73,16 @@ class Collection(Resource):
     @ns.doc('get_collection')
     @ns.marshal_with(collection_model)
     def get(self, collection_uuid):
-        collection = CollectionDB.find_or_fail(collection_uuid)
+        provider_uuid = get_provider_uuid_from_request()
+        collection = CollectionDB.find_accessible_or_fail(provider_uuid, collection_uuid)
         return collection
 
     @jwt_required
     @ns.doc('delete_collection')
     @ns.response(204, 'Collection deleted')
     def delete(self, collection_uuid):
-        collection = CollectionDB.find_or_fail(collection_uuid)
+        provider_uuid = get_provider_uuid_from_request()
+        collection = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
         collection.delete()
         collection.session().commit()
         return '', 204
@@ -90,10 +93,12 @@ class Collection(Resource):
     @ns.marshal_with(collection_model)
     @ns.response(200, 'Collection updated')
     def put(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+
         collection_dict = request.get_json()
         collection_new = CollectionModel(**collection_dict)
 
-        collection = CollectionDB.find_or_fail(collection_uuid)
+        collection = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
 
         collection.name = collection_new.name
         collection.is_public = collection_new.is_public

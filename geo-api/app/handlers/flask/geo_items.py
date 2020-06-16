@@ -196,7 +196,7 @@ from shapely.geometry.collection import GeometryCollection
 class CollectionItemList(Resource):
     @accept_fallback
     @jwt_required
-    @ns.doc('list_items')
+    @ns.doc('list_collection_items')
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -206,7 +206,7 @@ class CollectionItemList(Resource):
 
     @get.support('application/geojson')
     @jwt_required
-    @ns.doc('list_items')
+    @ns.doc('list_collection_items')
     def get_geojson(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -218,7 +218,7 @@ class CollectionItemList(Resource):
 
     @get.support('image/png')
     @jwt_required
-    @ns.doc('list_items')
+    @ns.doc('list_collection_items')
     def get_png(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -231,7 +231,7 @@ class CollectionItemList(Resource):
 
     @accept('application/json')
     @jwt_required
-    @ns.doc('create_item')
+    @ns.doc('create_collection_item')
     @ns.expect(create_item_model)
     @ns.marshal_with(item_model, 201)
     def post(self, collection_uuid):
@@ -247,7 +247,7 @@ class CollectionItemList(Resource):
 
     @post.support('application/geojson')
     @jwt_required
-    @ns.doc('create_item')
+    @ns.doc('create_collection_item')
     @ns.expect(create_item_model)
     @ns.marshal_list_with(bulk_create_item_response_model, code=201)
     def post_geojson(self, collection_uuid):
@@ -271,6 +271,13 @@ class CollectionItemList(Resource):
         items = ItemDB.where(collection_uuid=coll.uuid).all()
         return items, 201
 
+    @accept_fallback
+    @jwt_required
+    @ns.doc('delete_collection_items')
+    def delete(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        ItemDB.delete_by_collection_uuid(provider_uuid, collection_uuid)
+        return '', 204
 
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
@@ -394,28 +401,47 @@ class ItemApi(Resource):
         ItemDB.delete_owned(provider_uuid, item_uuid)
         return '', 204
 
+    @accept_fallback
+    @jwt_required
+    @ns.doc('update_item')
+    @ns.expect(update_item_model)
+    def put(self, item_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        item_dict = request.get_json(force=True)
+        item_new = Item(**item_dict)
 
-# @app.route('/items/<item_uuid>', methods=['DELETE'])
-@jwt_required
-def items_delete(item_uuid):
-    delete_item(item_uuid)
-    return response(204)
+        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
 
+        item.properties = item_new.properties
+        item.geometry = item_new.geometry
 
-# @app.route('/collections/<collection_uuid>/items', methods=['DELETE'])
-@jwt_required
-def delete_items(collection_uuid):
-    delete_items_by_collection_uuid(collection_uuid)
-    return response(204)
+        item.save()
+        item.session().commit()
+        return '', 204
 
+    @put.support('application/geojson')
+    @jwt_required
+    @ns.doc('update_item')
+    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
+    def put_geojson(self, item_uuid):
+        from shapely.geometry import shape
+        provider_uuid = get_provider_uuid_from_request()
+        geojson = request.get_json(force=True)
+        feature = geojson['feature']
+        item = ItemDB.find_owned_or_fail(provider_uuid, item_uuid)
 
-# @app.route('/items/<item_uuid>', methods=['PUT'])
-@jwt_required
-def items_update(item_uuid):
-    item_hash = request.json
-    item = Item(**item_hash)
-    update_item(item_uuid, item)
-    return response(204)
+        item_new = ItemDB(**{
+                'geometry': shape(feature['geometry']).to_wkt(),
+                'properties': feature['properties']
+            })
+
+        item.properties = item_new.properties
+        item.geometry = item_new.geometry
+
+        item.save
+        item.session().commit()
+
+        return '', 204
 
 
 # @app.route('/items/geojson', methods=['PUT'])

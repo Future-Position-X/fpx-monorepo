@@ -90,6 +90,31 @@ class Collection(BaseModel2):
 
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
+    @classmethod
+    def find_accessible(cls, provider_uuid):
+        q = cls.query.filter(
+            or_(
+                cls.is_public == True,
+                cls.provider_uuid == provider_uuid
+            ))
+        res = q.all()
+
+        return res
+
+    @classmethod
+    def find_accessible_or_fail(cls, provider_uuid, collection_uuid):
+        q = cls.query \
+            .filter(cls.uuid == collection_uuid)\
+            .filter(
+            or_(
+                cls.is_public == True,
+                cls.provider_uuid == provider_uuid
+            ))
+        res = q.first()
+
+        if res is None:
+            raise sqlalchemy_mixins.ModelNotFoundError
+        return res
 
 from sqlalchemy import func, or_
 
@@ -265,24 +290,46 @@ class Item(BaseModel2):
         if collection_uuid is not None:
             q = q.filter(cls.collection_uuid == collection_uuid)
 
-        res = q.filter(
+        q = q.filter(
             or_(
                 Item.collection.has(is_public=True),
                 Item.collection.has(provider_uuid=provider_uuid)
-            )) \
-            .first()
+            ))
+
+        res = q.first()
         if res is None:
             raise sqlalchemy_mixins.ModelNotFoundError
         return res
 
     @classmethod
-    def delete_owned(cls, provider_uuid, item_uuid, collection_uuid=None):
+    def owned_query(cls,provider_uuid, item_uuid, collection_uuid=None):
         q = cls.query\
             .filter(cls.uuid == item_uuid) \
             .filter(Collection.uuid == cls.collection_uuid,
                     Collection.provider_uuid == provider_uuid)
         if collection_uuid is not None:
             q = q.filter(Collection.uuid == collection_uuid)
+        return q
+    @classmethod
+    def delete_owned(cls, provider_uuid, item_uuid, collection_uuid=None):
+        cls.owned_query(provider_uuid, item_uuid, collection_uuid).delete(
+            synchronize_session=False)
+        cls.session().commit()
+        cls.session().expire_all()
+
+    @classmethod
+    def find_owned_or_fail(cls, provider_uuid, item_uuid, collection_uuid=None):
+        res = cls.owned_query(provider_uuid, item_uuid, collection_uuid).first()
+        if res is None:
+            raise sqlalchemy_mixins.ModelNotFoundError
+        return res
+
+    @classmethod
+    def delete_by_collection_uuid(cls, provider_uuid, collection_uuid):
+        q = cls.query \
+            .filter(Collection.uuid == collection_uuid) \
+            .filter(Collection.uuid == cls.collection_uuid,
+                    Collection.provider_uuid == provider_uuid)
         q.delete(
             synchronize_session=False)
         cls.session().commit()

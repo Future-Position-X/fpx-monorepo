@@ -129,6 +129,16 @@ def test_delete_collection_item(client, item):
     assert ('not found' in str(res.data))
 
 
+def test_delete_collection_items(client, item):
+    res = client.delete('/collections/{}/items'.format(item['collection_uuid']), headers={'accept': 'application/json'})
+    assert res.status_code == 204
+
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 404
+    assert ('not found' in str(res.data))
+
 def test_get_item_json(client, item):
     res = client.get(
         '/items/{}'.format(item['uuid']),
@@ -267,6 +277,16 @@ def test_item_delete(client, item):
         headers={'accept': 'application/json'})
     assert res.status_code == 404
     assert ('not found' in str(res.data))
+
+def test_item_update(client, item):
+    res = client.put('/items/{}'.format(item['uuid']), headers={'accept': 'application/json'}, json=item_attributes())
+    assert res.status_code == 204
+
+    res = client.get(
+        '/items/{}'.format(item['uuid']),
+        headers={'accept': 'application/json'})
+    assert res.status_code == 200
+    assert ('somename' in str(res.data))
 
 def test_item_creation_in_non_existent_collection(client):
     import uuid
