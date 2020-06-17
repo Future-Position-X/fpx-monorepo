@@ -1,11 +1,11 @@
-const GIA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI";
+const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZWI4YWE5Ni05NTkzLTQwZTMtYTEzYS02ZGVmZThhYWRkNzciLCJleHAiOjE1OTM1MTE5OTUsInByb3ZpZGVyX3V1aWQiOiJkN2EyNTI4MS0yOTVjLTQ3YzktODZjMi1mMjFjNTFhZGIxM2IifQ.SStYGpLPWEPN1rP3tWeWCPl7IAyBIBAnj47QVkNp5ls";
 
 export default {
     async fetchCollections() {
         const response = await fetch("https://dev.gia.fpx.se/collections", {
             headers: {
-                Authorization:
-                    `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${GIA_TOKEN}`,
+                Accept: `application/geojson`
             }
         });
 
@@ -15,8 +15,8 @@ export default {
     async fetchCollection(collectionId) {
         const response = await fetch(`https://dev.gia.fpx.se/collections/${collectionId}`, {
             headers: {
-                Authorization:
-                    `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${GIA_TOKEN}`,
+                Accept: `application/geojson`
             }
         });
 
@@ -25,11 +25,11 @@ export default {
     },
     async fetchItems(signal, collectionId, bounds, simplify) {
         const response = await fetch(
-            `https://dev.gia.fpx.se/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}&format=geojson`,
+            `https://dev.gia.fpx.se/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
                 headers: {
-                    Authorization:
-                        `Bearer ${GIA_TOKEN}`
+                    Authorization: `Bearer ${GIA_TOKEN}`,
+                    Accept: `application/geojson`
                 },
                 signal: signal
             }
@@ -40,14 +40,13 @@ export default {
     },
     async addItems(collectionId, items) {
         await fetch(
-            `https://dev.gia.fpx.se/collections/${collectionId}/items/geojson`,
+            `https://dev.gia.fpx.se/collections/${collectionId}/items`,
             {
                 method: "PUT",
                 mode: "cors",
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization:
-                        `Bearer ${GIA_TOKEN}`
+                    Authorization: `Bearer ${GIA_TOKEN}`,
+                    'Content-Type': `application/geojson`
                 },
                 body: JSON.stringify({
                     type: "FeatureCollection",
@@ -62,21 +61,18 @@ export default {
                 method: "DELETE",
                 mode: "cors",
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization:
-                        `Bearer ${GIA_TOKEN}`
+                    Authorization: `Bearer ${GIA_TOKEN}`
                 }
             });
         }
     },
     async updateItems(items) {
-        await fetch(`https://dev.gia.fpx.se/items/geojson`, {
+        await fetch(`https://dev.gia.fpx.se/items`, {
             method: "PUT",
             mode: "cors",
             headers: {
-                "Content-Type": "application/json",
-                Authorization:
-                    `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${GIA_TOKEN}`,
+                'Content-Type': `application/geojson`
             },
             body: JSON.stringify({
                 type: "FeatureCollection",
@@ -89,9 +85,8 @@ export default {
             method: "POST",
             mode: "cors",
             headers: {
-                "Content-Type": "application/json",
-                Authorization:
-                    `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${GIA_TOKEN}`,
+                'Content-Type': `application/geojson`
             },
             body: JSON.stringify({
                 name: collectionName,
@@ -104,8 +99,7 @@ export default {
             method: "DELETE",
             mode: "cors",
             headers: {
-                Authorization:
-                    `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${GIA_TOKEN}`
             }
         });
     }
