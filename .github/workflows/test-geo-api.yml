@@ -27,10 +27,10 @@ jobs:
       working-directory: ./geo-api
       run: |
         docker-compose up -d
-        docker-compose exec webserver pip install flake8
+        docker-compose exec -T webserver pip install flake8
         # stop the build if there are Python syntax errors or undefined names
-        docker-compose exec webserver flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker-compose exec -T webserver flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        docker-compose exec webserver flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        docker-compose exec -e DATABASE_URL_TESTING=postgresql://master:master@postgis:5432/testing -e APP_SETTINGS=testing -e USER_PASSWORD=test webserver flask db upgrade
-        docker-compose exec -e DATABASE_URL_TESTING=postgresql://master:master@postgis:5432/testing webserver pytest --runslow
+        docker-compose exec -T webserver flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        docker-compose exec -T -e DATABASE_URL_TESTING=postgresql://master:master@postgis:5432/testing -e APP_SETTINGS=testing -e USER_PASSWORD=test webserver flask db upgrade
+        docker-compose exec -T -e DATABASE_URL_TESTING=postgresql://master:master@postgis:5432/testing webserver pytest --runslow
