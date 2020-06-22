@@ -35,8 +35,8 @@ jobs:
         docker-compose exec -T -e DATABASE_URL_TESTING=postgresql://master:master@postgis:5432/testing -e APP_SETTINGS=testing -e USER_PASSWORD=test webserver flask db upgrade
         docker-compose exec -T -e DATABASE_URL_TESTING=postgresql://master:master@postgis:5432/testing webserver pytest --runslow
     - uses: docker/build-push-action@v1
-      working-directory: ./geo-api
       with:
+        path: ./geo-api
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: fpxgia/geo-api
