@@ -29,7 +29,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://master:master@localhost:5432/testing'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_TESTING', 'postgresql://master:master@localhost:5432/testing')
     SQLALCHEMY_ECHO = False
 
 app_config = {
