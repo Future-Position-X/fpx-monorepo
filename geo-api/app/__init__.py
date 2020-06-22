@@ -7,7 +7,12 @@ from flask_migrate import Migrate
 import sqlalchemy_mixins
 
 from app.config import app_config
-api = Api()
+
+api = Api(authorizations={
+    'apikey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'authorization'}})
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
@@ -24,8 +29,7 @@ def create_app(config_name=None):
                  description='GIA geo api',
                  contact='Magnus Engström',
                  contact_url='http://fpx.se',
-                 contact_email='magnus.engstrom@fpx.se'
-                 )
+                 contact_email='magnus.engstrom@fpx.se')
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
