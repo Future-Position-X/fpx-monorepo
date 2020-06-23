@@ -4,8 +4,8 @@ from flask_restx import Api
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 import sqlalchemy_mixins
-
 from app.config import app_config
 
 api = Api(authorizations={
@@ -21,6 +21,7 @@ app = None
 
 def create_app(config_name=None):
     app = Flask(__name__)
+    CORS(app)
     if config_name == None:
         config_name = os.environ.get('APP_SETTINGS', 'development')
     app.config.from_object(app_config[config_name])
