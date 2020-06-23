@@ -1,6 +1,6 @@
 const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZWI4YWE5Ni05NTkzLTQwZTMtYTEzYS02ZGVmZThhYWRkNzciLCJleHAiOjE1OTM1MTE5OTUsInByb3ZpZGVyX3V1aWQiOiJkN2EyNTI4MS0yOTVjLTQ3YzktODZjMi1mMjFjNTFhZGIxM2IifQ.SStYGpLPWEPN1rP3tWeWCPl7IAyBIBAnj47QVkNp5ls";
 
-const BASE_URL = process.env.VUE_APP_BASE_URL;
+const BASE_URL = process.env.BASE_URL;
 
 export default {
     async fetchCollections() {
