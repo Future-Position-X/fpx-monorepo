@@ -2,6 +2,7 @@ version: '3.1'
 
 services:
   postgis:
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_line_prefix=%m [%p] [s:%c] [t:%x]"]
     image: postgis/postgis:latest
     volumes:
       - ./postgis-data:/var/lib/postgresql/data
