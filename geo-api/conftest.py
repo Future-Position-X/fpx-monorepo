@@ -1,5 +1,6 @@
 # module conftest.py
 import pytest
+from sqlalchemy_utils import database_exists, create_database
 
 from app import create_app
 from app import db as _db
@@ -34,6 +35,11 @@ def db(app, request):
     Returns session-wide initialised database.
     """
     with app.app_context():
+        print(app.config)
+        if not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
+            create_database(app.config['SQLALCHEMY_DATABASE_URI'])
+        _db.engine.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+        _db.engine.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
         _db.drop_all()
         _db.create_all()
 

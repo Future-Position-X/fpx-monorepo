@@ -1,10 +1,8 @@
 import sqlalchemy_mixins
-from sqlalchemy.orm import aliased
-
 from app import db
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql import JSONB
-from geoalchemy2 import Geometry, WKTElement, WKBElement
+from geoalchemy2 import Geometry
 import uuid
 from app.models.item import Item as ItemModel
 from shapely_geojson import Feature as BaseFeature
@@ -127,7 +125,7 @@ class Collection(BaseModel2):
     @classmethod
     def find_accessible_or_fail(cls, provider_uuid, collection_uuid):
         q = cls.query \
-            .filter(cls.uuid == collection_uuid)\
+            .filter(cls.uuid == collection_uuid) \
             .filter(
             or_(
                 cls.is_public == True,
@@ -138,6 +136,7 @@ class Collection(BaseModel2):
         if res is None:
             raise sqlalchemy_mixins.ModelNotFoundError
         return res
+
 
 from sqlalchemy import func, or_
 
@@ -325,14 +324,15 @@ class Item(BaseModel2):
         return res
 
     @classmethod
-    def owned_query(cls,provider_uuid, item_uuid, collection_uuid=None):
-        q = cls.query\
+    def owned_query(cls, provider_uuid, item_uuid, collection_uuid=None):
+        q = cls.query \
             .filter(cls.uuid == item_uuid) \
             .filter(Collection.uuid == cls.collection_uuid,
                     Collection.provider_uuid == provider_uuid)
         if collection_uuid is not None:
             q = q.filter(Collection.uuid == collection_uuid)
         return q
+
     @classmethod
     def delete_owned(cls, provider_uuid, item_uuid, collection_uuid=None):
         cls.owned_query(provider_uuid, item_uuid, collection_uuid).delete(
@@ -349,7 +349,7 @@ class Item(BaseModel2):
 
     @classmethod
     def find_owned(cls, provider_uuid, item_uuids=None):
-        q = cls.query\
+        q = cls.query \
             .filter(Collection.uuid == cls.collection_uuid,
                     Collection.provider_uuid == provider_uuid)
         if item_uuids is not None:
@@ -357,7 +357,6 @@ class Item(BaseModel2):
 
         res = q.all()
         return res
-
 
     @classmethod
     def delete_by_collection_uuid(cls, provider_uuid, collection_uuid):

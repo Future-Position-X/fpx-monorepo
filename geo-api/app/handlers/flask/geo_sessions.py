@@ -1,18 +1,9 @@
-import rapidjson
-import base64
-from rapidjson import DM_ISO8601
-
-from app import app, api
-from app.handlers.flask import (
-    response
-)
-from app.services.user import get_user_by_email
+from app import api
 from app.services.session import (
     authenticate,
     create_access_token
 )
 from flask import request
-from flask_jwt_extended import jwt_required
 from flask_restx import Resource, fields
 
 ns = api.namespace('sessions', 'Session operations', path="/")
