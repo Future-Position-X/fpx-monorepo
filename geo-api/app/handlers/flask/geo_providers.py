@@ -17,15 +17,14 @@ provider_model = api.model('Provider', {
     'created_at': fields.String(description='created_at'),
     'updated_at': fields.String(description='updated_at'),
 })
-update_provider_model = api.model('Provider', {
+update_provider_model = api.model('UpdateProvider', {
     'name': fields.String(description='name'),
 })
 
 
 @ns.route('/')
 class ProviderList(Resource):
-    @jwt_required
-    @ns.doc('list_providers')
+    @ns.doc('list_providers', security=None)
     @ns.marshal_list_with(provider_model)
     def get(self):
         providers = ProviderDB.all()
@@ -36,8 +35,7 @@ class ProviderList(Resource):
 @ns.response(404, 'Provider not found')
 @ns.param('provider_uuid', 'The provider identifier')
 class ProviderApi(Resource):
-    @jwt_required
-    @ns.doc('get_provider')
+    @ns.doc('get_provider', security=None)
     @ns.marshal_with(provider_model)
     def get(self, provider_uuid):
         provider = ProviderDB.find_or_fail(provider_uuid)

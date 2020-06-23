@@ -1,5 +1,4 @@
-import rapidjson
-from app import app, api, db
+from app import api
 from flask_restx import Resource, fields
 from app.models.collection import Collection as CollectionModel
 from app.models import Collection as CollectionDB
@@ -8,16 +7,10 @@ from app.handlers.flask import (
 
 )
 from app.services.collection import (
-    get_all_collections,
-    create_collection,
-    delete_collection_by_uuid,
-    update_collection_by_uuid,
-    get_collection_by_uuid,
     copy_collection_from
 )
 from flask_jwt_extended import jwt_required
-from flask import request, abort
-from flask_accept import accept
+from flask import request
 ns = api.namespace('collections', 'Collection operations')
 
 collection_model = api.model('Collection', {
@@ -68,8 +61,7 @@ class CollectionList(Resource):
 @ns.response(404, 'Collection not found')
 @ns.param('collection_uuid', 'The collection identifier')
 class Collection(Resource):
-    @jwt_required
-    @ns.doc('get_collection')
+    @ns.doc('get_collection', security=None)
     @ns.marshal_with(collection_model)
     def get(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()

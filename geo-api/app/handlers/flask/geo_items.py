@@ -39,17 +39,17 @@ item_model = api.model('Item', {
     'updated_at': fields.String(description='updated_at'),
 })
 
-create_item_model = api.model('Item', {
+create_item_model = api.model('CreateItem', {
     'geometry': GeometryFormatter(),
     'properties': fields.Wildcard(fields.String, description='properties'),
 })
 
-update_item_model = api.model('Item', {
+update_item_model = api.model('UpdateItem', {
     'geometry': GeometryFormatter(),
     'properties': fields.Wildcard(fields.String, description='properties'),
 })
 
-bulk_create_item_response_model = api.model('Item', {
+bulk_create_item_response_model = api.model('BulkItemResponse', {
     'uuid': fields.String(description='uuid'),
 })
 
@@ -160,8 +160,7 @@ ns = api.namespace('items', description='Item operations', path='/')
 @ns.route('/collections/<uuid:collection_uuid>/items')
 class CollectionItemList(Resource):
     @accept_fallback
-    @jwt_required
-    @ns.doc('list_collection_items')
+    @ns.doc('list_collection_items', security=None)
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -170,8 +169,7 @@ class CollectionItemList(Resource):
         return items
 
     @get.support('application/geojson')
-    @jwt_required
-    @ns.doc('list_collection_items')
+    @ns.doc('list_collection_items', security=None)
     def get_geojson(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -182,8 +180,7 @@ class CollectionItemList(Resource):
         return flask.make_response(feature_collection, 200)
 
     @get.support('image/png')
-    @jwt_required
-    @ns.doc('list_collection_items')
+    @ns.doc('list_collection_items', security=None)
     def get_png(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -274,8 +271,7 @@ class CollectionItemList(Resource):
 @ns.param('item_uuid', 'The item identifier')
 class CollectionItemApi(Resource):
     @accept_fallback
-    @jwt_required
-    @ns.doc('get_item')
+    @ns.doc('get_item', security=None)
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -283,8 +279,7 @@ class CollectionItemApi(Resource):
         return item
 
     @get.support('application/geojson')
-    @jwt_required
-    @ns.doc('get_item')
+    @ns.doc('get_item', security=None)
     def get_geojson(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
@@ -292,8 +287,7 @@ class CollectionItemApi(Resource):
         return flask.make_response(dumps(feature), 200)
 
     @get.support('image/png')
-    @jwt_required
-    @ns.doc('get_item')
+    @ns.doc('get_item', security=None)
     def get_png(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
@@ -314,8 +308,7 @@ class CollectionItemApi(Resource):
 @ns.route('/collections/by_name/<collection_name>/items')
 class CollectionByNameItemList(Resource):
     @accept_fallback
-    @jwt_required
-    @ns.doc('list_items_by_name')
+    @ns.doc('list_items_by_name', security=None)
     @ns.marshal_list_with(item_model)
     def get(self, collection_name):
         provider_uuid = get_provider_uuid_from_request()
@@ -324,8 +317,7 @@ class CollectionByNameItemList(Resource):
         return items
 
     @get.support('application/geojson')
-    @jwt_required
-    @ns.doc('list_items_by_name')
+    @ns.doc('list_items_by_name', security=None)
     def get_geojson(self, collection_name):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -337,8 +329,7 @@ class CollectionByNameItemList(Resource):
         return flask.make_response(feature_collection, 200)
 
     @get.support('image/png')
-    @jwt_required
-    @ns.doc('list_items_by_name')
+    @ns.doc('list_items_by_name', security=None)
     def get_png(self, collection_name):
         filters = get_filters_from_request()
         provider_uuid = get_provider_uuid_from_request()
@@ -385,8 +376,7 @@ class ItemListApi(Resource):
 @ns.param('item_uuid', 'The item identifier')
 class ItemApi(Resource):
     @accept_fallback
-    @jwt_required
-    @ns.doc('get_item')
+    @ns.doc('get_item', security=None)
     @ns.marshal_with(item_model)
     def get(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -394,8 +384,7 @@ class ItemApi(Resource):
         return item
 
     @get.support('application/geojson')
-    @jwt_required
-    @ns.doc('get_item')
+    @ns.doc('get_item', security=None)
     def get_geojson(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
@@ -403,8 +392,7 @@ class ItemApi(Resource):
         return flask.make_response(dumps(feature), 200)
 
     @get.support('image/png')
-    @jwt_required
-    @ns.doc('get_item')
+    @ns.doc('get_item', security=None)
     def get_png(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
@@ -471,7 +459,7 @@ class GenerateWalkingPaths(Resource):
 
 @ns.route('/items/<item_uuid>/ai/sequence')
 class PredictionForSensorItem(Resource):
-    @jwt_required
+    @ns.doc('get_prediction', security=None)
     def get(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()

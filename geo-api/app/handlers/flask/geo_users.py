@@ -23,20 +23,19 @@ user_model = api.model('User', {
     'updated_at': fields.String(description='updated_at'),
 })
 
-create_user_model = api.model('User', {
+create_user_model = api.model('CreateUser', {
     'email': fields.String(description='email'),
     'password': fields.String(description='password')
 })
 
-update_user_model = api.model('User', {
+update_user_model = api.model('UpdateUser', {
     'password': fields.String(description='password')
 })
 
 
 @ns.route('/')
 class UserList(Resource):
-    @jwt_required
-    @ns.doc('list_users')
+    @ns.doc('list_users', security=None)
     @ns.marshal_list_with(user_model)
     def get(self):
         user = UserDB.all()
@@ -59,8 +58,7 @@ class UserList(Resource):
 @ns.response(404, 'User not found')
 @ns.param('user_uuid', 'The user identifier')
 class UserApi(Resource):
-    @jwt_required
-    @ns.doc('get_user')
+    @ns.doc('get_user', security=None)
     @ns.marshal_with(user_model)
     def get(self, user_uuid):
         user = UserDB.find_or_fail(user_uuid)

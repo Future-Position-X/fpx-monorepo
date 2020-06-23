@@ -18,4 +18,4 @@ def response(status_code, payload=None):
 
 def get_provider_uuid_from_request():
     claims = get_raw_jwt()
-    return UUID(claims['provider_uuid'])
+    return UUID(claims.get('provider_uuid', '00000000-0000-0000-0000-000000000000'))
