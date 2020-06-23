@@ -12,7 +12,7 @@ api = Api(authorizations={
     'apikey': {
         'type': 'apiKey',
         'in': 'header',
-        'name': 'authorization'}})
+        'name': 'authorization'}}, security='apikey')
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()

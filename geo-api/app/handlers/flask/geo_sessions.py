@@ -13,6 +13,7 @@ from app.models import User as UserDB
 
 @ns.route('/sessions')
 class Session(Resource):
+    @ns.doc(security=None)
     def post(self):
         json = request.get_json()
         email = json["email"]

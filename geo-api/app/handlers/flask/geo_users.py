@@ -42,8 +42,7 @@ class UserList(Resource):
         user = UserDB.all()
         return user
 
-    @jwt_required
-    @ns.doc('create_user')
+    @ns.doc('create_user', security=None)
     @ns.expect(create_user_model)
     @ns.marshal_with(user_model, 201)
     def post(self):

@@ -43,8 +43,7 @@ update_collection_model = api.model('UpdateCollection', {
 
 @ns.route('/')
 class CollectionList(Resource):
-    @jwt_required
-    @ns.doc('list_collections')
+    @ns.doc('list_collections', security=None)
     @ns.marshal_list_with(collection_model)
     def get(self):
         provider_uuid = get_provider_uuid_from_request()
