@@ -1,8 +1,10 @@
 const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZWI4YWE5Ni05NTkzLTQwZTMtYTEzYS02ZGVmZThhYWRkNzciLCJleHAiOjE1OTM1MTE5OTUsInByb3ZpZGVyX3V1aWQiOiJkN2EyNTI4MS0yOTVjLTQ3YzktODZjMi1mMjFjNTFhZGIxM2IifQ.SStYGpLPWEPN1rP3tWeWCPl7IAyBIBAnj47QVkNp5ls";
 
+const BASE_URL = process.env.VUE_APP_BASE_URL;
+
 export default {
     async fetchCollections() {
-        const response = await fetch("https://dev.gia.fpx.se/collections", {
+        const response = await fetch(`${BASE_URL}/collections`, {
             headers: {
                 Authorization: `Bearer ${GIA_TOKEN}`,
                 Accept: `application/geojson`
@@ -13,7 +15,7 @@ export default {
         return data;
     },
     async fetchCollection(collectionId) {
-        const response = await fetch(`https://dev.gia.fpx.se/collections/${collectionId}`, {
+        const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
                 Authorization: `Bearer ${GIA_TOKEN}`,
                 Accept: `application/geojson`
@@ -25,7 +27,7 @@ export default {
     },
     async fetchItems(signal, collectionId, bounds, simplify) {
         const response = await fetch(
-            `https://dev.gia.fpx.se/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
+            `${BASE_URL}/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
                 headers: {
                     Authorization: `Bearer ${GIA_TOKEN}`,
@@ -40,7 +42,7 @@ export default {
     },
     async addItems(collectionId, items) {
         await fetch(
-            `https://dev.gia.fpx.se/collections/${collectionId}/items`,
+            `${BASE_URL}/collections/${collectionId}/items`,
             {
                 method: "PUT",
                 mode: "cors",
@@ -57,7 +59,7 @@ export default {
     },
     async removeItems(items) {
         for (const item of items) {
-            await fetch(`https://dev.gia.fpx.se/items/${item.id}`, {
+            await fetch(`${BASE_URL}/items/${item.id}`, {
                 method: "DELETE",
                 mode: "cors",
                 headers: {
@@ -67,7 +69,7 @@ export default {
         }
     },
     async updateItems(items) {
-        await fetch(`https://dev.gia.fpx.se/items`, {
+        await fetch(`${BASE_URL}/items`, {
             method: "PUT",
             mode: "cors",
             headers: {
@@ -81,7 +83,7 @@ export default {
         });
     },
     async create(collectionName, isPublic) {
-        return await fetch(`https://dev.gia.fpx.se/collections`, {
+        return await fetch(`${BASE_URL}/collections`, {
             method: "POST",
             mode: "cors",
             headers: {
@@ -95,7 +97,7 @@ export default {
         });
     },
     async remove(collectionId) {
-        await fetch(`https://dev.gia.fpx.se/collections/${collectionId}`, {
+        await fetch(`${BASE_URL}/collections/${collectionId}`, {
             method: "DELETE",
             mode: "cors",
             headers: {
