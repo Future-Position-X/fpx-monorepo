@@ -341,8 +341,8 @@ def import_collection(collection):
 
     headers = {
         'Authorization': 'Bearer ' + GIA_TOKEN,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Content-Type': 'application/geojson',
+        'Accept': 'application/geojson'
     }
 
     length = len(json_obj['features'])
@@ -355,7 +355,7 @@ def import_collection(collection):
                 "features": json_obj['features'][offset:offset+batch_size]
         }
 
-        url = 'https://dev.gia.fpx.se/collections/' + collection['uuid'] + '/items/geojson'
+        url = 'http://dev.gia.fpx.se/collections/' + collection['uuid'] + '/items'
 
         if offset == 0:
             res = requests.post(url, json=fc, headers=headers)
