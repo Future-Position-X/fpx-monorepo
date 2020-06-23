@@ -201,7 +201,7 @@ class Item(BaseModel2):
             where += """
             AND ST_Intersects(
                 geometry,
-                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax, 4326)
+                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax)
             )
             """
 
@@ -209,7 +209,7 @@ class Item(BaseModel2):
             where += """
             AND ST_Within(
                 geometry,
-                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax, 4326)
+                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax)
             )
             """
 

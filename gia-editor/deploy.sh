@@ -3,6 +3,7 @@
 ARGUMENT_LIST=(
     "stage"
     "profile"
+    "mode"
 )
 
 
@@ -28,6 +29,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
 
+        --mode)
+            mode=$2
+            shift 2
+            ;;
+
         *)
             break
             ;;
@@ -35,9 +41,9 @@ while [[ $# -gt 0 ]]; do
 done
 stage=${stage:-dev}
 profile=${profile:-default}
-
+mode=${mode:-development}
 npm install -g serverless
 npm install
-npm run build
+npm run build -- --mode $mode
 sudo -E sls config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --stage $stage --profile $profile
 serverless client deploy --stage $stage --profile $profile --no-confirm

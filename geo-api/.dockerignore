@@ -6,3 +6,4 @@ venv
 .vscode
 .serverless
 node_modules
+postgis-data
