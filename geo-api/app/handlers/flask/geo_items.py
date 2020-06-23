@@ -1,56 +1,23 @@
-import rapidjson
-import base64
-
-import sqlalchemy_mixins
-from rapidjson import DM_ISO8601, UM_CANONICAL
-
 from shapely.geometry import Point
-from sqlalchemy import or_
-
 from app.models.item import Item
 from app.models import Item as ItemDB, Feature
 from app.models import Collection as CollectionDB
 from distutils.util import strtobool
-from app import app, api, db
+from app import api
 from app.handlers.flask import (
-    response,
     get_provider_uuid_from_request,
 
 )
 from flask import request
-from app.services.collection import (
-    get_collection_uuid_by_collection_name
-)
-from app.services.item import (
-    get_items_by_collection_uuid,
-    get_items_by_collection_uuid_as_geojson,
-    get_items_by_collection_uuid_as_png,
-    get_items_by_collection_name,
-    get_items_by_collection_name_as_geojson,
-    get_items_by_collection_name_as_png,
-    get_item_by_uuid_as_geojson,
-    get_item_by_uuid_as_png,
-    create_item,
-    delete_item,
-    update_item,
-    add_items_from_geojson,
-    create_items_from_geojson,
-    update_items_from_geojson,
-    delete_items_by_collection_uuid
-)
-
 from lib.visualizer.renderer import render_feature_collection, render_feature
-
 from app.services.ai import (
     generate_paths_from_points,
     get_sequence_for_sensor
 )
-
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource, fields
 from flask_accept import accept, accept_fallback
 import flask
-
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
 from shapely_geojson import dumps, FeatureCollection
@@ -189,6 +156,7 @@ def get_format_from_request():
 
 ns = api.namespace('items', description='Item operations', path='/')
 
+
 @ns.route('/collections/<uuid:collection_uuid>/items')
 class CollectionItemList(Resource):
     @accept_fallback
@@ -299,6 +267,7 @@ class CollectionItemList(Resource):
 
         return items, 201
 
+
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
 @ns.param('collection_uuid', 'The collection identifier')
@@ -362,7 +331,8 @@ class CollectionByNameItemList(Resource):
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = ItemDB.find_by_collection_name_with_simplify(provider_uuid, collection_name, filters, transforms)
-        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if item.geometry is not None]
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if
+                    item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
 
@@ -408,6 +378,7 @@ class ItemListApi(Resource):
         ItemDB.session().commit()
 
         return items, 201
+
 
 @ns.route('/items/<uuid:item_uuid>')
 @ns.response(404, 'Item not found')
@@ -467,7 +438,6 @@ class ItemApi(Resource):
         item.save()
         item.session().commit()
         return '', 204
-
 
 
 @ns.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths')

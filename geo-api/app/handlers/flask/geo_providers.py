@@ -1,20 +1,10 @@
-import rapidjson
-import base64
-from rapidjson import DM_ISO8601, UM_CANONICAL
 from flask_restx import Resource, fields
-
-from app import app, api
+from app import api
 from app.models.provider import Provider
 from app.models import Provider as ProviderDB
 from app.handlers.flask import (
-    response,
     get_provider_uuid_from_request
 )
-from app.services.provider import (
-    get_provider_by_uuid,
-    get_all_providers,
-    update_provider_by_uuid,
-    )
 from flask import request
 from flask_jwt_extended import jwt_required
 
@@ -30,6 +20,8 @@ provider_model = api.model('Provider', {
 update_provider_model = api.model('Provider', {
     'name': fields.String(description='name'),
 })
+
+
 @ns.route('/')
 class ProviderList(Resource):
     @jwt_required
@@ -50,7 +42,6 @@ class ProviderApi(Resource):
     def get(self, provider_uuid):
         provider = ProviderDB.find_or_fail(provider_uuid)
         return provider
-
 
     @jwt_required
     @ns.doc('update_provider')

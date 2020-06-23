@@ -1,21 +1,11 @@
 import bcrypt
-import rapidjson
-import base64
-from rapidjson import DM_ISO8601
-
 from flask_restx import Resource, fields
 
-from app import app, api
+from app import api
 from app.models.user import User
 from app.handlers.flask import (
-    response, get_provider_uuid_from_request
+    get_provider_uuid_from_request
 )
-from app.services.user import (
-    create_user,
-    get_user_by_uuid,
-    update_user_by_uuid,
-    delete_user_by_uuid
-    )
 from flask import request
 from flask_jwt_extended import jwt_required
 
@@ -66,7 +56,6 @@ class UserList(Resource):
         return user, 201
 
 
-
 @ns.route('/<uuid:user_uuid>')
 @ns.response(404, 'User not found')
 @ns.param('user_uuid', 'The user identifier')
@@ -77,7 +66,6 @@ class UserApi(Resource):
     def get(self, user_uuid):
         user = UserDB.find_or_fail(user_uuid)
         return user
-
 
     @jwt_required
     @ns.doc('update_user')
