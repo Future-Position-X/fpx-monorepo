@@ -2,6 +2,10 @@
 node_modules
 /dist
 
+#unignore .env and .env.*
+!.env
+!.env.*
+
 # local env files
 .env.local
 .env.*.local
