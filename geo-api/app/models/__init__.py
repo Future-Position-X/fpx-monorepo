@@ -262,7 +262,7 @@ class Item(BaseModel2):
         filters['collection_name'] = collection_name
         where, exec_dict = cls.create_where(filters)
         result = cls.session() \
-            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], False).label('geometry'),
                    cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
             .join(Item.collection) \
@@ -271,7 +271,7 @@ class Item(BaseModel2):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
-        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result]
+        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if res[1] is not None]
         return result
 
     @classmethod
@@ -294,7 +294,7 @@ class Item(BaseModel2):
         filters['collection_uuid'] = collection_uuid
         where, exec_dict = cls.create_where(filters)
         result = cls.session() \
-            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], False).label('geometry'),
                    cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
             .join(Item.collection) \
@@ -303,7 +303,7 @@ class Item(BaseModel2):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
-        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result]
+        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if res[1] is not None]
         return result
 
     @classmethod
