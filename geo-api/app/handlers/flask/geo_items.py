@@ -231,7 +231,7 @@ class CollectionItemList(Resource):
         ItemDB.session().bulk_save_objects(items)
         ItemDB.session().commit()
 
-        items = ItemDB.query.options(load_only("uuid")).filter(ItemDB.collection_uuid==collection.uuid).all()
+        items = ItemDB.query.options(load_only("uuid")).filter(ItemDB.collection_uuid==collection.uuid).order_by(ItemDB.created_at.desc()).limit(len(items)).all()
 
         return items, 201
 
@@ -262,7 +262,7 @@ class CollectionItemList(Resource):
         ItemDB.session().bulk_save_objects(items)
         ItemDB.session().commit()
 
-        items = ItemDB.query.options(load_only("uuid")).filter(ItemDB.collection_uuid==collection.uuid).all()
+        items = ItemDB.query.options(load_only("uuid")).filter(ItemDB.collection_uuid==collection.uuid).order_by(ItemDB.created_at.desc()).limit(len(items)).all()
         return items, 201
 
 
