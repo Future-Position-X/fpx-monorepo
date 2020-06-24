@@ -21,6 +21,7 @@ import flask
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
 from shapely_geojson import dumps, FeatureCollection
+from sqlalchemy.orm import load_only
 
 
 class GeometryFormatter(fields.Raw):
@@ -230,7 +231,8 @@ class CollectionItemList(Resource):
         ItemDB.session().bulk_save_objects(items)
         ItemDB.session().commit()
 
-        items = ItemDB.where(collection_uuid=collection.uuid).all()
+        items = ItemDB.query.options(load_only("uuid")).filter(collection_uuid=collection.uuid).all()
+
         return items, 201
 
     @accept_fallback
@@ -260,8 +262,7 @@ class CollectionItemList(Resource):
         ItemDB.session().bulk_save_objects(items)
         ItemDB.session().commit()
 
-        items = ItemDB.where(collection_uuid=collection.uuid).all()
-
+        items = ItemDB.query.options(load_only("uuid")).filter(collection_uuid=collection.uuid).all()
         return items, 201
 
 
