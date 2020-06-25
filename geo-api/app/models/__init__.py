@@ -273,7 +273,7 @@ class Item(BaseModel):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
-        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if res[1] is not None]
+        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if filters['valid'] is not True or res[1] is not None]
         return result
 
     @classmethod
@@ -295,7 +295,7 @@ class Item(BaseModel):
         filters['provider_uuid'] = provider_uuid
         filters['collection_uuid'] = collection_uuid
         where, exec_dict = cls.create_where(filters)
-        result = cls.session() \
+        result = cls.session \
             .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], False).label('geometry'),
                    cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
@@ -305,7 +305,7 @@ class Item(BaseModel):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
-        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if res[1] is not None]
+        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if filters['valid'] is False or res[1] is not None]
         return result
 
     @classmethod

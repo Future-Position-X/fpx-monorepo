@@ -1,5 +1,5 @@
 class BaseModelDTO:
-    __slots__ = ['uuid', 'provider_uuid',
+    __slots__ = ['uuid',
                  'created_at', 'updated_at', 'revision']
 
     def __init__(self, kwargs, slots):
@@ -21,7 +21,7 @@ class BaseModelDTO:
 class CollectionDTO(BaseModelDTO):
 
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['name', 'is_public'])
+        super().__init__(kwargs, ['provider_uuid', 'name', 'is_public'])
 
 
 class ItemDTO(BaseModelDTO):
@@ -39,4 +39,4 @@ class ProviderDTO(BaseModelDTO):
 class UserDTO(BaseModelDTO):
 
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['email', 'password'])
+        super().__init__(kwargs, ['provider_uuid', 'email', 'password'])

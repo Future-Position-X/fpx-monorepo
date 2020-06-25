@@ -1,13 +1,9 @@
 import random
 import math
-import rapidjson
 from shapely.geometry import mapping, LineString, shape
 from app.dto import ItemDTO
-from app.models import Item as ItemDB
+from app.models import Item
 
-from app.services.item import (
-    create_item
-)
 class WalkingAgent:
     x = 0
     y = 0
@@ -76,4 +72,4 @@ class WalkingAgent:
             item_hash["collection_uuid"] = store_collection_uuid
             item_hash["geometry"] = shape(item_hash['geometry']).to_wkt()
             item = ItemDTO(**item_hash)
-            return ItemDB.create(**item.to_dict())
+            return Item.create(**item.to_dict())
