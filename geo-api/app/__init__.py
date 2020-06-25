@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 import sqlalchemy_mixins
 from app.config import app_config
+from flask_compress import Compress
 
 api = Api(authorizations={
     'apikey': {
@@ -22,6 +23,7 @@ app = None
 def create_app(config_name=None):
     app = Flask(__name__)
     CORS(app)
+    Compress(app)
     if config_name == None:
         config_name = os.environ.get('APP_SETTINGS', 'development')
     app.config.from_object(app_config[config_name])
