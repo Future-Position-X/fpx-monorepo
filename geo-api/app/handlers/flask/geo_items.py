@@ -22,6 +22,7 @@ from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
 from shapely_geojson import dumps, FeatureCollection
 from sqlalchemy.orm import load_only
+import geobuf
 
 
 class GeometryFormatter(fields.Raw):
@@ -179,6 +180,20 @@ class CollectionItemList(Resource):
         features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
+
+
+    @get.support('application/geobuf')
+    @ns.doc('list_collection_items', security=None)
+    def get_geobuf(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        filters = get_filters_from_request()
+        transforms = get_transforms_from_request()
+        items = ItemDB.find_by_collection_uuid_with_simplify(provider_uuid, collection_uuid, filters, transforms)
+        features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
+        feature_collection = FeatureCollection(features).__geo_interface__
+        pbf = geobuf.encode(feature_collection)
+        return flask.make_response(pbf, 200)
+
 
     @get.support('image/png')
     @ns.doc('list_collection_items', security=None)
