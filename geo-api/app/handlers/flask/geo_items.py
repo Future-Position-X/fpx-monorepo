@@ -1,29 +1,33 @@
-from shapely.geometry import Point
-from app.dto import ItemDTO
-from app.models import Item as ItemDB, Feature
-from app.models import Collection as CollectionDB
 from distutils.util import strtobool
+from typing import List, Any
+from uuid import UUID
+
+import flask
+from flask import request
+from flask_accept import accept, accept_fallback
+from flask_jwt_extended import jwt_required
+from flask_restx import Resource, fields
+from geoalchemy2.shape import to_shape
+from shapely.geometry import Point
+from shapely.geometry import mapping
+from shapely_geojson import dumps, FeatureCollection
+
 from app import api
+from app.dto import ItemDTO
 from app.handlers.flask import (
     get_provider_uuid_from_request,
 
 )
-from flask import request
-
-from app.services.item import get_collection_items
-from lib.visualizer.renderer import render_feature_collection, render_feature
+from app.models import Feature
 from app.services.ai import (
     generate_paths_from_points,
     get_sequence_for_sensor
 )
-from flask_jwt_extended import jwt_required
-from flask_restx import Resource, fields
-from flask_accept import accept, accept_fallback
-import flask
-from geoalchemy2.shape import to_shape
-from shapely.geometry import mapping
-from shapely_geojson import dumps, FeatureCollection
-from sqlalchemy.orm import load_only
+from app.services.item import get_collection_items, create_collection_item, add_collection_items, \
+    replace_collection_items, delete_collection_items, get_collection_item, delete_collection_item, \
+    get_collection_items_by_name, \
+    update_items, get_item, delete_item, update_item
+from lib.visualizer.renderer import render_feature_collection, render_feature
 
 
 class GeometryFormatter(fields.Raw):
@@ -152,6 +156,17 @@ def get_format_from_request():
     return format
 
 
+def feature_collection_to_items(collection_uuid: UUID, geojson: Any) -> List[ItemDTO]:
+    from shapely.geometry import shape
+    items = [
+        ItemDTO(**{
+            'collection_uuid': collection_uuid,
+            'geometry': shape(feature['geometry']).to_wkt(),
+            'properties': feature['properties']
+        }) for feature in geojson['features']]
+    return items
+
+
 ns = api.namespace('items', description='Item operations', path='/')
 
 
@@ -185,7 +200,8 @@ class CollectionItemListApi(Resource):
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items(provider_uuid, collection_uuid, filters, transforms)
-        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if item.geometry is not None]
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if
+                    item.geometry is not None]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
@@ -198,39 +214,34 @@ class CollectionItemListApi(Resource):
     @ns.marshal_with(item_model, 201)
     def post(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        coll = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
-        item_hash = request.get_json()
-        item_hash['collection_uuid'] = coll.uuid
-        item = ItemDB(**item_hash)
-
-        item.save()
-        item.session().commit()
+        item_new = ItemDTO(**request.get_json())
+        item = create_collection_item(provider_uuid, collection_uuid, item_new)
         return item, 201
 
     @post.support('application/geojson')
     @jwt_required
-    @ns.doc('create_collection_item')
+    @ns.doc('replace_collection_items')
     @ns.expect(create_item_model)
     @ns.marshal_list_with(bulk_create_item_response_model, code=201)
     def post_geojson(self, collection_uuid):
-        from shapely.geometry import shape
         provider_uuid = get_provider_uuid_from_request()
-        collection = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
         geojson = request.get_json(force=True)
+        items = feature_collection_to_items(collection_uuid, geojson)
 
-        ItemDB.where(collection_uuid=collection.uuid).delete()
+        items = replace_collection_items(provider_uuid, collection_uuid, items)
 
-        items = [
-            ItemDB(**{
-                'collection_uuid': collection.uuid,
-                'geometry': shape(feature['geometry']).to_wkt(),
-                'properties': feature['properties']
-            }) for feature in geojson['features']]
+        return items, 201
 
-        ItemDB.session().bulk_save_objects(items)
-        ItemDB.session().commit()
+    @accept('application/geojson')
+    @jwt_required
+    @ns.doc('add_collection_items')
+    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
+    def put(self, collection_uuid):
+        provider_uuid = get_provider_uuid_from_request()
+        geojson = request.get_json(force=True)
+        items = feature_collection_to_items(collection_uuid, geojson)
 
-        items = ItemDB.query.options(load_only("uuid")).filter(ItemDB.collection_uuid==collection.uuid).order_by(ItemDB.created_at.desc()).limit(len(items)).all()
+        items = add_collection_items(provider_uuid, collection_uuid, items)
 
         return items, 201
 
@@ -239,30 +250,8 @@ class CollectionItemListApi(Resource):
     @ns.doc('delete_collection_items')
     def delete(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        ItemDB.delete_by_collection_uuid(provider_uuid, collection_uuid)
+        delete_collection_items(provider_uuid, collection_uuid)
         return '', 204
-
-    @accept('application/geojson')
-    @jwt_required
-    @ns.doc('update_collection_items')
-    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
-    def put(self, collection_uuid):
-        from shapely.geometry import shape
-        provider_uuid = get_provider_uuid_from_request()
-        collection = CollectionDB.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
-        geojson = request.get_json(force=True)
-        items = [
-            ItemDB(**{
-                'collection_uuid': collection.uuid,
-                'geometry': shape(feature['geometry']).to_wkt(),
-                'properties': feature['properties']
-            }) for feature in geojson['features']]
-
-        ItemDB.session().bulk_save_objects(items)
-        ItemDB.session().commit()
-
-        items = ItemDB.query.options(load_only("uuid")).filter(ItemDB.collection_uuid==collection.uuid).order_by(ItemDB.created_at.desc()).limit(len(items)).all()
-        return items, 201
 
 
 @ns.route('/collections/<uuid:collection_uuid>/items/<uuid:item_uuid>')
@@ -275,14 +264,14 @@ class CollectionItemApi(Resource):
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
+        item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
         return item
 
     @get.support('application/geojson')
     @ns.doc('get_item', security=None)
     def get_geojson(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
+        item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties, str(item.uuid))
         return flask.make_response(dumps(feature), 200)
 
@@ -290,7 +279,7 @@ class CollectionItemApi(Resource):
     @ns.doc('get_item', security=None)
     def get_png(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
+        item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature(feature, params['width'], params['height'], params['map_id'])
@@ -301,39 +290,41 @@ class CollectionItemApi(Resource):
     @ns.doc('delete_item')
     def delete(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        ItemDB.delete_owned(provider_uuid, item_uuid, collection_uuid)
+        delete_collection_item(provider_uuid, collection_uuid, item_uuid)
         return '', 204
 
 
 @ns.route('/collections/by_name/<collection_name>/items')
 class CollectionByNameItemListApi(Resource):
     @accept_fallback
-    @ns.doc('list_items_by_name', security=None)
+    @ns.doc('get_collection_items_by_name', security=None)
     @ns.marshal_list_with(item_model)
     def get(self, collection_name):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_name(provider_uuid, collection_name, filters)
+        transforms = get_transforms_from_request()
+        items = get_collection_items_by_name(provider_uuid, collection_name, filters, transforms)
         return items
 
     @get.support('application/geojson')
-    @ns.doc('list_items_by_name', security=None)
+    @ns.doc('get_collection_items_by_name', security=None)
     def get_geojson(self, collection_name):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
-        items = ItemDB.find_by_collection_name_with_simplify(provider_uuid, collection_name, filters, transforms)
+        items = get_collection_items_by_name(provider_uuid, collection_name, filters, transforms)
         features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if
                     item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
 
     @get.support('image/png')
-    @ns.doc('list_items_by_name', security=None)
+    @ns.doc('get_collection_items_by_name', security=None)
     def get_png(self, collection_name):
         filters = get_filters_from_request()
         provider_uuid = get_provider_uuid_from_request()
-        items = ItemDB.find_by_collection_name(provider_uuid, collection_name, filters)
+        transforms = get_transforms_from_request()
+        items = get_collection_items_by_name(provider_uuid, collection_name, filters, transforms)
         features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
@@ -358,15 +349,7 @@ class ItemListApi(Resource):
                 'properties': feature['properties']
             }) for feature in geojson['features']]
 
-        items = ItemDB.find_owned(provider_uuid, [item.uuid for item in items_new])
-
-        for item in items:
-            item_new = [item_new for item_new in items_new if str(item_new.uuid) == str(item.uuid)][0]
-            item.properties = item_new.properties
-            item.geometry = item_new.geometry
-            item.save()
-
-        ItemDB.session().commit()
+        items = update_items(provider_uuid, items_new)
 
         return items, 201
 
@@ -380,14 +363,14 @@ class ItemApi(Resource):
     @ns.marshal_with(item_model)
     def get(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
+        item = get_item(provider_uuid, item_uuid)
         return item
 
     @get.support('application/geojson')
     @ns.doc('get_item', security=None)
     def get_geojson(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
+        item = get_item(provider_uuid, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties)
         return flask.make_response(dumps(feature), 200)
 
@@ -395,7 +378,7 @@ class ItemApi(Resource):
     @ns.doc('get_item', security=None)
     def get_png(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
+        item = get_item(provider_uuid, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature(feature, params['width'], params['height'], params['map_id'])
@@ -406,7 +389,7 @@ class ItemApi(Resource):
     @ns.doc('delete_item')
     def delete(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        ItemDB.delete_owned(provider_uuid, item_uuid)
+        delete_item(provider_uuid, item_uuid)
         return '', 204
 
     @accept_fallback
@@ -415,16 +398,8 @@ class ItemApi(Resource):
     @ns.expect(update_item_model)
     def put(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        item_dict = request.get_json(force=True)
-        item_new = ItemDTO(**item_dict)
-
-        item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
-
-        item.properties = item_new.properties
-        item.geometry = item_new.geometry
-
-        item.save()
-        item.session().commit()
+        item_update = ItemDTO(**request.get_json(force=True))
+        update_item(provider_uuid, item_uuid, item_update)
         return '', 204
 
 

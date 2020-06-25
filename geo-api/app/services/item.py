@@ -1,141 +1,97 @@
 from typing import List
 from uuid import UUID
 
-from app.dto import ItemDTO, CollectionDTO
+from sqlalchemy.orm import load_only
 
-from app.models import Item, to_models
+from app.dto import ItemDTO
+from app.models import Item, to_models, Collection, to_model
 
 
 def get_collection_items(provider_uuid: UUID, collection_uuid: UUID, filters, transforms) -> List[ItemDTO]:
     items = Item.find_by_collection_uuid_with_simplify(provider_uuid, collection_uuid, filters, transforms)
     return to_models(items, ItemDTO)
 
-# def get_item_by_uuid_as_geojson(item_uuid):
-#     with ItemStore() as item_store:
-#         item = item_store.find_by_uuid_as_geojson(
-#             item_uuid)
-#         item_store.complete()
-#         return item
-#
-#
-# def get_item_by_uuid_as_png(item_uuid, width, height, map_id):
-#     with ItemStore() as item_store:
-#         item = item_store.find_by_uuid_as_geojson(item_uuid)
-#         item_store.complete()
-#
-#     return render_feature(item, width, height, map_id)
-#
-#
-# def get_items_by_collection_uuid(collection_uuid, filters):
-#     with ItemStore() as item_store:
-#          items = item_store.find_by_collection_uuid(collection_uuid, filters)
-#          item_store.complete()
-#          return items
-#
-# def get_items_by_collection_name(collection_name, current_provider_uuid, filters):
-#     with ItemStore() as item_store:
-#         items = item_store.find_by_collection_name(collection_name, current_provider_uuid, filters)
-#         item_store.complete()
-#         return items
-#
-# def get_items_by_collection_uuid_as_geojson(collection_uuid, filters, transforms):
-#     with ItemStore() as item_store:
-#         items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
-#         item_store.complete()
-#         return items
-#
-#
-# def get_items_by_collection_uuid_as_png(collection_uuid, filters, width, height, map_id, transforms):
-#     with ItemStore() as item_store:
-#         items = item_store.find_by_collection_uuid_as_geojson(collection_uuid, filters, transforms)
-#         item_store.complete()
-#
-#     return render_feature_collection(items, width, height, map_id)
-#
-#
-# def get_items_by_collection_name_as_png(collection_name, current_provider_uuid, filters, width, height, map_id):
-#     with ItemStore() as item_store:
-#         items = item_store.find_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters)
-#         item_store.complete()
-#
-#     return render_feature_collection(items, width, height, map_id)
-#
-#
-# def get_items_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters):
-#     with ItemStore() as item_store:
-#         geojson = item_store.find_by_collection_name_as_geojson(collection_name, current_provider_uuid, filters)
-#         item_store.complete()
-#         return geojson
-#
-# def create_item(item):
-#     with ItemStore() as item_store:
-#         uuid = item_store.insert_one(item)
-#         item_store.complete()
-#         return uuid
-#
-#
-# def delete_item(item_uuid):
-#     with ItemStore() as item_store:
-#         item_store.delete(item_uuid)
-#         item_store.complete()
-#
-#
-# def update_item(item_uuid, item):
-#     with ItemStore() as item_store:
-#         item_store.update(item_uuid, item)
-#         item_store.complete()
-#
-#
-# # Maybe this should be in it's own service that handles different formats
-# def create_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
-#     items = [
-#         ItemDTO(**{
-#             'provider_uuid': provider_uuid,
-#             'collection_uuid': collection_uuid,
-#             'geometry': feature['geometry'],
-#             'properties': feature['properties']
-#         }) for feature in geojson['features']]
-#
-#     with ItemStore() as item_store:
-#         item_store.remove_items_by_collection_uuid(provider_uuid, collection_uuid)
-#         uuids = item_store.insert(items)
-#         item_store.complete()
-#
-#     return uuids
-#
-#
-# def add_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
-#     items = [
-#         ItemDTO(**{
-#             'provider_uuid': provider_uuid,
-#             'collection_uuid': collection_uuid,
-#             'geometry': feature['geometry'],
-#             'properties': feature['properties']
-#         }) for feature in geojson['features']]
-#
-#     with ItemStore() as item_store:
-#         uuids = item_store.insert(items)
-#         item_store.complete()
-#
-#     return uuids
-#
-#
-# def update_items_from_geojson(feature_collection):
-#     with ItemStore() as item_store:
-#         for f in feature_collection['features']:
-#             item_store.update(f['id'],
-#                               ItemDTO(**{
-#                     'geometry': f['geometry'],
-#                     'properties': f['properties']
-#                 }))
-#
-#         item_store.complete()
-#
-#
-# def delete_items_by_collection_uuid(collection_uuid):
-#     with ItemStore() as item_store:
-#         item_store.delete_items(collection_uuid)
-#         item_store.complete()
+
+def get_collection_items_by_name(provider_uuid: UUID, collection_name: UUID, filters, transforms) -> List[ItemDTO]:
+    items = Item.find_by_collection_name_with_simplify(provider_uuid, collection_name, filters, transforms)
+    return to_models(items, ItemDTO)
+
+
+def create_collection_item(provider_uuid: UUID, collection_uuid: UUID, item: ItemDTO) -> ItemDTO:
+    coll = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+    item.collection_uuid = coll.uuid
+    item = Item(**item.to_dict())
+    item.save()
+    item.session().commit()
+    return to_model(item, ItemDTO)
+
+
+def replace_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]) -> List[ItemDTO]:
+    return create_collection_items(provider_uuid, collection_uuid, items, replace=True)
+
+
+def add_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]) -> List[ItemDTO]:
+    return create_collection_items(provider_uuid, collection_uuid, items, replace=False)
+
+
+def create_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO], replace=False) -> List[ItemDTO]:
+    collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+
+    if replace:
+        Item.where(collection_uuid=collection.uuid).delete()
+
+    Item.session().bulk_save_objects([Item(**item.to_dict()) for item in items])
+    Item.session().commit()
+
+    items = Item.query.options(load_only("uuid")).filter(Item.collection_uuid == collection.uuid).order_by(
+        Item.created_at.desc()).limit(len(items)).all()
+    return to_models(items, ItemDTO)
+
+
+def delete_collection_items(provider_uuid: UUID, collection_uuid: UUID) -> None:
+    Item.delete_by_collection_uuid(provider_uuid, collection_uuid)
+
+
+def get_collection_item(provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID) -> ItemDTO:
+    item = Item.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
+    return to_model(item, ItemDTO)
+
+
+def get_item(provider_uuid: UUID, item_uuid: UUID) -> ItemDTO:
+    item = Item.find_accessible_or_fail(provider_uuid, item_uuid)
+    return to_model(item, ItemDTO)
+
+
+def delete_collection_item(provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID) -> None:
+    Item.delete_owned(provider_uuid, item_uuid, collection_uuid)
+
+
+def delete_item(provider_uuid: UUID, item_uuid: UUID) -> None:
+    Item.delete_owned(provider_uuid, item_uuid)
+
+
+def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemDTO]:
+    items = Item.find_owned(provider_uuid, [item.uuid for item in items_update])
+
+    for item in items:
+        item_new = [item_new for item_new in items_update if str(item_new.uuid) == str(item.uuid)][0]
+        item.properties = item_new.properties
+        item.geometry = item_new.geometry
+        item.save()
+
+    Item.session().commit()
+    return to_models(items, ItemDTO)
+
+
+def update_item(provider_uuid: UUID, item_uuid: UUID, item_update) -> ItemDTO:
+    item = Item.find_accessible_or_fail(provider_uuid, item_uuid)
+
+    item.properties = item_update.properties
+    item.geometry = item_update.geometry
+
+    item.save()
+    item.session().commit()
+    return to_model(item, ItemDTO)
 
 
 def copy_items_by_collection_uuid(src_collection_uuid, dest_collection_uuid):
