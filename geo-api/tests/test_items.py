@@ -20,6 +20,13 @@ def item_attributes():
         },
     }
 
+def item_attributes_empty_geometry():
+    return {
+        'geometry': None,
+        'properties': {
+            'name': 'somenameempty',
+        },
+    }
 
 def item_attributes_geojson():
     return {
@@ -201,14 +208,21 @@ def test_get_items(client, collection):
     assert res.status_code == 200
     assert not ('FeatureCollection' in str(res.data))
     assert ('test-item' in str(res.data))
+    assert ('test-item-empty' in str(res.data))
 
+    res = client.get('/collections/{}/items?valid=true'.format(collection['uuid']), headers={'accept': 'application/json'})
+    assert res.status_code == 200
+    assert not ('FeatureCollection' in str(res.data))
+    assert ('test-item' in str(res.data))
+    assert ('test-item-empty' not in str(res.data))
 
 def test_get_items_geojson(client, collection):
     res = client.get('/collections/{}/items'.format(collection['uuid']), headers={'accept': 'application/geojson'})
     assert res.status_code == 200
     assert ('FeatureCollection' in str(res.data))
     assert ('test-item' in str(res.data))
-
+    # We can't represent empty geometry in a FeatureCollection
+    assert ('test-item-empty' not in str(res.data))
 
 def test_get_items_png(client, collection):
     res = client.get('/collections/{}/items?map_id=transparent'.format(collection['uuid']),
@@ -259,6 +273,23 @@ def test_item_creation(client):
     assert res.status_code == 200
     assert ('somename' in str(res.data))
 
+def test_item_creation_empty_geom(client):
+    res = client.post('/collections', json=collection_attributes())
+    assert res.status_code == 201
+    collection_hash = json.loads(res.data.decode('utf-8'))
+
+    res = client.get('/collections/{}'.format(collection_hash['uuid']))
+    assert res.status_code == 200
+
+    res = client.post('/collections/{}/items'.format(collection_hash['uuid']), json=item_attributes_empty_geometry())
+    assert res.status_code == 201
+    item_hash = json.loads(res.data.decode('utf-8'))
+
+    res = client.get(
+        '/collections/{}/items/{}'.format(item_hash['collection_uuid'], item_hash['uuid']))
+
+    assert res.status_code == 200
+    assert ('somenameempty' in str(res.data))
 
 def test_item_creation_geojson(client, collection, item):
     res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes_geojson(),

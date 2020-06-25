@@ -2,7 +2,7 @@ import json
 
 def item_attributes():
     return {
-        'geometry': None,
+        'geometry': 'POINT(1 1)',
         'properties': {
             'name': 'somename',
         },
@@ -103,7 +103,7 @@ def test_collection_can_be_copied_to_other_collection(client, collection):
     result = client.get(
         '/collections/{}/items'.format(other_collection_hash['uuid']))
     assert result.status_code == 200
+    print(result.data)
     assert ('somename' in str(result.data))
-
 
 

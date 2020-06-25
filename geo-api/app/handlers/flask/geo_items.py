@@ -9,6 +9,8 @@ from app.handlers.flask import (
 
 )
 from flask import request
+
+from app.services.item import get_collection_items
 from lib.visualizer.renderer import render_feature_collection, render_feature
 from app.services.ai import (
     generate_paths_from_points,
@@ -53,11 +55,6 @@ update_item_model = api.model('UpdateItem', {
 bulk_create_item_response_model = api.model('BulkItemResponse', {
     'uuid': fields.String(description='uuid'),
 })
-
-
-def get_collection_uuid_from_event(event):
-    collection_uuid = event['pathParameters'].get('collection_uuid')
-    return collection_uuid
 
 
 def valid_envelope(params):
@@ -159,14 +156,15 @@ ns = api.namespace('items', description='Item operations', path='/')
 
 
 @ns.route('/collections/<uuid:collection_uuid>/items')
-class CollectionItemList(Resource):
+class CollectionItemListApi(Resource):
     @accept_fallback
     @ns.doc('list_collection_items', security=None)
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_uuid(provider_uuid, collection_uuid, filters)
+        transforms = get_transforms_from_request()
+        items = get_collection_items(provider_uuid, collection_uuid, filters, transforms)
         return items
 
     @get.support('application/geojson')
@@ -175,7 +173,7 @@ class CollectionItemList(Resource):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
-        items = ItemDB.find_by_collection_uuid_with_simplify(provider_uuid, collection_uuid, filters, transforms)
+        items = get_collection_items(provider_uuid, collection_uuid, filters, transforms)
         features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
@@ -185,8 +183,9 @@ class CollectionItemList(Resource):
     def get_png(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
-        items = ItemDB.find_by_collection_uuid(provider_uuid, collection_uuid, filters)
-        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items]
+        transforms = get_transforms_from_request()
+        items = get_collection_items(provider_uuid, collection_uuid, filters, transforms)
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if item.geometry is not None]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
@@ -307,7 +306,7 @@ class CollectionItemApi(Resource):
 
 
 @ns.route('/collections/by_name/<collection_name>/items')
-class CollectionByNameItemList(Resource):
+class CollectionByNameItemListApi(Resource):
     @accept_fallback
     @ns.doc('list_items_by_name', security=None)
     @ns.marshal_list_with(item_model)
@@ -335,7 +334,7 @@ class CollectionByNameItemList(Resource):
         filters = get_filters_from_request()
         provider_uuid = get_provider_uuid_from_request()
         items = ItemDB.find_by_collection_name(provider_uuid, collection_name, filters)
-        features = [Feature(to_shape(item.geometry), item.properties) for item in items]
+        features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
         feature_collection = FeatureCollection(features).__geo_interface__
         params = get_visualizer_params_from_request()
         data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
@@ -430,7 +429,7 @@ class ItemApi(Resource):
 
 
 @ns.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths')
-class GenerateWalkingPaths(Resource):
+class GenerateWalkingPathsApi(Resource):
     @jwt_required
     @ns.marshal_list_with(bulk_create_item_response_model)
     def post(self, collection_uuid):
@@ -459,7 +458,7 @@ class GenerateWalkingPaths(Resource):
 
 
 @ns.route('/items/<item_uuid>/ai/sequence')
-class PredictionForSensorItem(Resource):
+class PredictionForSensorItemApi(Resource):
     @ns.doc('get_prediction', security=None)
     def get(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()

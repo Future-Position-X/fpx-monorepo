@@ -112,7 +112,15 @@ def item(app, db, provider, collection, request):
         return item.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, db, provider, user, collection, obstacles, sensors, item, request):
+def item_empty_geom(app, db, provider, collection, request):
+    from app.models import Item
+    with app.app_context():
+        item = Item.create(collection_uuid=collection['uuid'], geometry=None, properties={'name': 'test-item-empty'})
+        Item.session().commit()
+        return item.to_dict()
+
+@pytest.fixture(scope="session")
+def client(app, db, provider, user, collection, obstacles, sensors, item, item_empty_geom, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
