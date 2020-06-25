@@ -33,7 +33,7 @@ class ItemDTO(BaseModelDTO):
 class ProviderDTO(BaseModelDTO):
 
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['name '])
+        super().__init__(kwargs, ['name'])
 
 
 class UserDTO(BaseModelDTO):
