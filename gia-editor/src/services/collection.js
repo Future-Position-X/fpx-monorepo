@@ -2,6 +2,9 @@ const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZWI4YWE5Ni05
 
 const BASE_URL = process.env.VUE_APP_BASE_URL;
 
+var geobuf = require("geobuf")
+var Pbf = require("pbf")
+
 export default {
     async fetchCollections() {
         const response = await fetch(`${BASE_URL}/collections`, {
@@ -31,14 +34,15 @@ export default {
             {
                 headers: {
                     Authorization: `Bearer ${GIA_TOKEN}`,
-                    Accept: `application/geojson`
+                    Accept: `application/geobuf`
                 },
                 signal: signal
             }
         );
 
-        const data = await response.json();
-        return data;
+        const buffer = await response.arrayBuffer();
+        var geojson = geobuf.decode(new Pbf(buffer));
+        return geojson;
     },
     async addItems(collectionId, items) {
         await fetch(

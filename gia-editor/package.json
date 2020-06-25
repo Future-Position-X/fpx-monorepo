@@ -10,6 +10,7 @@
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.5.0",
     "core-js": "^3.6.4",
+    "geobuf": "^3.0.1",
     "geojson-validation": "^1.0.1",
     "jsoneditor": "^8.6.6",
     "leaflet": "^1.6.0",
