@@ -1,5 +1,5 @@
 from app.stores.base_store import Store
-from app.models.provider import Provider
+from app.dto import ProviderDTO
 from app.stores import DB
 
 class ProviderStore(Store):
@@ -20,14 +20,14 @@ class ProviderStore(Store):
     def find_all(self):
         c = self.cursor()
         c.execute('SELECT * FROM providers')
-        return [Provider(**row) for row in c.fetchall()]
+        return [ProviderDTO(**row) for row in c.fetchall()]
 
     def get_by_uuid(self, provider_uuid):
         c = self.cursor()
         c.execute("SELECT * FROM providers WHERE uuid = %(uuid)s", {
             "uuid": provider_uuid
         })
-        return Provider(**c.fetchall()[0])
+        return ProviderDTO(**c.fetchall()[0])
 
     def update(self, provider_uuid, provider):
         c = self.cursor()

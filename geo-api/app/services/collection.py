@@ -1,50 +1,48 @@
-from app.stores.collection import CollectionStore
+from typing import List
+from uuid import UUID
+
+from app.dto import CollectionDTO
+from app.models import Collection, to_model
+from app.models import to_models
 from app.services.item import copy_items_by_collection_uuid
-from app.models.collection import Collection
-
-from app.models import Collection as CollectionDB
-
-def create_collection(collection):
-    with CollectionStore() as collection_store:
-        uuid = collection_store.insert(collection)
-        collection_store.complete()
-        return uuid
 
 
-def get_all_collections():
-    with CollectionStore() as collection_store:
-        collections = collection_store.find_all()
-        collection_store.complete()
-        return collections
+def get_all_accessable_collections(provider_uuid: UUID) -> List[CollectionDTO]:
+    collections = Collection.find_accessible(provider_uuid)
+    return to_models(collections, CollectionDTO)
 
 
-def get_collection_by_uuid(collection_uuid):
-    with CollectionStore() as collection_store:
-        collection = collection_store.get_by_uuid(collection_uuid)
-        collection_store.complete()
-        return collection
+def create_collection(provider_uuid, collection: CollectionDTO) -> CollectionDTO:
+    collection.provider_uuid = provider_uuid
+    collection = Collection(**collection.to_dict())
+    collection.save()
+    collection.session().commit()
+    return to_model(collection, CollectionDTO)
 
 
-def get_collection_uuid_by_collection_name(collection_name):
-    with CollectionStore() as collection_store:
-        uuid = collection_store.get_uuid_by_name(collection_name)
-        collection_store.complete()
-        return uuid
+def get_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> CollectionDTO:
+    collection = Collection.find_accessible_or_fail(provider_uuid, collection_uuid)
+    return to_model(collection, CollectionDTO)
 
 
-def delete_collection_by_uuid(collection_uuid):
-    with CollectionStore() as collection_store:
-        collection_store.delete(collection_uuid)
-        collection_store.complete()
+def delete_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> None:
+    collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+    collection.delete()
+    collection.session().commit()
 
 
-def update_collection_by_uuid(collection_uuid, collection):
-    with CollectionStore() as collection_store:
-        collection_store.update(collection_uuid, collection)
-        collection_store.complete()
+def update_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID,
+                              collection_update: CollectionDTO) -> CollectionDTO:
+    collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+    collection.name = collection_update.name
+    collection.is_public = collection_update.is_public
+    collection.save()
+    collection.session().commit()
+    return to_model(collection, CollectionDTO)
 
-def copy_collection_from(src_collection_uuid, dst_collection_uuid, provider_uuid):
-    src_collection = CollectionDB.find_or_fail(src_collection_uuid)
+
+def copy_collection_from(provider_uuid: UUID, src_collection_uuid: UUID, dst_collection_uuid: UUID) -> CollectionDTO:
+    src_collection = Collection.find_or_fail(src_collection_uuid)
     if src_collection.provider_uuid != provider_uuid and not src_collection.is_public:
         raise PermissionError()
 
@@ -55,9 +53,10 @@ def copy_collection_from(src_collection_uuid, dst_collection_uuid, provider_uuid
             "is_public": False
         }
 
-        dst_collection = CollectionDB.create(**dst_collection)
+        dst_collection = Collection.create(**dst_collection)
         dst_collection_uuid = dst_collection.uuid
 
     copy_items_by_collection_uuid(src_collection_uuid, dst_collection_uuid)
     src_collection.session().commit()
-    return dst_collection_uuid
+    collection = Collection.find_or_fail(dst_collection_uuid)
+    return to_model(collection, CollectionDTO)

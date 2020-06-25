@@ -2,7 +2,7 @@ import bcrypt
 from flask_restx import Resource, fields
 
 from app import api
-from app.models.user import User
+from app.dto import UserDTO
 from app.handlers.flask import (
     get_provider_uuid_from_request
 )
@@ -45,11 +45,11 @@ class UserList(Resource):
     @ns.expect(create_user_model)
     @ns.marshal_with(user_model, 201)
     def post(self):
-        user = User(**request.get_json())
+        user = UserDTO(**request.get_json())
         user.password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         provider = ProviderDB.create(name=user.email)
         user.provider_uuid = provider.uuid
-        user = UserDB.create(**user.as_dict())
+        user = UserDB.create(**user.to_dict())
         user.session().commit()
         return user, 201
 
@@ -70,7 +70,7 @@ class UserApi(Resource):
     def put(self, user_uuid):
         provider_uuid = get_provider_uuid_from_request()
         user_dict = request.get_json()
-        user_new = User(**user_dict)
+        user_new = UserDTO(**user_dict)
         user = UserDB.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
         user.password = bcrypt.hashpw(user_new.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         user.save()

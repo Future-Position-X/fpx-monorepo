@@ -1,28 +1,18 @@
 import concurrent.futures
 import os
 import random
-import json
+from datetime import datetime, timedelta
+
 import joblib
 import pandas as pd
-from datetime import date, datetime, timedelta
-
 from geoalchemy2.shape import to_shape
-from shapely_geojson import FeatureCollection
-
-from app.services.collection import (
-    get_collection_uuid_by_collection_name
-)
-from app.services.item import (
-    get_item_by_uuid_as_geojson
-)
 
 from app.models import Item as ItemDB, Feature
-
-from app.services.item import get_items_by_collection_uuid_as_geojson
-from app.models.ai.walking_agent import WalkingAgent
-from app.models.ai.polygon_environment import PolygonEnvironment
-from app.models.ai.data_preperation.gcs_sensor_data import SensorData
 from app.models.ai.data_predictors.sensor_prediction import SensorPrediction
+from app.models.ai.data_preperation.gcs_sensor_data import SensorData
+from app.models.ai.polygon_environment import PolygonEnvironment
+from app.models.ai.walking_agent import WalkingAgent
+
 
 def generate_agents(points, n_agents, pathlength):
     return [WalkingAgent(random.choice(points), pathlength) for a in range(n_agents)]

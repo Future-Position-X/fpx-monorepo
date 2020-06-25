@@ -1,6 +1,6 @@
 from flask_restx import Resource, fields
 from app import api
-from app.models.provider import Provider
+from app.dto import ProviderDTO
 from app.models import Provider as ProviderDB
 from app.handlers.flask import (
     get_provider_uuid_from_request
@@ -48,7 +48,7 @@ class ProviderApi(Resource):
         if get_provider_uuid_from_request() != provider_uuid:
             return '', 403
         provider_dict = request.get_json()
-        provider_new = Provider(**provider_dict)
+        provider_new = ProviderDTO(**provider_dict)
         provider = ProviderDB.find_or_fail(provider_uuid)
         provider.name = provider_new.name
         provider.save()

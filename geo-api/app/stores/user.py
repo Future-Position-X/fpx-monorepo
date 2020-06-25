@@ -1,6 +1,6 @@
 import bcrypt
 from app.stores.base_store import Store
-from app.models.user import User
+from app.dto import UserDTO
 from app.stores import DB
 
 class UserStore(Store):
@@ -33,7 +33,7 @@ class UserStore(Store):
                 "user_uuid": user_uuid
             })
 
-        return User(**c.fetchall()[0])
+        return UserDTO(**c.fetchall()[0])
 
 
     def get_by_email(self, email):
@@ -42,7 +42,7 @@ class UserStore(Store):
             "email": email
         })
 
-        return User(**c.fetchall()[0])
+        return UserDTO(**c.fetchall()[0])
 
 
     def update(self, user_uuid, user):

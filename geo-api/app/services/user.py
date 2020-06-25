@@ -1,11 +1,12 @@
 from app.stores.user import UserStore
 from app.stores import DB
 from app.services.provider import create_provider
-from app.models.provider import Provider
+from app.dto import ProviderDTO
+
 
 def create_user(user):
     with DB().transaction():
-        provider_uuid = create_provider(Provider(**{"name": user.email}))
+        provider_uuid = create_provider(ProviderDTO(**{"name": user.email}))
         user.provider_uuid = provider_uuid
         uuid = UserStore.insert(user)
         return uuid
