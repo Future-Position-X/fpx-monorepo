@@ -1,5 +1,5 @@
 from shapely.geometry import Point
-from app.models.item import Item
+from app.dto import ItemDTO
 from app.models import Item as ItemDB, Feature
 from app.models import Collection as CollectionDB
 from distutils.util import strtobool
@@ -353,7 +353,7 @@ class ItemListApi(Resource):
         provider_uuid = get_provider_uuid_from_request()
         geojson = request.get_json(force=True)
         items_new = [
-            Item(**{
+            ItemDTO(**{
                 'uuid': feature['properties']['id'],
                 'geometry': shape(feature['geometry']).to_wkt(),
                 'properties': feature['properties']
@@ -417,7 +417,7 @@ class ItemApi(Resource):
     def put(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item_dict = request.get_json(force=True)
-        item_new = Item(**item_dict)
+        item_new = ItemDTO(**item_dict)
 
         item = ItemDB.find_accessible_or_fail(provider_uuid, item_uuid)
 

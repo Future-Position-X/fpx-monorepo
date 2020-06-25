@@ -1,5 +1,5 @@
 from app.stores.base_store import Store
-from app.models.collection import Collection
+from app.dto import CollectionDTO
 
 
 class CollectionStore(Store):
@@ -23,7 +23,7 @@ class CollectionStore(Store):
     def find_all(self):
         c = self.cursor()
         c.execute('SELECT * FROM collections')
-        return [Collection(**row) for row in c.fetchall()]
+        return [CollectionDTO(**row) for row in c.fetchall()]
 
 
     def get_by_uuid(self, collection_uuid):
@@ -31,7 +31,7 @@ class CollectionStore(Store):
         c.execute("SELECT * FROM collections WHERE uuid = %(uuid)s", {
             "uuid": collection_uuid
         })
-        return Collection(**c.fetchall()[0])
+        return CollectionDTO(**c.fetchall()[0])
 
 
     def get_uuid_by_name(self, name):

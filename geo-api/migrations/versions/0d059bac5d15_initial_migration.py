@@ -12,7 +12,7 @@ from alembic import op
 import sqlalchemy as sa
 import geoalchemy2
 from sqlalchemy.dialects import postgresql
-from app.models import BaseModel2, User, Provider
+from app.models import BaseModel, User, Provider
 from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
@@ -88,7 +88,7 @@ def upgrade():
 
 def seed_initial_user():
     session = Session(bind=op.get_bind())
-    BaseModel2.set_session(session)
+    BaseModel.set_session(session)
     provider = Provider.create(name='fpx')
     password = None
     try:

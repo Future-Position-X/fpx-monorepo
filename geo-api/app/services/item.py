@@ -1,5 +1,5 @@
 from app.stores.item import ItemStore
-from app.models.item import Item
+from app.dto import ItemDTO
 from lib.visualizer.renderer import render_feature_collection, render_feature
 
 from app.models import Item as ItemDB
@@ -83,7 +83,7 @@ def update_item(item_uuid, item):
 # Maybe this should be in it's own service that handles different formats
 def create_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
     items = [
-        Item(**{
+        ItemDTO(**{
             'provider_uuid': provider_uuid,
             'collection_uuid': collection_uuid,
             'geometry': feature['geometry'],
@@ -100,7 +100,7 @@ def create_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=
 
 def add_items_from_geojson(geojson=None, collection_uuid=None, provider_uuid=None):
     items = [
-        Item(**{
+        ItemDTO(**{
             'provider_uuid': provider_uuid,
             'collection_uuid': collection_uuid,
             'geometry': feature['geometry'],
@@ -118,7 +118,7 @@ def update_items_from_geojson(feature_collection):
     with ItemStore() as item_store:
         for f in feature_collection['features']:
             item_store.update(f['id'],
-                Item(**{
+                              ItemDTO(**{
                     'geometry': f['geometry'],
                     'properties': f['properties']
                 }))

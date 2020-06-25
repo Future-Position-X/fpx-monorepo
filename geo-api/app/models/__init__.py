@@ -1,13 +1,15 @@
-import sqlalchemy_mixins
-from app import db
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects.postgresql import JSONB
-from geoalchemy2 import Geometry
 import uuid
-from app.models.item import Item as ItemModel
+from typing import List, Type, TypeVar
+
+import sqlalchemy_mixins
+from geoalchemy2 import Geometry
 from shapely_geojson import Feature as BaseFeature
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
     ModelNotFoundError
+
+from app import db
 
 
 class Feature(BaseFeature):
@@ -66,7 +68,7 @@ def _receive_before_update(mapper, connection, target):
     target.updated_at = target.__datetime_callback__()
 
 
-class BaseModel2(db.Model, FPXActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, FPXTimestampsMixin):
+class BaseModel(db.Model, FPXActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, FPXTimestampsMixin):
     __abstract__ = True
 
     revision = db.Column(db.Integer, server_default=db.text('1'), nullable=False)
@@ -78,7 +80,7 @@ class BaseModel2(db.Model, FPXActiveRecordMixin, SmartQueryMixin, ReprMixin, Ser
     pass
 
 
-class Provider(BaseModel2):
+class Provider(BaseModel):
     __tablename__ = 'providers'
 
     uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True,
@@ -88,7 +90,7 @@ class Provider(BaseModel2):
     collections = db.relationship('Collection', backref='provider', lazy=True)
 
 
-class User(BaseModel2):
+class User(BaseModel):
     __tablename__ = 'users'
 
     uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True,
@@ -99,7 +101,7 @@ class User(BaseModel2):
     provider_uuid = db.Column(UUID(as_uuid=True), db.ForeignKey('providers.uuid'), index=True, nullable=False)
 
 
-class Collection(BaseModel2):
+class Collection(BaseModel):
     __tablename__ = 'collections'
     __table_args__ = (
         db.UniqueConstraint('provider_uuid', 'name'),)
@@ -141,7 +143,7 @@ class Collection(BaseModel2):
 from sqlalchemy import func, or_
 
 
-class Item(BaseModel2):
+class Item(BaseModel):
     __tablename__ = 'items'
 
     uuid = db.Column(UUID(as_uuid=True), primary_key=True, server_default=db.text("gen_random_uuid()"), unique=True,
@@ -379,3 +381,17 @@ class Item(BaseModel2):
             "src_collection_uuid": src_collection_uuid,
             "dest_collection_uuid": dest_collection_uuid
         })
+
+
+from app.dto import BaseModelDTO, ItemDTO as ItemModel
+
+BDTO = TypeVar("BDTO", bound=BaseModelDTO)
+BM = TypeVar("BM", bound=BaseModel)
+
+
+def to_model(db_model: BM, klass: Type[BDTO]) -> BDTO:
+    return klass(**db_model.to_dict())
+
+
+def to_models(db_models: List[BM], klass: Type[BDTO]) -> List[BDTO]:
+    return [to_model(db_model, klass) for db_model in db_models]

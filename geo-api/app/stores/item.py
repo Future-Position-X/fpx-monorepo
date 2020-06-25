@@ -1,6 +1,6 @@
 import rapidjson
 from app.stores.base_store import Store
-from app.models.item import Item
+from app.dto import ItemDTO
 
 
 def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
@@ -119,7 +119,7 @@ class ItemStore(Store):
         FROM items
         LIMIT 100
         """)
-        return [Item(**row) for row in c.fetchall()]
+        return [ItemDTO(**row) for row in c.fetchall()]
 
     def find_by_collection_uuid(self, collection_uuid, filters):
         c = self.cursor()
@@ -150,7 +150,7 @@ class ItemStore(Store):
                 OFFSET %(offset)s
                 LIMIT %(limit)s
             """, exec_dict)
-        return [Item(**row) for row in c.fetchall()]
+        return [ItemDTO(**row) for row in c.fetchall()]
 
     def find_by_collection_name(self, collection_name, current_provider_uuid, filters):
         c = self.cursor()
@@ -190,7 +190,7 @@ class ItemStore(Store):
                 OFFSET %(offset)s
                 LIMIT %(limit)s
             """, exec_dict)
-        return [Item(**row) for row in c.fetchall()]
+        return [ItemDTO(**row) for row in c.fetchall()]
 
     def find_by_collection_uuid_as_geojson(self, collection_uuid, filters, transforms):
         c = self.cursor()

@@ -138,8 +138,8 @@ def session(app, db, request):
         options = dict(bind=conn, binds={})
         sess = _db.create_scoped_session(options=options)
 
-        from app.models import BaseModel2
-        BaseModel2.set_session(sess)
+        from app.models import BaseModel
+        BaseModel.set_session(sess)
 
         # establish  a SAVEPOINT just before beginning the test
         # (http://docs.sqlalchemy.org/en/latest/orm/session_transaction.html#using-savepoint)

@@ -35,8 +35,8 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from app.models import BaseModel2
-    BaseModel2.set_session(db.session)
+    from app.models import BaseModel
+    BaseModel.set_session(db.session)
 
     from app.handlers.flask import handle_model_not_found_error
     app.register_error_handler(sqlalchemy_mixins.ModelNotFoundError, handle_model_not_found_error)
@@ -44,3 +44,9 @@ def create_app(config_name=None):
     from app.handlers.flask import geo_collections, geo_items, geo_sessions, geo_users, geo_providers, handler
 
     return app
+
+
+def create_app_for_console(config_name=None):
+    cli_app = create_app(config_name)
+    cli_app.app_context().push()
+    return cli_app

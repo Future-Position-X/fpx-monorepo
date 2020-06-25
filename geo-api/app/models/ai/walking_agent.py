@@ -2,7 +2,7 @@ import random
 import math
 import rapidjson
 from shapely.geometry import mapping, LineString, shape
-from app.models.item import Item
+from app.dto import ItemDTO
 from app.models import Item as ItemDB
 
 from app.services.item import (
@@ -75,5 +75,5 @@ class WalkingAgent:
         if item_hash["type"] != "Empty":
             item_hash["collection_uuid"] = store_collection_uuid
             item_hash["geometry"] = shape(item_hash['geometry']).to_wkt()
-            item = Item(**item_hash)
-            return ItemDB.create(**item.as_dict())
+            item = ItemDTO(**item_hash)
+            return ItemDB.create(**item.to_dict())
