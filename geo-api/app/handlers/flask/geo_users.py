@@ -1,4 +1,5 @@
-import bcrypt
+from flask import request
+from flask_jwt_extended import jwt_required
 from flask_restx import Resource, fields
 
 from app import api
@@ -6,13 +7,9 @@ from app.dto import UserDTO
 from app.handlers.flask import (
     get_provider_uuid_from_request
 )
-from flask import request
-from flask_jwt_extended import jwt_required
+from app.services.user import get_users, create_user, get_user, update_user, delete_user
 
 ns = api.namespace('users', 'User operations')
-
-from app.models import User as UserDB
-from app.models import Provider as ProviderDB
 
 user_model = api.model('User', {
     'uuid': fields.String(description='uuid'),
@@ -35,24 +32,22 @@ update_user_model = api.model('UpdateUser', {
 
 @ns.route('/')
 class UserList(Resource):
-    @ns.doc('list_users', security=None)
+    @ns.doc('get_users', security=None)
     @ns.marshal_list_with(user_model)
     def get(self):
-        user = UserDB.all()
-        return user
+        users = get_users()
+        return users
 
     @ns.doc('create_user', security=None)
     @ns.expect(create_user_model)
     @ns.marshal_with(user_model, 201)
     def post(self):
         user = UserDTO(**request.get_json())
-        user.password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        provider = ProviderDB.create(name=user.email)
-        user.provider_uuid = provider.uuid
-        user = UserDB.create(**user.to_dict())
-        user.session().commit()
-        return user, 201
-
+        try:
+            user = create_user(user)
+            return user, 201
+        except ValueError:
+            return '', 400
 
 @ns.route('/<uuid:user_uuid>')
 @ns.response(404, 'User not found')
@@ -61,7 +56,7 @@ class UserApi(Resource):
     @ns.doc('get_user', security=None)
     @ns.marshal_with(user_model)
     def get(self, user_uuid):
-        user = UserDB.find_or_fail(user_uuid)
+        user = get_user(user_uuid)
         return user
 
     @jwt_required
@@ -70,18 +65,13 @@ class UserApi(Resource):
     def put(self, user_uuid):
         provider_uuid = get_provider_uuid_from_request()
         user_dict = request.get_json()
-        user_new = UserDTO(**user_dict)
-        user = UserDB.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
-        user.password = bcrypt.hashpw(user_new.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        user.save()
-        user.session().commit()
+        user_update = UserDTO(**user_dict)
+        update_user(provider_uuid, user_uuid, user_update)
         return '', 204
 
     @jwt_required
     @ns.doc('delete_user')
     def delete(self, user_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        user = UserDB.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
-        user.delete()
-        user.session().commit()
+        delete_user(provider_uuid, user_uuid)
         return '', 204

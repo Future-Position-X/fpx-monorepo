@@ -1,27 +1,33 @@
+from typing import List
+from uuid import UUID
+
+from app.dto import ProviderDTO
+from app.models import Provider, to_models, to_model
 from app.stores.provider import ProviderStore
 from app.stores import DB
 
-def create_provider(provider):
-    with DB().transaction():
-        uuid = ProviderStore.insert(provider)
-        return uuid
+
+def get_providers() -> List[ProviderDTO]:
+    providers = Provider.all()
+    return to_models(providers, ProviderDTO)
 
 
-def get_all_providers():
-    with ProviderStore() as provider_store:
-        providers = provider_store.find_all()
-        provider_store.complete()
-        return providers
+def get_provider(provider_uuid: UUID) -> ProviderDTO:
+    provider = Provider.find_or_fail(provider_uuid)
+    return to_model(provider, ProviderDTO)
 
 
-def get_provider_by_uuid(provider_uuid):
-    with ProviderStore() as provider_store:
-        provider = provider_store.get_by_uuid(provider_uuid)
-        provider_store.complete()
-        return provider
+def update_provider(provider_uuid: UUID, provider_update: ProviderDTO) -> ProviderDTO:
+    provider = Provider.find_or_fail(provider_uuid)
+    provider.name = provider_update.name
+    provider.save()
+    provider.session.commit()
+    return to_model(provider, ProviderDTO)
 
 
-def update_provider_by_uuid(provider_uuid, provider):
-    with ProviderStore() as provider_store:
-        provider_store.update(provider_uuid, provider)
-        provider_store.complete()
+def create_provider(provider: ProviderDTO) -> ProviderDTO:
+    provider = Provider(**provider.to_dict())
+    provider.save()
+    provider.session.commit()
+    return to_model(provider, ProviderDTO)
+

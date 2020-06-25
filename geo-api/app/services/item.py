@@ -22,7 +22,7 @@ def create_collection_item(provider_uuid: UUID, collection_uuid: UUID, item: Ite
     item.collection_uuid = coll.uuid
     item = Item(**item.to_dict())
     item.save()
-    item.session().commit()
+    item.session.commit()
     return to_model(item, ItemDTO)
 
 
@@ -40,8 +40,8 @@ def create_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: L
     if replace:
         Item.where(collection_uuid=collection.uuid).delete()
 
-    Item.session().bulk_save_objects([Item(**item.to_dict()) for item in items])
-    Item.session().commit()
+    Item.session.bulk_save_objects([Item(**item.to_dict()) for item in items])
+    Item.session.commit()
 
     items = Item.query.options(load_only("uuid")).filter(Item.collection_uuid == collection.uuid).order_by(
         Item.created_at.desc()).limit(len(items)).all()
@@ -79,7 +79,7 @@ def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemD
         item.geometry = item_new.geometry
         item.save()
 
-    Item.session().commit()
+    Item.session.commit()
     return to_models(items, ItemDTO)
 
 
@@ -90,7 +90,7 @@ def update_item(provider_uuid: UUID, item_uuid: UUID, item_update) -> ItemDTO:
     item.geometry = item_update.geometry
 
     item.save()
-    item.session().commit()
+    item.session.commit()
     return to_model(item, ItemDTO)
 
 

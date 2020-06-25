@@ -16,7 +16,7 @@ def create_collection(provider_uuid, collection: CollectionDTO) -> CollectionDTO
     collection.provider_uuid = provider_uuid
     collection = Collection(**collection.to_dict())
     collection.save()
-    collection.session().commit()
+    collection.session.commit()
     return to_model(collection, CollectionDTO)
 
 
@@ -28,7 +28,7 @@ def get_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> Collec
 def delete_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> None:
     collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
     collection.delete()
-    collection.session().commit()
+    collection.session.commit()
 
 
 def update_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID,
@@ -37,7 +37,7 @@ def update_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID,
     collection.name = collection_update.name
     collection.is_public = collection_update.is_public
     collection.save()
-    collection.session().commit()
+    collection.session.commit()
     return to_model(collection, CollectionDTO)
 
 
@@ -57,6 +57,6 @@ def copy_collection_from(provider_uuid: UUID, src_collection_uuid: UUID, dst_col
         dst_collection_uuid = dst_collection.uuid
 
     copy_items_by_collection_uuid(src_collection_uuid, dst_collection_uuid)
-    src_collection.session().commit()
+    src_collection.session.commit()
     collection = Collection.find_or_fail(dst_collection_uuid)
     return to_model(collection, CollectionDTO)

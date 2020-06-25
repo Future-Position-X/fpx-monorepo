@@ -8,6 +8,8 @@ from app.handlers.flask import (
 from flask import request
 from flask_jwt_extended import jwt_required
 
+from app.services.provider import get_providers, get_provider, update_provider
+
 ns = api.namespace('providers', 'Provider operations')
 
 provider_model = api.model('Provider', {
@@ -24,10 +26,10 @@ update_provider_model = api.model('UpdateProvider', {
 
 @ns.route('/')
 class ProviderList(Resource):
-    @ns.doc('list_providers', security=None)
+    @ns.doc('get_providers', security=None)
     @ns.marshal_list_with(provider_model)
     def get(self):
-        providers = ProviderDB.all()
+        providers = get_providers()
         return providers
 
 
@@ -38,7 +40,7 @@ class ProviderApi(Resource):
     @ns.doc('get_provider', security=None)
     @ns.marshal_with(provider_model)
     def get(self, provider_uuid):
-        provider = ProviderDB.find_or_fail(provider_uuid)
+        provider = get_provider(provider_uuid)
         return provider
 
     @jwt_required
@@ -47,10 +49,6 @@ class ProviderApi(Resource):
     def put(self, provider_uuid):
         if get_provider_uuid_from_request() != provider_uuid:
             return '', 403
-        provider_dict = request.get_json()
-        provider_new = ProviderDTO(**provider_dict)
-        provider = ProviderDB.find_or_fail(provider_uuid)
-        provider.name = provider_new.name
-        provider.save()
-        provider.session().commit()
+        provider_update = ProviderDTO(**request.get_json())
+        provider = update_provider(provider_uuid, provider_update)
         return '', 204
