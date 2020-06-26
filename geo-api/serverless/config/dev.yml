@@ -1,5 +1,0 @@
-profile: geo-api-deploy-dev
-environment:
-    DATABASE_URL: ${ssm:DATABASE_URL}
-    JWT_SECRET: ${ssm:JWT_SECRET}
-    MAPBOX_TOKEN: ${ssm:MAPBOX_TOKEN}
