@@ -150,11 +150,6 @@ def get_visualizer_params_from_request():
     }
 
 
-def get_format_from_request():
-    format = request.args.get('format', "geojson")
-    return format
-
-
 def feature_collection_to_items(collection_uuid: UUID, geojson: Any) -> List[ItemDTO]:
     from shapely.geometry import shape
     items = [
@@ -168,11 +163,31 @@ def feature_collection_to_items(collection_uuid: UUID, geojson: Any) -> List[Ite
 
 ns = api.namespace('items', description='Item operations', path='/')
 
+get_params = {
+    'offset': {'description': 'offset', 'type': 'int', 'default': 0},
+    'limit': {'description': 'limit', 'type': 'int', 'default': 20},
+    'valid': {'description': 'valid', 'type': 'bool', 'default': False}
+}
+filter_params = {
+    'property_filter': {'description': 'Property filter like someprop=X,otherprop=Y', 'type': 'string', 'default': None},
+    'spatial_filter': {'description': 'Spatial filter, one of within-distance, within, intersect', 'default': None},
+    'spatial_filter.distance.x': {'description': 'x (longitude) value of Point for within-distance', 'type': 'float'},
+    'spatial_filter.distance.y': {'description': 'y (latitude) value of Point for within-distance', 'type': 'float'},
+    'spatial_filter.distance.d': {'description': 'distance value from Point for within-distance', 'type': 'float'},
+    'spatial_filter.envelope.ymin': {'description': 'ymin of envelope for spatial filter within or intersect'},
+    'spatial_filter.envelope.xmin': {'description': 'xmin of envelope for spatial filter within or intersect'},
+    'spatial_filter.envelope.ymax': {'description': 'ymax of envelope for spatial filter within or intersect'},
+    'spatial_filter.envelope.xmax': {'description': 'xmax of envelope for spatial filter within or intersect'}
+}
+
+transform_params = {
+    'simplify': {'description': 'Tolerance for simplification of geometries', 'type': 'float', 'default': 0.0}
+}
 
 @ns.route('/collections/<uuid:collection_uuid>/items')
 class CollectionItemListApi(Resource):
     @accept_fallback
-    @ns.doc('list_collection_items', security=None)
+    @ns.doc('get_collection_items', security=None, params={**get_params, **filter_params, **transform_params})
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -182,7 +197,7 @@ class CollectionItemListApi(Resource):
         return items
 
     @get.support('application/geojson')
-    @ns.doc('list_collection_items', security=None)
+    @ns.doc('get_collection_items', security=None, params={**get_params, **filter_params, **transform_params})
     def get_geojson(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -193,7 +208,7 @@ class CollectionItemListApi(Resource):
         return flask.make_response(feature_collection, 200)
 
     @get.support('image/png')
-    @ns.doc('list_collection_items', security=None)
+    @ns.doc('get_collection_items', security=None, params={**get_params, **filter_params, **transform_params})
     def get_png(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -259,7 +274,7 @@ class CollectionItemListApi(Resource):
 @ns.param('item_uuid', 'The item identifier')
 class CollectionItemApi(Resource):
     @accept_fallback
-    @ns.doc('get_item', security=None)
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -267,7 +282,7 @@ class CollectionItemApi(Resource):
         return item
 
     @get.support('application/geojson')
-    @ns.doc('get_item', security=None)
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
     def get_geojson(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
@@ -275,7 +290,7 @@ class CollectionItemApi(Resource):
         return flask.make_response(dumps(feature), 200)
 
     @get.support('image/png')
-    @ns.doc('get_item', security=None)
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
     def get_png(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
@@ -296,7 +311,7 @@ class CollectionItemApi(Resource):
 @ns.route('/collections/by_name/<collection_name>/items')
 class CollectionByNameItemListApi(Resource):
     @accept_fallback
-    @ns.doc('get_collection_items_by_name', security=None)
+    @ns.doc('get_collection_items_by_name', security=None, params={**get_params, **filter_params, **transform_params})
     @ns.marshal_list_with(item_model)
     def get(self, collection_name):
         provider_uuid = get_provider_uuid_from_request()
@@ -306,7 +321,7 @@ class CollectionByNameItemListApi(Resource):
         return items
 
     @get.support('application/geojson')
-    @ns.doc('get_collection_items_by_name', security=None)
+    @ns.doc('get_collection_items_by_name', security=None, params={**get_params, **filter_params, **transform_params})
     def get_geojson(self, collection_name):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -318,7 +333,7 @@ class CollectionByNameItemListApi(Resource):
         return flask.make_response(feature_collection, 200)
 
     @get.support('image/png')
-    @ns.doc('get_collection_items_by_name', security=None)
+    @ns.doc('get_collection_items_by_name', security=None, params={**get_params, **filter_params, **transform_params})
     def get_png(self, collection_name):
         filters = get_filters_from_request()
         provider_uuid = get_provider_uuid_from_request()
@@ -358,7 +373,7 @@ class ItemListApi(Resource):
 @ns.param('item_uuid', 'The item identifier')
 class ItemApi(Resource):
     @accept_fallback
-    @ns.doc('get_item', security=None)
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
     @ns.marshal_with(item_model)
     def get(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -366,7 +381,7 @@ class ItemApi(Resource):
         return item
 
     @get.support('application/geojson')
-    @ns.doc('get_item', security=None)
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
     def get_geojson(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_item(provider_uuid, item_uuid)
@@ -374,7 +389,7 @@ class ItemApi(Resource):
         return flask.make_response(dumps(feature), 200)
 
     @get.support('image/png')
-    @ns.doc('get_item', security=None)
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
     def get_png(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_item(provider_uuid, item_uuid)
