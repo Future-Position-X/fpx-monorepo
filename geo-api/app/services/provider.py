@@ -3,8 +3,6 @@ from uuid import UUID
 
 from app.dto import ProviderDTO
 from app.models import Provider, to_models, to_model
-from app.stores.provider import ProviderStore
-from app.stores import DB
 
 
 def get_providers() -> List[ProviderDTO]:

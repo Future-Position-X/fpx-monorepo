@@ -1,3 +1,8 @@
+from uuid import UUID
+
+from geoalchemy2 import WKTElement
+
+
 class BaseModelDTO:
     __slots__ = ['uuid',
                  'created_at', 'updated_at', 'revision']
@@ -19,13 +24,18 @@ class BaseModelDTO:
 
 
 class CollectionDTO(BaseModelDTO):
+    provider_uuid: UUID
+    name: str
+    is_public: bool
 
     def __init__(self, **kwargs):
         super().__init__(kwargs, ['provider_uuid', 'name', 'is_public'])
 
 
 class ItemDTO(BaseModelDTO):
-
+    collection_uuid: UUID
+    geometry: WKTElement
+    properties: dict
     def __init__(self, **kwargs):
         super().__init__(kwargs, ['collection_uuid', 'geometry', 'properties'])
 

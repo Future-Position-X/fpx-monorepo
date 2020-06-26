@@ -1,5 +1,6 @@
 import json
 
+
 def item_attributes():
     return {
         'geometry': 'POINT(1 1)',
@@ -7,6 +8,7 @@ def item_attributes():
             'name': 'somename',
         },
     }
+
 
 def collection_attributes():
     return {'name': 'gg', 'is_public': True}
@@ -64,6 +66,7 @@ def test_collection_deletion(client):
     result = client.get('/collections/{}'.format(result_in_json['uuid']))
     assert result.status_code == 404
 
+
 def test_collection_can_be_copied_to_new_collection(client, collection):
     res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes())
     assert res.status_code == 201
@@ -92,7 +95,6 @@ def test_collection_can_be_copied_to_other_collection(client, collection):
     assert res.status_code == 201
     other_collection_hash = json.loads(res.data.decode('utf-8'))
 
-
     res = client.post(
         '/collections/{}/copy/{}'.format(collection['uuid'], other_collection_hash['uuid']), data=None)
     assert res.status_code == 201
@@ -103,7 +105,4 @@ def test_collection_can_be_copied_to_other_collection(client, collection):
     result = client.get(
         '/collections/{}/items'.format(other_collection_hash['uuid']))
     assert result.status_code == 200
-    print(result.data)
     assert ('somename' in str(result.data))
-
-
