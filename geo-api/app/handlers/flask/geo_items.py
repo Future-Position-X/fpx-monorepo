@@ -37,7 +37,6 @@ class GeometryFormatter(fields.Raw):
 
 item_model = api.model('Item', {
     'uuid': fields.String(description='uuid'),
-    'provider_uuid': fields.String(description='provider_uuid'),
     'collection_uuid': fields.String(description='collection_uuid'),
     'geometry': GeometryFormatter(),
     'properties': fields.Raw(description='properties'),

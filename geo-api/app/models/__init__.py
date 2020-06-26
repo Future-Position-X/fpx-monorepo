@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Type, TypeVar
-
+from app.dto import BaseModelDTO, ItemDTO
 import sqlalchemy_mixins
 from geoalchemy2 import Geometry
 from shapely_geojson import Feature as BaseFeature
@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
     ModelNotFoundError
+from sqlalchemy import func, or_
 
 from app import db
 
@@ -35,7 +36,7 @@ class Feature(BaseFeature):
             }
 
 
-class FPXActiveRecordMixin(ActiveRecordMixin):
+class FPXActiveRecordMixin(ActiveRecordMixin, SmartQueryMixin):
     __abstract__ = True
 
     @classmethod
@@ -117,7 +118,7 @@ class Collection(BaseModel):
     def find_accessible(cls, provider_uuid):
         q = cls.query.filter(
             or_(
-                cls.is_public == True,
+                cls.is_public is True,
                 cls.provider_uuid == provider_uuid
             ))
         res = q.all()
@@ -130,7 +131,7 @@ class Collection(BaseModel):
             .filter(cls.uuid == collection_uuid) \
             .filter(
             or_(
-                cls.is_public == True,
+                cls.is_public is True,
                 cls.provider_uuid == provider_uuid
             ))
         res = q.first()
@@ -138,9 +139,6 @@ class Collection(BaseModel):
         if res is None:
             raise sqlalchemy_mixins.ModelNotFoundError
         return res
-
-
-from sqlalchemy import func, or_
 
 
 class Item(BaseModel):
@@ -273,7 +271,8 @@ class Item(BaseModel):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
-        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if filters['valid'] is not True or res[1] is not None]
+        result = [ItemDTO(**dict(zip(res.keys(), res))) for res in result if
+                  filters['valid'] is not True or res[1] is not None]
         return result
 
     @classmethod
@@ -305,7 +304,8 @@ class Item(BaseModel):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
-        result = [ItemModel(**dict(zip(res.keys(), res))) for res in result if filters['valid'] is False or res[1] is not None]
+        result = [ItemDTO(**dict(zip(res.keys(), res))) for res in result if
+                  filters['valid'] is False or res[1] is not None]
         return result
 
     @classmethod
@@ -382,8 +382,6 @@ class Item(BaseModel):
             "dest_collection_uuid": dest_collection_uuid
         })
 
-
-from app.dto import BaseModelDTO, ItemDTO as ItemModel
 
 BDTO = TypeVar("BDTO", bound=BaseModelDTO)
 BM = TypeVar("BM", bound=BaseModel)
