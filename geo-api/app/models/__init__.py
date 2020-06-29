@@ -118,7 +118,8 @@ class Collection(BaseModel):
     def find_accessible(cls, provider_uuid):
         q = cls.query.filter(
             or_(
-                cls.is_public is True,
+                cls.is_public
+                ,
                 cls.provider_uuid == provider_uuid
             ))
         res = q.all()
@@ -131,7 +132,7 @@ class Collection(BaseModel):
             .filter(cls.uuid == collection_uuid) \
             .filter(
             or_(
-                cls.is_public is True,
+                cls.is_public,
                 cls.provider_uuid == provider_uuid
             ))
         res = q.first()

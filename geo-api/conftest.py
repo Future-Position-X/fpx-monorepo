@@ -132,8 +132,6 @@ def client(app, db, provider, user, collection, obstacles, sensors, item, item_e
     client.environ_base['HTTP_ACCEPT'] = 'application/json'
     return client
 
-
-
 @pytest.fixture(scope="function", autouse=True)
 def session(app, db, request):
     """
