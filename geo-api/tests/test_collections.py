@@ -23,9 +23,12 @@ def test_collection_creation(client):
 def test_api_can_get_all_public_collection(client):
     res = client.post('/collections', json=collection_attributes())
     assert res.status_code == 201
+    original_token = client.environ_base['HTTP_AUTHORIZATION']
+    client.environ_base['HTTP_AUTHORIZATION'] = None
     res = client.get('/collections')
     assert res.status_code == 200
     assert ('gg' in str(res.data))
+    client.environ_base['HTTP_AUTHORIZATION'] = original_token
 
 
 def test_api_can_get_collection_by_uuid(client):
