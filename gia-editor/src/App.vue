@@ -268,8 +268,7 @@ export default {
       );
 
       if (res.status == 201) {
-        const id = await res.text();
-        const coll = await collection.fetchCollection(id);
+        const coll = await res.json();
         this.$refs.collectionTree.addCollection(coll);
       }
     },

@@ -1,4 +1,4 @@
-const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZWI4YWE5Ni05NTkzLTQwZTMtYTEzYS02ZGVmZThhYWRkNzciLCJleHAiOjE1OTM1MTE5OTUsInByb3ZpZGVyX3V1aWQiOiJkN2EyNTI4MS0yOTVjLTQ3YzktODZjMi1mMjFjNTFhZGIxM2IifQ.SStYGpLPWEPN1rP3tWeWCPl7IAyBIBAnj47QVkNp5ls";
+const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZDVjOGE3OS1lNDcwLTQ3MTctYjI0YS1kNzY1MjAyNWRjZjYiLCJleHAiOjE1OTQ3Mjk1MDMsInByb3ZpZGVyX3V1aWQiOiJlMjZkMGNmNS1hZjEzLTRiNzktOThjMS0xNWYwN2Y4MzM5YjUifQ.-wYIrzHT_766EXvOQ_XeNOk7a9dnWym-uMd23uogu54";
 
 const BASE_URL = process.env.VUE_APP_BASE_URL;
 
@@ -89,7 +89,7 @@ export default {
             mode: "cors",
             headers: {
                 Authorization: `Bearer ${GIA_TOKEN}`,
-                'Content-Type': `application/geojson`
+                'Content-Type': `application/json`
             },
             body: JSON.stringify({
                 name: collectionName,
