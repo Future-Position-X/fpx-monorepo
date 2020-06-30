@@ -150,9 +150,8 @@ export default {
       console.log("geojsonUpdateFromMap");
       this.code = JSON.stringify(geojson, null, "  ");
     },
-    selectionUpdate(ids) {
+    async selectionUpdate(ids) {
       let index = -1;
-
       this.renderedCollections.forEach(c => {
         if (!ids.includes(c.uuid)) {
           if (this.selectedCollection == c) {
@@ -163,11 +162,18 @@ export default {
           this.$delete(this.geojson, c.uuid);
         }
       });
-
       this.renderedCollections.splice(index, 1);
       this.fetchGeoJson(
         ids.filter(id => !this.renderedCollections.some(c => c.uuid == id))
-      );
+      ).then(() => this.updateFetchedCollections(ids));
+    },
+    updateFetchedCollections(ids) {
+        this.renderedCollections = this.collections.filter(c =>
+          ids.some(id => id == c.uuid)
+        );
+        this.selectedCollection = this.collections.filter(
+          c => c.uuid == ids[ids.length - 1]
+        )[0];
     },
     dropDownChange(selected) {
       console.log("selected: ", selected);
@@ -301,12 +307,6 @@ export default {
           return;
         }
       }
-      this.renderedCollections = this.collections.filter(c =>
-        ids.some(id => id == c.uuid)
-      );
-      this.selectedCollection = this.collections.filter(
-        c => c.uuid == ids[ids.length - 1]
-      )[0];
       this.isFetchingItems = false;
     }
   },
