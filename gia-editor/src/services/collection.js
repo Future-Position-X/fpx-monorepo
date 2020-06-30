@@ -1,11 +1,12 @@
-const GIA_TOKEN = process.env.VUE_APP_GIA_TOKEN;
 const BASE_URL = process.env.VUE_APP_BASE_URL;
 
 export default {
+    GIA_TOKEN: null,
+
     async fetchCollections() {
         const response = await fetch(`${BASE_URL}/collections`, {
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
+                Authorization: `Bearer ${this.GIA_TOKEN}`,
                 Accept: `application/geojson`
             }
         });
@@ -16,7 +17,7 @@ export default {
     async fetchCollection(collectionId) {
         const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
+                Authorization: `Bearer ${this.GIA_TOKEN}`,
                 Accept: `application/geojson`
             }
         });
@@ -29,7 +30,7 @@ export default {
             `${BASE_URL}/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
                 headers: {
-                    Authorization: `Bearer ${GIA_TOKEN}`,
+                    Authorization: `Bearer ${this.GIA_TOKEN}`,
                     Accept: `application/geojson`
                 },
                 signal: signal
@@ -39,14 +40,25 @@ export default {
         const data = await response.json();
         return data;
     },
+    async authenticated() {
+        if (this.GIA_TOKEN == null)
+            return false;
+
+        return true;
+    },
     async addItems(collectionId, items) {
+        if (! (await this.authenticated())) {
+            console.log("not allowed");
+            return false;
+        }
+
         await fetch(
             `${BASE_URL}/collections/${collectionId}/items`,
             {
                 method: "PUT",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${GIA_TOKEN}`,
+                    Authorization: `Bearer ${this.GIA_TOKEN}`,
                     'Content-Type': `application/geojson`,
                     Accept: `application/geojson`
                 },
@@ -56,6 +68,8 @@ export default {
                 })
             }
         );
+
+        return true;
     },
     async removeItems(items) {
         for (const item of items) {
@@ -63,7 +77,7 @@ export default {
                 method: "DELETE",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${GIA_TOKEN}`
+                    Authorization: `Bearer ${this.GIA_TOKEN}`
                 }
             });
         }
@@ -73,7 +87,7 @@ export default {
             method: "PUT",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
+                Authorization: `Bearer ${this.GIA_TOKEN}`,
                 'Content-Type': `application/geojson`
             },
             body: JSON.stringify({
@@ -87,7 +101,7 @@ export default {
             method: "POST",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
+                Authorization: `Bearer ${this.GIA_TOKEN}`,
                 'Content-Type': `application/json`
             },
             body: JSON.stringify({
@@ -101,7 +115,7 @@ export default {
             method: "DELETE",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${this.GIA_TOKEN}`
             }
         });
     }

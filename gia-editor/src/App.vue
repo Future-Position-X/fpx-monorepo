@@ -46,6 +46,12 @@
               >Create</v-btn>
               <br clear="both" />
             </div>
+            <v-btn
+                @click="getValidToken"
+                small
+                color="primary"
+                style="width: 100px; float: right;"
+              >Login</v-btn>
           </v-col>
           <v-col sm="7" style="padding: 0px;">
             <Map
@@ -106,6 +112,7 @@ import Tree from "./components/Tree.vue";
 import leafletImage from "leaflet-image";
 import collection from "./services/collection";
 import modify from "./services/modify";
+import session from "./services/session";
 
 export default {
   name: "App",
@@ -234,8 +241,11 @@ export default {
       modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      await modify.commit(this.modCtx, this.selectedCollection.uuid);
-      this.modCtx = modify.createContext();
+      const success = await modify.commit(this.modCtx, this.selectedCollection.uuid);
+      
+      if (success) {
+        this.modCtx = modify.createContext();
+      }
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
@@ -271,6 +281,11 @@ export default {
         const coll = await res.json();
         this.$refs.collectionTree.addCollection(coll);
       }
+    },
+    async getValidToken() {
+      const token = await session.create();
+      collection.GIA_TOKEN = token;
+      console.log("token: ", token);
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
