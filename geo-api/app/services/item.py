@@ -1,7 +1,5 @@
 from typing import List
-from uuid import UUID
-
-from sqlalchemy.orm import load_only
+from uuid import UUID, uuid4
 
 from app.dto import ItemDTO
 from app.models import Item, to_models, Collection, to_model
@@ -39,12 +37,10 @@ def create_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: L
 
     if replace:
         Item.where(collection_uuid=collection.uuid).delete()
-
-    Item.session.bulk_save_objects([Item(**item.to_dict()) for item in items])
+    items = [Item(**{**item.to_dict(), **{"uuid": uuid4()}}) for item in items]
+    Item.session.bulk_save_objects(items)
     Item.session.commit()
 
-    items = Item.query.options(load_only("uuid")).filter(Item.collection_uuid == collection.uuid).order_by(
-        Item.created_at.desc()).limit(len(items)).all()
     return to_models(items, ItemDTO)
 
 
