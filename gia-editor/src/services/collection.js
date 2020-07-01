@@ -1,12 +1,12 @@
 const BASE_URL = process.env.VUE_APP_BASE_URL;
 
 export default {
-    GIA_TOKEN: null,
+    sessionToken: null,
 
     async fetchCollections() {
         const response = await fetch(`${BASE_URL}/collections`, {
             headers: {
-                Authorization: `Bearer ${this.GIA_TOKEN}`,
+                Authorization: `Bearer ${this.sessionToken}`,
                 Accept: `application/geojson`
             }
         });
@@ -17,7 +17,7 @@ export default {
     async fetchCollection(collectionId) {
         const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
-                Authorization: `Bearer ${this.GIA_TOKEN}`,
+                Authorization: `Bearer ${this.sessionToken}`,
                 Accept: `application/geojson`
             }
         });
@@ -30,7 +30,7 @@ export default {
             `${BASE_URL}/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
                 headers: {
-                    Authorization: `Bearer ${this.GIA_TOKEN}`,
+                    Authorization: `Bearer ${this.sessionToken}`,
                     Accept: `application/geojson`
                 },
                 signal: signal
@@ -41,7 +41,7 @@ export default {
         return data;
     },
     async authenticated() {
-        if (this.GIA_TOKEN == null)
+        if (this.sessionToken == null)
             return false;
 
         return true;
@@ -58,7 +58,7 @@ export default {
                 method: "PUT",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${this.GIA_TOKEN}`,
+                    Authorization: `Bearer ${this.sessionToken}`,
                     'Content-Type': `application/geojson`,
                     Accept: `application/geojson`
                 },
@@ -77,7 +77,7 @@ export default {
                 method: "DELETE",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${this.GIA_TOKEN}`
+                    Authorization: `Bearer ${this.sessionToken}`
                 }
             });
         }
@@ -87,7 +87,7 @@ export default {
             method: "PUT",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${this.GIA_TOKEN}`,
+                Authorization: `Bearer ${this.sessionToken}`,
                 'Content-Type': `application/geojson`
             },
             body: JSON.stringify({
@@ -101,7 +101,7 @@ export default {
             method: "POST",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${this.GIA_TOKEN}`,
+                Authorization: `Bearer ${this.sessionToken}`,
                 'Content-Type': `application/json`
             },
             body: JSON.stringify({
@@ -115,7 +115,7 @@ export default {
             method: "DELETE",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${this.GIA_TOKEN}`
+                Authorization: `Bearer ${this.sessionToken}`
             }
         });
     }

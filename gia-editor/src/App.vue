@@ -17,6 +17,7 @@
                     color="primary"
                     v-on="on"
                     @click="onDeleteCollectionsClick"
+                    :disabled="!authenticated"
                   >Delete selected collections</v-btn>
                 </template>
                 <v-card>
@@ -43,11 +44,12 @@
                 small
                 color="primary"
                 style="width: 100px; float: right;"
+                :disabled="!authenticated"
               >Create</v-btn>
               <br clear="both" />
             </div>
             <v-btn
-                @click="getValidToken"
+                @click="onLoginClick"
                 small
                 color="primary"
                 style="width: 100px; float: right;"
@@ -92,7 +94,7 @@
               -->
             </v-tabs>
             <div class="my-2 save-button">
-              <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
+              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated">Save modifications</v-btn>
             </div>
             <div class="my-2 export-image-button">
               <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
@@ -140,7 +142,8 @@ export default {
       collectionColors: {},
       modCtx: modify.createContext(),
       showDeleteConfirmationDialog: false,
-      deleteConfirmationContent: null
+      deleteConfirmationContent: null,
+      authenticated: false
     };
   },
   watch: {
@@ -282,10 +285,14 @@ export default {
         this.$refs.collectionTree.addCollection(coll);
       }
     },
-    async getValidToken() {
-      const token = await session.create();
-      collection.GIA_TOKEN = token;
-      console.log("token: ", token);
+    async onLoginClick() {
+      const success = await session.create();
+
+      if (success) {
+        collection.sessionToken = session.token;
+        this.authenticated = true;
+        console.log("token: ", session.token);
+      }
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
