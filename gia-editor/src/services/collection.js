@@ -1,15 +1,25 @@
 const BASE_URL = process.env.VUE_APP_BASE_URL;
 
-export default {
-    sessionToken: null,
+import session from "../services/session";
 
+export default {
+    async validateResponse(response) {
+        if (!response.ok)
+            throw new Error(await response.text())
+    },
     async fetchCollections() {
+        const headers = {
+            Accept: `application/json`
+        }
+
+        if (session.authenticated())
+            headers.Authorization = `Bearer ${session.token}`;
+
         const response = await fetch(`${BASE_URL}/collections`, {
-            headers: {
-                Authorization: `Bearer ${this.sessionToken}`,
-                Accept: `application/json`
-            }
+            headers: headers
         });
+        
+        await this.validateResponse(response);
 
         const data = await response.json();
         return data;
@@ -17,10 +27,12 @@ export default {
     async fetchCollection(collectionId) {
         const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
-                Authorization: `Bearer ${this.sessionToken}`,
+                Authorization: `Bearer ${session.token}`,
                 Accept: `application/json`
             }
         });
+
+        await this.validateResponse(response);
 
         const data = await response.json();
         return data;
@@ -30,35 +42,26 @@ export default {
             `${BASE_URL}/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
                 headers: {
-                    Authorization: `Bearer ${this.sessionToken}`,
+                    Authorization: `Bearer ${session.token}`,
                     Accept: `application/geojson`
                 },
                 signal: signal
             }
         );
 
+        await this.validateResponse(response);
+
         const data = await response.json();
         return data;
     },
-    async authenticated() {
-        if (this.sessionToken == null)
-            return false;
-
-        return true;
-    },
     async addItems(collectionId, items) {
-        if (! (await this.authenticated())) {
-            console.log("not allowed");
-            return false;
-        }
-
-        await fetch(
+        const response = await fetch(
             `${BASE_URL}/collections/${collectionId}/items`,
             {
                 method: "PUT",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${this.sessionToken}`,
+                    Authorization: `Bearer ${session.token}`,
                     'Content-Type': `application/geojson`,
                     Accept: `application/geojson`
                 },
@@ -67,27 +70,29 @@ export default {
                     features: items
                 })
             }
-        );
-
-        return true;
+        )
+        
+        await this.validateResponse(response);
     },
     async removeItems(items) {
         for (const item of items) {
-            await fetch(`${BASE_URL}/items/${item.id}`, {
+            const response = await fetch(`${BASE_URL}/items/${item.id}`, {
                 method: "DELETE",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${this.sessionToken}`
+                    Authorization: `Bearer ${session.token}`
                 }
             });
+
+            await this.validateResponse(response);
         }
     },
     async updateItems(items) {
-        await fetch(`${BASE_URL}/items`, {
+        const response = await fetch(`${BASE_URL}/items`, {
             method: "PUT",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${this.sessionToken}`,
+                Authorization: `Bearer ${session.token}`,
                 'Content-Type': `application/geojson`,
                 Accept: 'application/geojson'
             },
@@ -96,13 +101,15 @@ export default {
                 features: items
             })
         });
+
+        await this.validateResponse(response);
     },
     async create(collectionName, isPublic) {
-        return await fetch(`${BASE_URL}/collections`, {
+        const response = await fetch(`${BASE_URL}/collections`, {
             method: "POST",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${this.sessionToken}`,
+                Authorization: `Bearer ${session.token}`,
                 'Content-Type': `application/json`
             },
             body: JSON.stringify({
@@ -110,14 +117,21 @@ export default {
                 is_public: isPublic
             })
         });
+
+        await this.validateResponse(response);
+
+        const collection = await response.json();
+        return collection;
     },
     async remove(collectionId) {
-        await fetch(`${BASE_URL}/collections/${collectionId}`, {
+        const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             method: "DELETE",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${this.sessionToken}`
+                Authorization: `Bearer ${session.token}`
             }
         });
+
+        await this.validateResponse(response);
     }
 };

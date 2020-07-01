@@ -244,11 +244,9 @@ export default {
       modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      const success = await modify.commit(this.modCtx, this.selectedCollection.uuid);
-      
-      if (success) {
-        this.modCtx = modify.createContext();
-      }
+      await modify.commit(this.modCtx, this.selectedCollection.uuid)
+        .then(() => this.modCtx = modify.createContext())
+        .catch((error) => console.error("backend error: ", error));
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
@@ -275,24 +273,36 @@ export default {
       }
     },
     async onCreateCollectionClick() {
-      const res = await collection.create(
-        this.collectionName,
-        this.isPublicCollection
-      );
-
-      if (res.status == 201) {
-        const coll = await res.json();
-        this.$refs.collectionTree.addCollection(coll);
+      await collection.create(this.collectionName, this.isPublicCollection)
+      .then((coll) => this.$refs.collectionTree.addCollection(coll))
+      .catch((error) => console.error("backend error: ", error));
+    },
+    async showAvailableCollections(){
+      this.collections = await collection.fetchCollections();
+      let sortedCollections = groupBy(this.collections, "name");
+      const len = Object.keys(sortedCollections).length;
+      let i = 1;
+      for (let [key, value] of Object.entries(sortedCollections)) {
+        console.log(key);
+        let color = selectColor(i, len);
+        value = value.map(c => {
+          c.color = color;
+          this.collectionColors[c.uuid] = color;
+          return c;
+        });
+        i++;
       }
+
+      this.sortedCollections = sortedCollections;
+      console.log("sorted collections", this.sortedCollections);
     },
     async onLoginClick() {
-      const success = await session.create();
-
-      if (success) {
-        collection.sessionToken = session.token;
+      await session.create()
+      .then(() => {
         this.authenticated = true;
-        console.log("token: ", session.token);
-      }
+        return this.showAvailableCollections();
+      })
+      .catch((error) => console.error("backend error: ", error));
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
@@ -316,7 +326,7 @@ export default {
             this.dataBounds,
             simplify
           );
-
+          
           this.$set(this.geojson, id, {
             id: id,
             color: this.collectionColors[id],
@@ -332,23 +342,7 @@ export default {
     }
   },
   async created() {
-    this.collections = await collection.fetchCollections();
-    let sortedCollections = groupBy(this.collections, "name");
-    const len = Object.keys(sortedCollections).length;
-    let i = 1;
-    for (let [key, value] of Object.entries(sortedCollections)) {
-      console.log(key);
-      let color = selectColor(i, len);
-      value = value.map(c => {
-        c.color = color;
-        this.collectionColors[c.uuid] = color;
-        return c;
-      });
-      i++;
-    }
-
-    this.sortedCollections = sortedCollections;
-    console.log("sorted collections", this.sortedCollections);
+    await this.showAvailableCollections();
   }
 };
 

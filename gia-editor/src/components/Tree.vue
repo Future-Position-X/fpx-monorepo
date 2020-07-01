@@ -1,5 +1,5 @@
 <template>
-  <v-treeview @input="selectionUpdate" selectable :items="items">
+  <v-treeview @input="selectionUpdate" :items="items" :open.sync="open">
     <template v-slot:append="{ item }">
       <v-icon :color="item.color">mdi-brightness-1</v-icon>
     </template>
@@ -41,12 +41,16 @@ export default {
   },
   watch: {
     sortedCollections: function() {
-      const items = [];
+      this.items = [];
+      const collections = [];
+      
       for (let [key, value] of Object.entries(this.sortedCollections)) {
-        items.push({
+        console.log(key, value)
+        collections.push({
           id: key,
           name: key,
           color: value[0].color,
+          is_public: value[0].is_public,
           children: value.map(function(e) {
             e.id = e.uuid;
             //e.name = e.provider_uuid;
@@ -54,11 +58,28 @@ export default {
           })
         });
       }
-      this.items = items;
+      console.log("collections", collections);
+      this.items.push({
+          id: "Private",
+          name: "Private",
+          color: "#000",
+          children: collections.filter((coll) => coll.is_public == "False"),
+          selectable: false
+        })
+      this.items.push({
+          id: "Public",
+          name: "Public",
+          color: "#000",
+          children: collections.filter((coll) => coll.is_public == "True"),
+          selectable: true
+        })
+        console.log(this.items);
+        this.open = ["Public"];
     }
   },
   data: () => ({
-    items: []
+    items: [],
+    open: []
   })
 };
 </script>

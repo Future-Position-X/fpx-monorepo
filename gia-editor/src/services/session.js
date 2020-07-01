@@ -4,6 +4,10 @@ const PASSWORD = process.env.VUE_APP_PASSWORD;
 
 export default {
     token: null,
+    async validateResponse(response) {
+        if (!response.ok)
+            throw new Error(await response.text())
+    },
     async create() {
         const response = await fetch(`${BASE_URL}/sessions`, {
             method: "POST",
@@ -18,11 +22,11 @@ export default {
             })
         });
 
-        if (response.status == 201) {
-            this.token = (await response.json())["token"]
-            return true;
-        }
-        
-        return false;
+        await this.validateResponse(response);
+
+        this.token = (await response.json())["token"]
+    },
+    authenticated() {
+        return !!this.token;
     }
 };
