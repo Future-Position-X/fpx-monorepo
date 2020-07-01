@@ -19,7 +19,7 @@ export default {
         });
 
         if (response.status == 201) {
-            this.token = (await response.json())["token"][0]
+            this.token = (await response.json())["token"]
             return true;
         }
         

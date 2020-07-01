@@ -17,7 +17,7 @@ class Session(Resource):
         email = json["email"]
         password = json["password"]
         try:
-            token = create_session(email, password), 201
+            token = create_session(email, password)
             return {
                        'token': token
                    }, 201
