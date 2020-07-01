@@ -205,7 +205,7 @@ class CollectionItemListApi(Resource):
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items(provider_uuid, collection_uuid, filters, transforms)
-        features = [Feature(to_shape(item.geometry), item.properties) for item in items if item.geometry is not None]
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if item.geometry is not None]
         feature_collection = dumps(FeatureCollection(features))
         return flask.make_response(feature_collection, 200)
 
@@ -367,7 +367,7 @@ class ItemListApi(Resource):
         geojson = request.get_json(force=True)
         items_new = [
             ItemDTO(**{
-                'uuid': feature['properties']['id'],
+                'uuid': feature['id'],
                 'geometry': shape(feature['geometry']).to_wkt(),
                 'properties': feature['properties']
             }) for feature in geojson['features']]

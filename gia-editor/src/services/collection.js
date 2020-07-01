@@ -88,7 +88,8 @@ export default {
             mode: "cors",
             headers: {
                 Authorization: `Bearer ${this.sessionToken}`,
-                'Content-Type': `application/geojson`
+                'Content-Type': `application/geojson`,
+                Accept: 'application/geojson'
             },
             body: JSON.stringify({
                 type: "FeatureCollection",
