@@ -1,5 +1,5 @@
 from flask import request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, jwt_optional
 from flask_restx import Resource, fields
 
 from app import api
@@ -32,12 +32,14 @@ update_user_model = api.model('UpdateUser', {
 
 @ns.route('/')
 class UserList(Resource):
+    @jwt_optional
     @ns.doc('get_users', security=None)
     @ns.marshal_list_with(user_model)
     def get(self):
         users = get_users()
         return users
 
+    @jwt_optional
     @ns.doc('create_user', security=None)
     @ns.expect(create_user_model)
     @ns.marshal_with(user_model, 201)
@@ -53,6 +55,7 @@ class UserList(Resource):
 @ns.response(404, 'User not found')
 @ns.param('user_uuid', 'The user identifier')
 class UserApi(Resource):
+    @jwt_optional
     @ns.doc('get_user', security=None)
     @ns.marshal_with(user_model)
     def get(self, user_uuid):

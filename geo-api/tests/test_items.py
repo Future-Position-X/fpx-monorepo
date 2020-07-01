@@ -255,33 +255,18 @@ def test_get_items_by_name_png(client, collection):
     assert mime == 'image/png'
 
 
-def test_item_creation(client):
-    res = client.post('/collections', json=collection_attributes())
-    assert res.status_code == 201
-    collection_hash = json.loads(res.data.decode('utf-8'))
-
-    res = client.get('/collections/{}'.format(collection_hash['uuid']))
-    assert res.status_code == 200
-
-    res = client.post('/collections/{}/items'.format(collection_hash['uuid']), json=item_attributes())
+def test_item_creation(client, collection):
+    res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes())
     assert res.status_code == 201
     item_hash = json.loads(res.data.decode('utf-8'))
 
     res = client.get(
         '/collections/{}/items/{}'.format(item_hash['collection_uuid'], item_hash['uuid']))
-
     assert res.status_code == 200
     assert ('somename' in str(res.data))
 
-def test_item_creation_empty_geom(client):
-    res = client.post('/collections', json=collection_attributes())
-    assert res.status_code == 201
-    collection_hash = json.loads(res.data.decode('utf-8'))
-
-    res = client.get('/collections/{}'.format(collection_hash['uuid']))
-    assert res.status_code == 200
-
-    res = client.post('/collections/{}/items'.format(collection_hash['uuid']), json=item_attributes_empty_geometry())
+def test_item_creation_empty_geom(client, collection):
+    res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes_empty_geometry())
     assert res.status_code == 201
     item_hash = json.loads(res.data.decode('utf-8'))
 
@@ -350,16 +335,12 @@ def test_item_creation_in_non_existent_collection(client):
     assert res.status_code == 404
 
 
-def test_api_can_get_item_by_collection_uuid_and_uuid(client, collection):
-    res = client.post('/collections/{}/items'.format(collection['uuid']), json=item_attributes())
-    assert res.status_code == 201
-    item_hash = json.loads(res.data.decode('utf-8'))
-
+def test_api_can_get_item_by_collection_uuid_and_uuid(client, item):
     res = client.get(
-        '/collections/{}/items/{}'.format(item_hash['collection_uuid'], item_hash['uuid']))
+        '/collections/{}/items/{}'.format(item['collection_uuid'], item['uuid']))
 
     assert res.status_code == 200
-    assert ('somename' in str(res.data))
+    assert (item['properties']['name'] in str(res.data))
 
 
 def test_api_error_on_item_not_found(client, collection):
