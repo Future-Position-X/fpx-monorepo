@@ -1,5 +1,5 @@
 from flask import request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, jwt_optional
 from flask_restx import Resource, fields
 
 from app import api
@@ -39,6 +39,7 @@ update_collection_model = api.model('UpdateCollection', {
 
 @ns.route('/')
 class CollectionListApi(Resource):
+    @jwt_optional
     @ns.doc('list_collections', security=None)
     @ns.marshal_list_with(collection_model)
     def get(self):
@@ -61,6 +62,7 @@ class CollectionListApi(Resource):
 @ns.response(404, 'Collection not found')
 @ns.param('collection_uuid', 'The collection identifier')
 class CollectionApi(Resource):
+    @jwt_optional
     @ns.doc('get_collection', security=None)
     @ns.marshal_with(collection_model)
     def get(self, collection_uuid):

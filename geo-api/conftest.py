@@ -68,6 +68,22 @@ def collection(app, db, provider, request):
         return collection.to_dict()
 
 @pytest.fixture(scope="session")
+def collection_empty(app, db, provider, request):
+    from app.models import Collection
+    with app.app_context():
+        collection = Collection.create(name='test-collection-empty', is_public=True, provider_uuid=provider['uuid'])
+        Collection.session().commit()
+        return collection.to_dict()
+
+@pytest.fixture(scope="session")
+def collection_private(app, db, provider, request):
+    from app.models import Collection
+    with app.app_context():
+        collection = Collection.create(name='test-collection-private', is_public=False, provider_uuid=provider['uuid'])
+        Collection.session().commit()
+        return collection.to_dict()
+
+@pytest.fixture(scope="session")
 def obstacles(app, db, provider, request):
     import json
     import os.path
@@ -112,6 +128,14 @@ def item(app, db, provider, collection, request):
         return item.to_dict()
 
 @pytest.fixture(scope="session")
+def item_private(app, db, provider, collection_private, request):
+    from app.models import Item
+    with app.app_context():
+        item = Item.create(collection_uuid=collection_private['uuid'], geometry='POINT(1 1)', properties={'name': 'test-item-private'})
+        Item.session().commit()
+        return item.to_dict()
+
+@pytest.fixture(scope="session")
 def item_empty_geom(app, db, provider, collection, request):
     from app.models import Item
     with app.app_context():
@@ -120,7 +144,7 @@ def item_empty_geom(app, db, provider, collection, request):
         return item.to_dict()
 
 @pytest.fixture(scope="session")
-def client(app, db, provider, user, collection, obstacles, sensors, item, item_empty_geom, request):
+def client(app, db, provider, user, collection, collection_private, collection_empty, obstacles, sensors, item, item_empty_geom, item_private, request):
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
@@ -128,6 +152,13 @@ def client(app, db, provider, user, collection, obstacles, sensors, item, item_e
     client = app.test_client()
     client.environ_base[
         'HTTP_AUTHORIZATION'] = 'Bearer ' + token
+    client.environ_base['HTTP_CONTENT_TYPE'] = 'application/json'
+    client.environ_base['HTTP_ACCEPT'] = 'application/json'
+    return client
+
+@pytest.fixture(scope="session")
+def anon_client(app, db, provider, user, collection, collection_private, collection_empty, obstacles, sensors, item, item_empty_geom, item_private, request):
+    client = app.test_client()
     client.environ_base['HTTP_CONTENT_TYPE'] = 'application/json'
     client.environ_base['HTTP_ACCEPT'] = 'application/json'
     return client

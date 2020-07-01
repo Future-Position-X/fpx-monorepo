@@ -6,7 +6,7 @@ from app.handlers.flask import (
     get_provider_uuid_from_request
 )
 from flask import request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, jwt_optional
 
 from app.services.provider import get_providers, get_provider, update_provider
 
@@ -26,6 +26,7 @@ update_provider_model = api.model('UpdateProvider', {
 
 @ns.route('/')
 class ProviderList(Resource):
+    @jwt_optional
     @ns.doc('get_providers', security=None)
     @ns.marshal_list_with(provider_model)
     def get(self):
@@ -37,6 +38,7 @@ class ProviderList(Resource):
 @ns.response(404, 'Provider not found')
 @ns.param('provider_uuid', 'The provider identifier')
 class ProviderApi(Resource):
+    @jwt_optional
     @ns.doc('get_provider', security=None)
     @ns.marshal_with(provider_model)
     def get(self, provider_uuid):
