@@ -7,7 +7,7 @@ export default {
         const response = await fetch(`${BASE_URL}/collections`, {
             headers: {
                 Authorization: `Bearer ${this.sessionToken}`,
-                Accept: `application/geojson`
+                Accept: `application/json`
             }
         });
 
@@ -18,7 +18,7 @@ export default {
         const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
                 Authorization: `Bearer ${this.sessionToken}`,
-                Accept: `application/geojson`
+                Accept: `application/json`
             }
         });
 
