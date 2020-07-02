@@ -4,6 +4,7 @@ const PASSWORD = process.env.VUE_APP_PASSWORD;
 
 export default {
     token: null,
+    user: null,
     async validateResponse(response) {
         if (!response.ok)
             throw new Error(await response.text())
@@ -25,8 +26,26 @@ export default {
         await this.validateResponse(response);
 
         this.token = (await response.json())["token"]
+        this.user = await this.getUser();
     },
     authenticated() {
         return !!this.token;
+    },
+    async getUser() {
+        const headers = {
+            Authorization: `Bearer ${this.token}`,
+            Accept: `application/json`
+        }
+        let response = await fetch(`${BASE_URL}/users/uuid`, {
+            headers: headers
+        });
+        await this.validateResponse(response);
+        const user_uuid = (await response.json())["uuid"]; 
+        response = await fetch(`${BASE_URL}/users/${user_uuid}`, {
+            headers: headers
+        });
+        await this.validateResponse(response);
+        const user = await response.json();
+        return user   
     }
 };

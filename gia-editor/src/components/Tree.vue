@@ -7,6 +7,7 @@
 </template>
 
 <script>
+import session from "../services/session";
 export default {
   props: ["sortedCollections"],
   methods: {
@@ -40,7 +41,7 @@ export default {
     }
   },
   watch: {
-    sortedCollections: function() {
+    sortedCollections: async function() {
       this.items = [];
       const collections = [];
       
@@ -50,7 +51,7 @@ export default {
           id: key,
           name: key,
           color: value[0].color,
-          is_public: value[0].is_public,
+          provider_uuid: value[0].provider_uuid,
           children: value.map(function(e) {
             e.id = e.uuid;
             //e.name = e.provider_uuid;
@@ -58,23 +59,26 @@ export default {
           })
         });
       }
-      console.log("collections", collections);
+      let provider_uuid = null
+      if (session.authenticated()) {
+        provider_uuid = session.user.provider_uuid;
+      }
       this.items.push({
-          id: "Private",
-          name: "Private",
+          id: "Owned collections",
+          name: "Owned collections",
           color: "#000",
-          children: collections.filter((coll) => coll.is_public == "False"),
+          children: collections.filter((coll) => coll.provider_uuid == provider_uuid),
           selectable: false
         })
       this.items.push({
-          id: "Public",
-          name: "Public",
+          id: "Other collections",
+          name: "Other collections",
           color: "#000",
-          children: collections.filter((coll) => coll.is_public == "True"),
+          children: collections.filter((coll) => coll.provider_uuid != provider_uuid),
           selectable: true
         })
         console.log(this.items);
-        this.open = ["Public"];
+        this.open = ["Owned collections"];
     }
   },
   data: () => ({
