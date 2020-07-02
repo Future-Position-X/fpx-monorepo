@@ -307,7 +307,7 @@ def test_item_update(client, item):
 
 def test_items_update_geojson(client, item):
     geojson = item_attributes_geojson()
-    geojson['features'][0]['properties']['id'] = item['uuid']
+    geojson['features'][0]['id'] = item['uuid']
     res = client.put('/items', headers={'accept': 'application/geojson'}, json=geojson)
     assert res.status_code == 201
 

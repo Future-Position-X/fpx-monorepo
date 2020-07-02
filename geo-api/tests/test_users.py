@@ -60,3 +60,9 @@ def test_del_user(client, user):
     res = client.get('/users/{}'.format(user['uuid']))
     assert res.status_code == 404
     assert ('' in str(res.data))
+
+
+def test_get_user_uuid(client, user):
+    res = client.get('/users/uuid')
+    assert res.status_code == 200
+    assert (str(user['uuid']) in str(res.data))

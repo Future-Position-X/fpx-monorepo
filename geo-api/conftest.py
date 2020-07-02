@@ -148,7 +148,7 @@ def client(app, db, provider, user, collection, collection_private, collection_e
     from app.services.session import create_access_token
     provider_uuid = str(provider['uuid'])
     with app.app_context():
-        token = create_access_token('abc123', provider_uuid)
+        token = create_access_token(user['uuid'], provider_uuid)
     client = app.test_client()
     client.environ_base[
         'HTTP_AUTHORIZATION'] = 'Bearer ' + token
