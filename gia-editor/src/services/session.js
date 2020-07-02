@@ -1,6 +1,4 @@
 const BASE_URL = process.env.VUE_APP_BASE_URL;
-const EMAIL = process.env.VUE_APP_EMAIL;
-const PASSWORD = process.env.VUE_APP_PASSWORD;
 
 export default {
     token: null,
@@ -9,7 +7,7 @@ export default {
         if (!response.ok)
             throw new Error(await response.text())
     },
-    async create() {
+    async create(email, password) {
         const response = await fetch(`${BASE_URL}/sessions`, {
             method: "POST",
             mode: "cors",
@@ -18,8 +16,8 @@ export default {
                 Accept: `application/json`
             },
             body: JSON.stringify({
-                email: EMAIL,
-                password: PASSWORD
+                email: email,
+                password: password
             })
         });
 

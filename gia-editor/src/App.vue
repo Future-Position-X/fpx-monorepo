@@ -49,6 +49,13 @@
               >Create</v-btn>
               <br clear="both" />
             </div>
+            <v-text-field v-model="email" label="Email"></v-text-field>
+            <v-text-field
+            v-model="password" 
+            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPassword ? 'text' : 'password'"
+            @click:append="showPassword = !showPassword" 
+            label="Password"></v-text-field>
             <v-btn
                 @click="onLoginClick"
                 small
@@ -129,7 +136,10 @@ export default {
       modCtx: modify.createContext(),
       showDeleteConfirmationDialog: false,
       deleteConfirmationContent: null,
-      authenticated: false
+      authenticated: false,
+      email: null,
+      password: null,
+      showPassword: false
     };
   },
   watch: {
@@ -283,7 +293,7 @@ export default {
       console.log("sorted collections", this.sortedCollections);
     },
     async onLoginClick() {
-      await session.create()
+      await session.create(this.email, this.password)
       .then(() => {
         this.authenticated = true;
         return this.showAvailableCollections();
@@ -328,6 +338,11 @@ export default {
     }
   },
   async created() {
+    if (process.env.NODE_ENV == "development") {
+      this.email = process.env.VUE_APP_EMAIL;
+      this.password = process.env.VUE_APP_PASSWORD;
+    }
+
     await this.showAvailableCollections();
   }
 };
