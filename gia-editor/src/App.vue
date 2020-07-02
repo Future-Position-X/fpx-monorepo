@@ -7,6 +7,7 @@
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
+              @updateCodeView="onUpdateCodeView"
               ref="collectionTree"
             />
             <div class="my-2 export-image-button">
@@ -74,24 +75,9 @@
           >
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
-              <!--<v-tab>Table</v-tab>-->
               <v-tab-item style="display: flex;flex-direction:column; flex:1;">
-                <v-select
-                  :items="renderedCollections"
-                  label="Collection"
-                  @change="dropDownChange"
-                  v-model="selectedCollection"
-                  class="select-collection"
-                  item-text="name"
-                  return-object
-                ></v-select>
                 <Code v-bind:code="code" style="display: flex;flex-direction:column; flex:1;" />
               </v-tab-item>
-              <!--
-              <v-tab-item>
-                <Table />
-              </v-tab-item>
-              -->
             </v-tabs>
             <div class="my-2 save-button">
               <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated">Save modifications</v-btn>
@@ -185,9 +171,9 @@ export default {
           c => c.uuid == ids[ids.length - 1]
         )[0];
     },
-    dropDownChange(selected) {
-      console.log("selected: ", selected);
-      this.code = this.geojson[selected.uuid].geojson;
+    onUpdateCodeView(collection) {
+      this.code = this.geojson[collection.uuid].geojson;
+      this.selectedCollection = collection;
     },
     zoomUpdate(zoom) {
       if (this.zoom != zoom) {

@@ -1,5 +1,5 @@
 <template>
-  <v-treeview @input="selectionUpdate" :items="items" :open.sync="open">
+  <v-treeview return-object @input="selectionUpdate" @update:active="onActiveUpdate" :items="items" selectable activatable :open.sync="open">
     <template v-slot:append="{ item }">
       <v-icon :color="item.color">mdi-brightness-1</v-icon>
     </template>
@@ -11,8 +11,15 @@ import session from "../services/session";
 export default {
   props: ["sortedCollections"],
   methods: {
+    onActiveUpdate(activeCollections) {
+      const collection = activeCollections[0];
+
+      if (collection.editable) {
+        this.$emit("updateCodeView", collection);
+      }
+    },
     selectionUpdate(selectedIds) {
-      this.$emit("selectionUpdate", selectedIds);
+      this.$emit("selectionUpdate", selectedIds.map(x => x.uuid));
     },
     addCollection(collection) {
       let colorNum = this.items.length;
@@ -50,10 +57,12 @@ export default {
         collections.push({
           id: key,
           name: key,
-          color: value[0].color,
+          color: "#FFF",
           provider_uuid: value[0].provider_uuid,
+          editable: false,
           children: value.map(function(e) {
             e.id = e.uuid;
+            e.editable = true
             //e.name = e.provider_uuid;
             return e;
           })
@@ -66,16 +75,16 @@ export default {
       this.items.push({
           id: "Owned collections",
           name: "Owned collections",
-          color: "#000",
+          color: "#FFF",
+          editable: false,
           children: collections.filter((coll) => coll.provider_uuid == provider_uuid),
-          selectable: false
         })
       this.items.push({
           id: "Other collections",
           name: "Other collections",
-          color: "#000",
+          color: "#FFF",
+          editable: false,
           children: collections.filter((coll) => coll.provider_uuid != provider_uuid),
-          selectable: true
         })
         console.log(this.items);
         this.open = ["Owned collections"];
