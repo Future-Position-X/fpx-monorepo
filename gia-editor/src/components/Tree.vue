@@ -32,16 +32,20 @@ export default {
         saturation +
         "%,50%)";
 
-      let item = {
+      collection.color = color;
+      collection.editable = true;
+      collection.id = collection.uuid;
+
+      const item = {
         id: collection.name,
         name: collection.name,
-        color: color,
-        children: []
+        color: "#FFF",
+        provider_uuid: collection.provider_uuid,
+        editable: false,
+        children: [collection]
       };
 
-      collection.id = collection.uuid;
-      item.children.push(collection);
-      this.items.push(item);
+      this.items[0].children.push(item);
     },
     removeCollection(collection) {
       this.items.splice(this.items.indexOf(collection), 1);
