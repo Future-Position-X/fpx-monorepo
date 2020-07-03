@@ -1,15 +1,25 @@
-const GIA_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZWI4YWE5Ni05NTkzLTQwZTMtYTEzYS02ZGVmZThhYWRkNzciLCJleHAiOjE1OTM1MTE5OTUsInByb3ZpZGVyX3V1aWQiOiJkN2EyNTI4MS0yOTVjLTQ3YzktODZjMi1mMjFjNTFhZGIxM2IifQ.SStYGpLPWEPN1rP3tWeWCPl7IAyBIBAnj47QVkNp5ls";
-
 const BASE_URL = process.env.VUE_APP_BASE_URL;
 
+import session from "../services/session";
+
 export default {
+    async validateResponse(response) {
+        if (!response.ok)
+            throw new Error(await response.text())
+    },
     async fetchCollections() {
+        const headers = {
+            Accept: `application/json`
+        }
+
+        if (session.authenticated())
+            headers.Authorization = `Bearer ${session.token}`;
+
         const response = await fetch(`${BASE_URL}/collections`, {
-            headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
-                Accept: `application/geojson`
-            }
+            headers: headers
         });
+        
+        await this.validateResponse(response);
 
         const data = await response.json();
         return data;
@@ -17,10 +27,12 @@ export default {
     async fetchCollection(collectionId) {
         const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
-                Accept: `application/geojson`
+                Authorization: `Bearer ${session.token}`,
+                Accept: `application/json`
             }
         });
+
+        await this.validateResponse(response);
 
         const data = await response.json();
         return data;
@@ -30,79 +42,96 @@ export default {
             `${BASE_URL}/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
                 headers: {
-                    Authorization: `Bearer ${GIA_TOKEN}`,
+                    Authorization: `Bearer ${session.token}`,
                     Accept: `application/geojson`
                 },
                 signal: signal
             }
         );
 
+        await this.validateResponse(response);
+
         const data = await response.json();
         return data;
     },
     async addItems(collectionId, items) {
-        await fetch(
+        const response = await fetch(
             `${BASE_URL}/collections/${collectionId}/items`,
             {
                 method: "PUT",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${GIA_TOKEN}`,
-                    'Content-Type': `application/geojson`
+                    Authorization: `Bearer ${session.token}`,
+                    'Content-Type': `application/geojson`,
+                    Accept: `application/geojson`
                 },
                 body: JSON.stringify({
                     type: "FeatureCollection",
                     features: items
                 })
             }
-        );
+        )
+        
+        await this.validateResponse(response);
     },
     async removeItems(items) {
         for (const item of items) {
-            await fetch(`${BASE_URL}/items/${item.id}`, {
+            const response = await fetch(`${BASE_URL}/items/${item.id}`, {
                 method: "DELETE",
                 mode: "cors",
                 headers: {
-                    Authorization: `Bearer ${GIA_TOKEN}`
+                    Authorization: `Bearer ${session.token}`
                 }
             });
+
+            await this.validateResponse(response);
         }
     },
     async updateItems(items) {
-        await fetch(`${BASE_URL}/items`, {
+        const response = await fetch(`${BASE_URL}/items`, {
             method: "PUT",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
-                'Content-Type': `application/geojson`
+                Authorization: `Bearer ${session.token}`,
+                'Content-Type': `application/geojson`,
+                Accept: 'application/geojson'
             },
             body: JSON.stringify({
                 type: "FeatureCollection",
                 features: items
             })
         });
+
+        await this.validateResponse(response);
     },
     async create(collectionName, isPublic) {
-        return await fetch(`${BASE_URL}/collections`, {
+        const response = await fetch(`${BASE_URL}/collections`, {
             method: "POST",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`,
-                'Content-Type': `application/geojson`
+                Authorization: `Bearer ${session.token}`,
+                'Content-Type': `application/json`
             },
             body: JSON.stringify({
                 name: collectionName,
                 is_public: isPublic
             })
         });
+
+        await this.validateResponse(response);
+
+        const collection = await response.json();
+        return collection;
     },
     async remove(collectionId) {
-        await fetch(`${BASE_URL}/collections/${collectionId}`, {
+        const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             method: "DELETE",
             mode: "cors",
             headers: {
-                Authorization: `Bearer ${GIA_TOKEN}`
+                Authorization: `Bearer ${session.token}`
             }
         });
+
+        await this.validateResponse(response);
     }
 };

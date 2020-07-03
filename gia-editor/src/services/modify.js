@@ -33,11 +33,16 @@ export default {
     },
     async commit(ctx, collectionId) {
         if (ctx.addedItems.length > 0) {
-            await collection.addItems(
+            const success = await collection.addItems(
                 collectionId,
                 ctx.addedItems
             );
-            ctx.addedItems = [];
+            
+            if (success) {
+                ctx.addedItems = [];
+            } else {
+                return false;
+            }
         }
 
         if (ctx.removedItems.length > 0) {
@@ -49,5 +54,7 @@ export default {
             await collection.updateItems(ctx.modifiedItems);
             ctx.modifiedItems = [];
         }
+
+        return true;
     }
 };

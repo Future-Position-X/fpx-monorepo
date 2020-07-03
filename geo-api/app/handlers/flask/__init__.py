@@ -1,5 +1,5 @@
 from app import app
-from flask_jwt_extended import get_raw_jwt
+from flask_jwt_extended import get_raw_jwt, get_jwt_identity
 from uuid import UUID
 
 
@@ -19,3 +19,7 @@ def response(status_code, payload=None):
 def get_provider_uuid_from_request():
     claims = get_raw_jwt()
     return UUID(claims.get('provider_uuid', '00000000-0000-0000-0000-000000000000'))
+
+
+def get_user_uuid_from_request():
+    return get_jwt_identity()

@@ -7,6 +7,7 @@
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
+              @updateCodeView="onUpdateCodeView"
               ref="collectionTree"
             />
             <div class="my-2 export-image-button">
@@ -17,6 +18,7 @@
                     color="primary"
                     v-on="on"
                     @click="onDeleteCollectionsClick"
+                    :disabled="!authenticated"
                   >Delete selected collections</v-btn>
                 </template>
                 <v-card>
@@ -43,9 +45,23 @@
                 small
                 color="primary"
                 style="width: 100px; float: right;"
+                :disabled="!authenticated"
               >Create</v-btn>
               <br clear="both" />
             </div>
+            <v-text-field v-model="email" label="Email"></v-text-field>
+            <v-text-field
+            v-model="password" 
+            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPassword ? 'text' : 'password'"
+            @click:append="showPassword = !showPassword" 
+            label="Password"></v-text-field>
+            <v-btn
+                @click="onLoginClick"
+                small
+                color="primary"
+                style="width: 100px; float: right;"
+              >Login</v-btn>
           </v-col>
           <v-col sm="7" style="padding: 0px;">
             <Map
@@ -66,27 +82,12 @@
           >
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
-              <!--<v-tab>Table</v-tab>-->
               <v-tab-item style="display: flex;flex-direction:column; flex:1;">
-                <v-select
-                  :items="renderedCollections"
-                  label="Collection"
-                  @change="dropDownChange"
-                  v-model="selectedCollection"
-                  class="select-collection"
-                  item-text="name"
-                  return-object
-                ></v-select>
                 <Code v-bind:code="code" style="display: flex;flex-direction:column; flex:1;" />
               </v-tab-item>
-              <!--
-              <v-tab-item>
-                <Table />
-              </v-tab-item>
-              -->
             </v-tabs>
             <div class="my-2 save-button">
-              <v-btn small color="primary" @click="onSaveClick">Save modifications</v-btn>
+              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated">Save modifications</v-btn>
             </div>
             <div class="my-2 export-image-button">
               <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
@@ -106,6 +107,7 @@ import Tree from "./components/Tree.vue";
 import leafletImage from "leaflet-image";
 import collection from "./services/collection";
 import modify from "./services/modify";
+import session from "./services/session";
 
 export default {
   name: "App",
@@ -133,7 +135,11 @@ export default {
       collectionColors: {},
       modCtx: modify.createContext(),
       showDeleteConfirmationDialog: false,
-      deleteConfirmationContent: null
+      deleteConfirmationContent: null,
+      authenticated: false,
+      email: null,
+      password: null,
+      showPassword: false
     };
   },
   watch: {
@@ -150,9 +156,8 @@ export default {
       console.log("geojsonUpdateFromMap");
       this.code = JSON.stringify(geojson, null, "  ");
     },
-    selectionUpdate(ids) {
+    async selectionUpdate(ids) {
       let index = -1;
-
       this.renderedCollections.forEach(c => {
         if (!ids.includes(c.uuid)) {
           if (this.selectedCollection == c) {
@@ -163,15 +168,22 @@ export default {
           this.$delete(this.geojson, c.uuid);
         }
       });
-
       this.renderedCollections.splice(index, 1);
       this.fetchGeoJson(
         ids.filter(id => !this.renderedCollections.some(c => c.uuid == id))
-      );
+      ).then(() => this.updateFetchedCollections(ids));
     },
-    dropDownChange(selected) {
-      console.log("selected: ", selected);
-      this.code = this.geojson[selected.uuid].geojson;
+    updateFetchedCollections(ids) {
+        this.renderedCollections = this.collections.filter(c =>
+          ids.some(id => id == c.uuid)
+        );
+        this.selectedCollection = this.collections.filter(
+          c => c.uuid == ids[ids.length - 1]
+        )[0];
+    },
+    onUpdateCodeView(collection) {
+      this.code = this.geojson[collection.uuid].geojson;
+      this.selectedCollection = collection;
     },
     zoomUpdate(zoom) {
       if (this.zoom != zoom) {
@@ -228,8 +240,9 @@ export default {
       modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      await modify.commit(this.modCtx, this.selectedCollection.uuid);
-      this.modCtx = modify.createContext();
+      await modify.commit(this.modCtx, this.selectedCollection.uuid)
+        .then(() => this.modCtx = modify.createContext())
+        .catch((error) => console.error("backend error: ", error));
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
@@ -256,16 +269,36 @@ export default {
       }
     },
     async onCreateCollectionClick() {
-      const res = await collection.create(
-        this.collectionName,
-        this.isPublicCollection
-      );
-
-      if (res.status == 201) {
-        const id = await res.text();
-        const coll = await collection.fetchCollection(id);
-        this.$refs.collectionTree.addCollection(coll);
+      await collection.create(this.collectionName, this.isPublicCollection)
+      .then((coll) => this.$refs.collectionTree.addCollection(coll))
+      .catch((error) => console.error("backend error: ", error));
+    },
+    async showAvailableCollections(){
+      this.collections = await collection.fetchCollections();
+      let sortedCollections = groupBy(this.collections, "name");
+      const len = Object.keys(sortedCollections).length;
+      let i = 1;
+      for (let [key, value] of Object.entries(sortedCollections)) {
+        console.log(key);
+        let color = selectColor(i, len);
+        value = value.map(c => {
+          c.color = color;
+          this.collectionColors[c.uuid] = color;
+          return c;
+        });
+        i++;
       }
+
+      this.sortedCollections = sortedCollections;
+      console.log("sorted collections", this.sortedCollections);
+    },
+    async onLoginClick() {
+      await session.create(this.email, this.password)
+      .then(() => {
+        this.authenticated = true;
+        return this.showAvailableCollections();
+      })
+      .catch((error) => console.error("backend error: ", error));
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
@@ -289,7 +322,7 @@ export default {
             this.dataBounds,
             simplify
           );
-
+          
           this.$set(this.geojson, id, {
             id: id,
             color: this.collectionColors[id],
@@ -301,33 +334,16 @@ export default {
           return;
         }
       }
-      this.renderedCollections = this.collections.filter(c =>
-        ids.some(id => id == c.uuid)
-      );
-      this.selectedCollection = this.collections.filter(
-        c => c.uuid == ids[ids.length - 1]
-      )[0];
       this.isFetchingItems = false;
     }
   },
   async created() {
-    this.collections = await collection.fetchCollections();
-    let sortedCollections = groupBy(this.collections, "name");
-    const len = Object.keys(sortedCollections).length;
-    let i = 1;
-    for (let [key, value] of Object.entries(sortedCollections)) {
-      console.log(key);
-      let color = selectColor(i, len);
-      value = value.map(c => {
-        c.color = color;
-        this.collectionColors[c.uuid] = color;
-        return c;
-      });
-      i++;
+    if (process.env.NODE_ENV == "development") {
+      this.email = process.env.VUE_APP_EMAIL;
+      this.password = process.env.VUE_APP_PASSWORD;
     }
 
-    this.sortedCollections = sortedCollections;
-    console.log("sorted collections", this.sortedCollections);
+    await this.showAvailableCollections();
   }
 };
 

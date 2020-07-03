@@ -5,7 +5,8 @@ from flask_restx import Resource, fields
 from app import api
 from app.dto import UserDTO
 from app.handlers.flask import (
-    get_provider_uuid_from_request
+    get_provider_uuid_from_request,
+    get_user_uuid_from_request
 )
 from app.services.user import get_users, create_user, get_user, update_user, delete_user
 
@@ -27,6 +28,10 @@ create_user_model = api.model('CreateUser', {
 
 update_user_model = api.model('UpdateUser', {
     'password': fields.String(description='password')
+})
+
+get_uuid_model = api.model('GetUuid', {
+    'uuid': fields.String(description='uuid')
 })
 
 
@@ -78,3 +83,13 @@ class UserApi(Resource):
         provider_uuid = get_provider_uuid_from_request()
         delete_user(provider_uuid, user_uuid)
         return '', 204
+
+
+@ns.route('/uuid')
+class UserUuidApi(Resource):
+    @jwt_required
+    @ns.doc('get_user_uuid', security=None)
+    @ns.marshal_with(get_uuid_model)
+    def get(self):
+        user_uuid = get_user_uuid_from_request()
+        return {'uuid': user_uuid}, 200

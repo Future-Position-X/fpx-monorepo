@@ -16,8 +16,12 @@ export default {
     };
   },
   watch: {
-    code(val) {
-      this.editor.set(val);
+    code: {
+      handler: function(val) {
+        console.log("editor.set: ", val);
+        this.editor.set(val);
+      },
+      deep: true
     }
   },
   methods: {

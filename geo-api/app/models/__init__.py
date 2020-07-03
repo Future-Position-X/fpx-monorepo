@@ -296,7 +296,7 @@ class Item(BaseModel):
         filters['collection_uuid'] = collection_uuid
         where, exec_dict = cls.create_where(filters)
         result = cls.session \
-            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], False).label('geometry'),
+            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
                    cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
             .join(Item.collection) \
