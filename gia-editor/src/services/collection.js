@@ -38,13 +38,17 @@ export default {
         return data;
     },
     async fetchItems(signal, collectionId, bounds, simplify) {
+        const headers = {
+            Accept: `application/geojson`
+        }
+
+        if (session.authenticated())
+            headers.Authorization = `Bearer ${session.token}`;
+
         const response = await fetch(
             `${BASE_URL}/collections/${collectionId}/items?limit=100000&spatial_filter=intersect&spatial_filter.envelope.xmin=${bounds.minX}&spatial_filter.envelope.ymin=${bounds.minY}&spatial_filter.envelope.xmax=${bounds.maxX}&spatial_filter.envelope.ymax=${bounds.maxY}&simplify=${simplify}`,
             {
-                headers: {
-                    Authorization: `Bearer ${session.token}`,
-                    Accept: `application/geojson`
-                },
+                headers: headers,
                 signal: signal
             }
         );
