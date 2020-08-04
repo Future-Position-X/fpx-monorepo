@@ -14,24 +14,28 @@
         v-for="layer in layers"
         v-bind:key="layer.id"
         :geojson="layer.geojson"
-        :options="options"
-        :options-style="styleFunction(layer.color)"
+        :options="options(layer)"
+        :options-style="styleFunction(layer)"
       />
     </l-map>
   </div>
 </template>
 
 <script>
+
+import * as L from "leaflet";
+import { svgMarker } from "../vendor/svg-icon";
+
 import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
+
 import "leaflet/dist/leaflet.css";
 
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
-import { Icon } from "leaflet";
 
-delete Icon.Default.prototype._getIconUrl;
-Icon.Default.mergeOptions({
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
   iconUrl: require("leaflet/dist/images/marker-icon.png"),
   shadowUrl: require("leaflet/dist/images/marker-shadow.png")
@@ -97,15 +101,40 @@ export default {
         maxY: neCoord.lat
       }
     },
-    styleFunction(color) {
+    pointStyle(layer) {
+          return {
+            weight: 1,
+            color: layer.color,
+            opacity: 0.5,
+            fillColor: layer.color,
+            fillOpacity: 0.3 + Math.random() * 0.05,
+            iconOptions: { color: layer.color }
+          };
+    },
+    style(layer) {
+          return {
+            weight: 1,
+            color: "#333",
+            opacity: 0.5,
+            fillColor: layer.color,
+            fillOpacity: 0.3 + Math.random() * 0.05,
+          };
+    },
+    options(layer) {
+      return {
+        onEachFeature: this.onEachFeatureFunction,
+        pointToLayer: (feature, latlng) => {
+          return svgMarker(latlng, this.pointStyle(layer))
+        }
+      };
+    },
+    styleFunction(layer) {
       return () => {
-        return {
-          weight: 1,
-          color: "#333",
-          opacity: 0.5,
-          fillColor: color,
-          fillOpacity: 0.3 + Math.random() * 0.05,
-        };
+        if(layer.geojson.features[0].geometry.type == 'Point') {
+          return this.pointStyle(layer)
+        } else {
+          return this.style(layer)
+        }
       };
     }
   },
@@ -177,11 +206,6 @@ export default {
     });
   },
   computed: {
-    options() {
-      return {
-        onEachFeature: this.onEachFeatureFunction
-      };
-    },
     onEachFeatureFunction() {
       /*
       if (!this.enableTooltip) {
