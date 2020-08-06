@@ -37,7 +37,7 @@ def generate_paths_from_points(points_collection_uuid, obstacles_collection_uuid
         executor.shutdown(wait=True)
         return [a.save_walking_path(store_uuid) for a in agents if a.moved_distance > 0]
 
-def get_sequence_for_sensor(provider_uuid, uuid, filters, start_date, end_date):
+def get_sequence_for_sensor(provider_uuid, uuid, start_date, end_date):
     pre_start_date = datetime.strptime(start_date, '%Y-%m-%d') - timedelta(hours=168, minutes=0)
     sensor_item = ItemDB.find_accessible_or_fail(provider_uuid, uuid)
     sid = sensor_item.properties["Cid"]

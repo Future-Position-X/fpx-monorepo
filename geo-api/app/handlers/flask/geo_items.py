@@ -163,14 +163,21 @@ def feature_collection_to_items(collection_uuid: UUID, geojson: Any) -> List[Ite
 
 ns = api.namespace('items', description='Item operations', path='/')
 
+visualizer_params = {
+    'width': {'description': 'Resulting image width', 'type': 'int', 'default': 1280},
+    'height': {'description': 'Resulting image height', 'type': 'int', 'default': 1280},
+    'map_id': {'description': 'Mapbox style, valid ids = [streets-v11, outdoors-v11, light-v10, dark-v10, satellite-v9, satellite-streets-v11]', 'type': 'string', 'default': 'dark-v10'}
+}
+
 get_params = {
     'offset': {'description': 'offset', 'type': 'int', 'default': 0},
     'limit': {'description': 'limit', 'type': 'int', 'default': 20},
     'valid': {'description': 'valid', 'type': 'bool', 'default': False}
 }
+
 filter_params = {
     'property_filter': {'description': 'Property filter like someprop=X,otherprop=Y', 'type': 'string', 'default': None},
-    'spatial_filter': {'description': 'Spatial filter, one of within-distance, within, intersect', 'default': None},
+    'spatial_filter': {'description': 'Spatial filter, one of within-distance, within, intersect', 'type':'string', 'default': None},
     'spatial_filter.distance.x': {'description': 'x (longitude) value of Point for within-distance', 'type': 'float'},
     'spatial_filter.distance.y': {'description': 'y (latitude) value of Point for within-distance', 'type': 'float'},
     'spatial_filter.distance.d': {'description': 'distance value from Point for within-distance', 'type': 'float'},
@@ -182,6 +189,18 @@ filter_params = {
 
 transform_params = {
     'simplify': {'description': 'Tolerance for simplification of geometries', 'type': 'float', 'default': 0.0}
+}
+
+generate_walking_paths_params = {
+    'steps': {'description': 'Steps the agents will try to move in the environment', 'type': 'int', 'default': 200},
+    'agents': {'description': 'Number of agents to spawn in the simulation.', 'type': 'int', 'default': 50},
+    'starting_points_collection_uuid': {'description': 'Collection uuid to be used for starting points.', 'type': 'string', 'default': None},
+    'environment_collection_uuid': {'description': 'Collection to be used for environment.', 'type': 'string', 'default': None}
+}
+
+prediction_for_sensor_item_params = {
+    'startdate': {'description': 'A date presented in YY-mm-dd format', 'type': 'string', 'default': None},
+    'enddate': {'description': 'A date presented in YY-mm-dd format', 'type': 'string', 'default': None},
 }
 
 @ns.route('/collections/<uuid:collection_uuid>/items')
@@ -211,7 +230,7 @@ class CollectionItemListApi(Resource):
 
     @get.support('image/png')
     @jwt_optional
-    @ns.doc('get_collection_items', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.doc('get_collection_items', security=None, params={**get_params, **filter_params, **transform_params, **visualizer_params})
     def get_png(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         filters = get_filters_from_request()
@@ -278,7 +297,7 @@ class CollectionItemListApi(Resource):
 class CollectionItemApi(Resource):
     @accept_fallback
     @jwt_optional
-    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.doc('get_item', security=None)
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
@@ -287,7 +306,7 @@ class CollectionItemApi(Resource):
 
     @get.support('application/geojson')
     @jwt_optional
-    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.doc('get_item', security=None)
     def get_geojson(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
@@ -296,7 +315,7 @@ class CollectionItemApi(Resource):
 
     @get.support('image/png')
     @jwt_optional
-    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params, **visualizer_params})
     def get_png(self, collection_uuid, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_collection_item(provider_uuid, collection_uuid, item_uuid)
@@ -315,6 +334,7 @@ class CollectionItemApi(Resource):
 
 
 @ns.route('/collections/by_name/<collection_name>/items')
+@ns.param('collection_name', 'The collection name')
 class CollectionByNameItemListApi(Resource):
     @accept_fallback
     @jwt_optional
@@ -342,7 +362,7 @@ class CollectionByNameItemListApi(Resource):
 
     @get.support('image/png')
     @jwt_optional
-    @ns.doc('get_collection_items_by_name', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.doc('get_collection_items_by_name', security=None, params={**get_params, **filter_params, **transform_params, **visualizer_params})
     def get_png(self, collection_name):
         filters = get_filters_from_request()
         provider_uuid = get_provider_uuid_from_request()
@@ -401,7 +421,7 @@ class ItemApi(Resource):
 
     @get.support('image/png')
     @jwt_optional
-    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.doc('get_item', security=None, params={**get_params, **filter_params, **transform_params, **visualizer_params})
     def get_png(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item = get_item(provider_uuid, item_uuid)
@@ -430,18 +450,19 @@ class ItemApi(Resource):
 
 
 @ns.route('/collections/<collection_uuid>/items/ai/generate/walkingpaths')
+@ns.param('collection_uuid', 'The collection identifier')
 class GenerateWalkingPathsApi(Resource):
     @jwt_required
     @ns.marshal_list_with(bulk_create_item_response_model)
+    @ns.doc('generate_walking_paths', security=None, params={**generate_walking_paths_params})
     def post(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        filters = get_filters_from_request()
-        filters.update({
+        filters = {
             "offset": 0,
             "limit": 1000,
             "property_filter": None,
             "valid": False
-        })
+        }
         steps = min(int(request.args.get('steps', '200')), 200)
         n_agents = min(int(request.args.get('agents', '50')), 50)
         starting_points_collection_uuid = request.args.get('starting_points_collection_uuid')
@@ -459,13 +480,13 @@ class GenerateWalkingPathsApi(Resource):
 
 
 @ns.route('/items/<item_uuid>/ai/sequence')
+@ns.param('item_uuid', 'The item identifier')
 class PredictionForSensorItemApi(Resource):
     @jwt_optional
-    @ns.doc('get_prediction', security=None)
+    @ns.doc('prediction_for_sensor_item', security=None, params={**prediction_for_sensor_item_params})
     def get(self, item_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        filters = get_filters_from_request()
         start_date = request.args.get('startdate')
         end_date = request.args.get('enddate')
-        sequence_data = get_sequence_for_sensor(provider_uuid, item_uuid, filters, start_date, end_date)
+        sequence_data = get_sequence_for_sensor(provider_uuid, item_uuid, start_date, end_date)
         return sequence_data, 200
