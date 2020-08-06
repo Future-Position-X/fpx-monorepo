@@ -44,6 +44,13 @@ collections = [
         'batch_size': 1000
     },
     {
+        'name': 'basemap-elevations',
+        'url': 'https://catalog.gavle.se/store/1/resource/90',
+        'filename': 'baskarta_hojder.json',
+        'uuid': 'fc9b4a8b-05be-4c90-8e47-f8b5a8e6dbc3',
+        'batch_size': 1000
+    },
+    {
         'name': 'school-assignment-areas',
         'url': 'https://catalog.gavle.se/store/1/resource/374',
         'filename': 'skolplaceringsomraden.json',
@@ -315,13 +322,6 @@ collections = [
         'filename': 'baskarta_adress.json',
         'uuid': '2609dd38-2af4-4438-8c62-a0b7150678be',
         'batch_size': 1000
-    },
-    {
-        'name': 'basemap-elevations',
-        'url': 'https://catalog.gavle.se/store/1/resource/90',
-        'filename': 'baskarta_hojder.json',
-        'uuid': 'fc9b4a8b-05be-4c90-8e47-f8b5a8e6dbc3',
-        'batch_size': 1000
     }
 ]
 
@@ -342,14 +342,15 @@ def import_collection(collection):
 
     headers = {
         'Authorization': 'Bearer ' + GIA_TOKEN,
-        'Content-Type': 'application/geojson',
-        'Accept': 'application/geojson'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     }
 
     length = len(json_obj['features'])
     offset = 0
+    collection_start_time = time.time()
     while offset < length:
-        start_time = time.time()
+        batch_start_time = time.time()
         batch_size = min(length - offset, collection['batch_size'])
 
         fc = {
@@ -357,14 +358,15 @@ def import_collection(collection):
                 "features": json_obj['features'][offset:offset+batch_size]
         }
 
-        url = 'http://dev.gia.fpx.se/collections/' + collection['uuid'] + '/items'
+        url = 'http://localhost:8080/collections/' + collection['uuid'] + '/items'
 
         if offset == 0:
             res = requests.post(url, json=fc, headers=headers)
         else:
             res = requests.put(url, json=fc, headers=headers)
-        print("--- dataset %s, batch %s, %s seconds ---" % (collection["name"], offset, (time.time() - start_time)))
+        print("--- dataset %s, batch %s, %s seconds ---" % (collection["name"], offset, (time.time() - batch_start_time)))
         offset += batch_size
+    print("--- dataset %s, %s seconds ---" % (collection["name"], (time.time() - collection_start_time)))
     return res
 
 
@@ -377,10 +379,10 @@ else:
 
 print(request_collections)
 
-#with concurrent.futures.ThreadPoolExecutor() as executor:
-    #for collection, status in zip(request_collections, executor.map(import_collection, request_collections)):
-        #print('%s returned: %s' % (collection['name'], status))
+with concurrent.futures.ProcessPoolExecutor() as executor:
+    for collection, status in zip(request_collections, executor.map(import_collection, request_collections)):
+        print('%s returned: %s' % (collection['name'], status))
 
-for collection in request_collections:
-    response = import_collection(collection)
-    print('%s returned: %s' % (collection['name'], response))
+#for collection in request_collections:
+#    response = import_collection(collection)
+#    print('%s returned: %s' % (collection['name'], response))
