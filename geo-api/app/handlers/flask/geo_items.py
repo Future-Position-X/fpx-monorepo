@@ -461,7 +461,8 @@ class GenerateWalkingPathsApi(Resource):
             "offset": 0,
             "limit": 1000,
             "property_filter": None,
-            "valid": False
+            "valid": False,
+            "spatial_filter": None,
         }
         steps = min(int(request.args.get('steps', '200')), 200)
         n_agents = min(int(request.args.get('agents', '50')), 50)
