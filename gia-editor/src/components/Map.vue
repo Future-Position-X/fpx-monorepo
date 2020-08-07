@@ -30,16 +30,65 @@ import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
 
 import "leaflet/dist/leaflet.css";
 
-import "@geoman-io/leaflet-geoman-free";
+//import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
+import glify from 'leaflet.glify';
 
+console.log(glify)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
   iconUrl: require("leaflet/dist/images/marker-icon.png"),
   shadowUrl: require("leaflet/dist/images/marker-shadow.png")
 });
+
+const fromHex = function (hex) {
+  console.log(hex);
+    if (hex.length < 6) return null;
+    hex = hex.toLowerCase();
+
+    if (hex[0] === '#') {
+      hex = hex.substring(1, hex.length);
+    }
+
+    const r = parseInt(hex[0] + hex[1], 16)
+      , g = parseInt(hex[2] + hex[3], 16)
+      , b = parseInt(hex[4] + hex[5], 16)
+      ;
+    return { r: r / 255, g: g / 255, b: b / 255 };
+  };
+const hslToHex = function(hslStr) {
+  console.log(hslStr);
+  let {res, h, s, l} = hslStr.match(/hsl\((?<h>\d+.?\d*),(?<s>\d+.?\d*)%,(?<l>\d+.?\d*)%\)/).groups
+  console.log(res,h,s,l);
+  h /= 360;
+  s /= 100;
+  l /= 100;
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l; // achromatic
+  } else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  const toHex = x => {
+    const hex = Math.round(x * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
 
 export default {
   name: "Map",
@@ -66,12 +115,14 @@ export default {
       this.$emit("boundsUpdate", bounds);
     },
     zoomUpdate(zoom) {
+      /*
       if (zoom >= 16) {
         this.$refs.theMap.mapObject.pm.addControls();
       } else {
         this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
         this.$refs.theMap.mapObject.pm.removeControls();
       }
+      */
       this.$emit("zoomUpdate", zoom);
     },
     getDataBounds() {
@@ -143,13 +194,55 @@ export default {
       handler: function() {
         console.log("geojson updated, ", this.geojson);
         const layers = Object.values(this.geojson);
-        this.layers = layers;
+        glify.Shapes.instances.forEach(element => {
+          element.remove();
+        });
+        glify.Shapes.instances =[];
+        glify.Points.instances.forEach(element => {
+          element.remove();
+        });
+        glify.Points.instances =[];
+        glify.Lines.instances.forEach(element => {
+          element.remove();
+        });
+        glify.Lines.instances =[];
+
+        for (let layer of layers) {
+          console.log(layer.geojson.features[0].geometry.type);
+          if(layer.geojson.features[0].geometry.type == 'Point') {
+            glify.points({
+              size: 10,
+              latitudeKey: 1,
+              longitudeKey: 0,
+              map: this.$refs.theMap.mapObject,
+              data: layer.geojson,
+              color: fromHex(hslToHex(layer.color)),
+            });
+          } else if(['LineString', 'MultiLineString'].includes(layer.geojson.features[0].geometry.type)) {
+            glify.lines({
+              size: 0.1,
+              latitudeKey: 1,
+              longitudeKey: 0,
+              map: this.$refs.theMap.mapObject,
+              data: layer.geojson,
+              color: fromHex(hslToHex(layer.color)),
+            });
+          } else {
+            glify.shapes({
+              map: this.$refs.theMap.mapObject, 
+              data: layer.geojson,
+              color: fromHex(hslToHex(layer.color)),
+            });
+          }
+        }
+        // this.layers = layers;
       },
       deep: true
     }
   },
   mounted() {
     this.$nextTick(() => {
+      /*
       const map = this.$refs.theMap.mapObject;
       map.pm.addControls({
         position: "topleft",
@@ -203,6 +296,7 @@ export default {
           this.$emit("itemAdded", feature);
         }
       });
+      */
     });
   },
   computed: {

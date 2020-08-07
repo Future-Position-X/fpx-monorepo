@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy_mixins import ActiveRecordMixin, SmartQueryMixin, ReprMixin, SerializeMixin, \
     ModelNotFoundError
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 
 from app import db
 
@@ -295,16 +295,47 @@ class Item(BaseModel):
         filters['provider_uuid'] = provider_uuid
         filters['collection_uuid'] = collection_uuid
         where, exec_dict = cls.create_where(filters)
+        # subquery1 = cls.session.query(cls.uuid, ((func.ST_Dump(func.ST_Intersection(cls.geometry, func.ST_MakeEnvelope(filters['spatial_filter']['envelope']['xmin'], filters['spatial_filter']['envelope']['ymin'], filters['spatial_filter']['envelope']['xmax'], filters['spatial_filter']['envelope']['ymax'])))).geom).label("geom1")).filter(db.text("collection_uuid='bcaaa89d-3541-4344-8478-ff941a57611b'")).subquery()
+        # subquery2 = cls.session.query(subquery1.c.uuid, (func.ST_LineMerge(func.ST_Union(subquery1.c.geom1)).label("geos"))).group_by(subquery1.c.uuid).subquery()
+        # result = cls.session \
+        #     .query(cls.uuid, func.ST_Simplify(subquery2.c.geos, transforms['simplify'], True).label('geometry'),
+        #            cls.properties, cls.collection_uuid, cls.created_at,
+        #            cls.updated_at, cls.revision) \
+        #     .join(Item.collection) \
+        #     .join(subquery2, cls.uuid == subquery2.c.uuid) \
+        #     .filter(db.text(where)) \
+        #     .params(exec_dict) \
+        #     .order_by(cls.uuid) \
+        #     .limit(filters['limit']) \
+        #     .offset(filters['offset']) \
+        #     .all()
+
         result = cls.session \
-            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+            .query(cls.uuid, func.ST_Simplify((func.ST_Dump(func.ST_Intersection(cls.geometry, func.ST_MakeEnvelope(filters['spatial_filter']['envelope']['xmin'], filters['spatial_filter']['envelope']['ymin'], filters['spatial_filter']['envelope']['xmax'], filters['spatial_filter']['envelope']['ymax'])))).geom, transforms['simplify'], True).label('geometry'),
                    cls.properties, cls.collection_uuid, cls.created_at,
                    cls.updated_at, cls.revision) \
             .join(Item.collection) \
             .filter(db.text(where)) \
             .params(exec_dict) \
+            .order_by(cls.uuid) \
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
+
+        # case_stmt = case([
+        #     (func.ST_GeometryType(cls.geometry) == "ST_LineString", func.ST_Simplify((func.ST_Dump(func.ST_Intersection(cls.geometry, func.ST_MakeEnvelope(filters['spatial_filter']['envelope']['xmin'], filters['spatial_filter']['envelope']['ymin'], filters['spatial_filter']['envelope']['xmax'], filters['spatial_filter']['envelope']['ymax'])))).geom, transforms['simplify'], True))
+        # ], else_=func.ST_Simplify(cls.geometry, transforms['simplify'], True))
+        # result = cls.session \
+        #     .query(cls.uuid, case_stmt.label('geometry'),
+        #            cls.properties, cls.collection_uuid, cls.created_at,
+        #            cls.updated_at, cls.revision) \
+        #     .join(Item.collection) \
+        #     .filter(db.text(where)) \
+        #     .params(exec_dict) \
+        #     .order_by(cls.uuid) \
+        #     .limit(filters['limit']) \
+        #     .offset(filters['offset']) \
+        #     .all()
         result = [ItemDTO(**dict(zip(res.keys(), res))) for res in result if
                   filters['valid'] is False or res[1] is not None]
         return result

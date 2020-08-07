@@ -278,8 +278,8 @@ export default {
       let sortedCollections = groupBy(this.collections, "name");
       const len = Object.keys(sortedCollections).length;
       let i = 1;
-      for (let [key, value] of Object.entries(sortedCollections)) {
-        console.log(key);
+      for (let value of Object.values(sortedCollections)) {
+
         let color = selectColor(i, len);
         value = value.map(c => {
           c.color = color;

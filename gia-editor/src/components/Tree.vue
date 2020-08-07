@@ -57,7 +57,6 @@ export default {
       const collections = [];
       
       for (let [key, value] of Object.entries(this.sortedCollections)) {
-        console.log(key, value)
         collections.push({
           id: key,
           name: key,
@@ -90,7 +89,6 @@ export default {
           editable: false,
           children: collections.filter((coll) => coll.provider_uuid != provider_uuid),
         })
-        console.log(this.items);
         this.open = ["Owned collections"];
     }
   },
