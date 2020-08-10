@@ -21,6 +21,11 @@ def test_user_creation_transaction_rollback(client, user):
     assert res.status_code == 200
     assert ('test-user@test.se' not in str(res.data))
 
+def test_user_creation_errors(client, user):
+    res = client.post('/users', json=user_attributes())
+    assert res.status_code == 201
+    res = client.post('/users', json=user_attributes())
+    assert res.status_code == 400
 
 def test_get_users(client, user):
     res = client.get('/users')

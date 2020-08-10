@@ -17,9 +17,9 @@ def get_users() -> List[UserDTO]:
 def create_user(user: UserDTO) -> UserDTO:
     user.password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     User.session.begin_nested()
-    provider = create_provider(ProviderDTO(name=user.email))
-    user.provider_uuid = provider.uuid
     try:
+        provider = create_provider(ProviderDTO(name=user.email))
+        user.provider_uuid = provider.uuid
         user = User.create(**user.to_dict())
     except IntegrityError as e:
         User.session.rollback()

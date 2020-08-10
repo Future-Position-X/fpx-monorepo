@@ -2,7 +2,7 @@
   <div style="height: 100%">
     <l-map
       ref="theMap"
-      :options="{preferCanvas: true}"
+      :options="mapOptions()"
       :zoom="zoom"
       :center="center"
       style="height: 100vh; width: 100%"
@@ -14,7 +14,7 @@
         v-for="layer in layers"
         v-bind:key="layer.id"
         :geojson="layer.geojson"
-        :options="options(layer)"
+        :options="geoJsonOptions(layer)"
         :options-style="styleFunction(layer)"
       />
     </l-map>
@@ -33,7 +33,6 @@ import "leaflet/dist/leaflet.css";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
-
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -46,11 +45,12 @@ export default {
   components: {
     LMap,
     LTileLayer,
-    LGeoJson
+    LGeoJson,
   },
   props: ["geojson"],
   data() {
     return {
+      renderer: L.canvas(),
       zoom: 16,
       center: [60.675744, 17.1402],
       layers: [],
@@ -120,7 +120,7 @@ export default {
             fillOpacity: 0.3 + Math.random() * 0.05,
           };
     },
-    options(layer) {
+    geoJsonOptions(layer) {
       return {
         onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
@@ -136,6 +136,14 @@ export default {
           return this.style(layer)
         }
       };
+    },
+    mapOptions() {
+      const renderer = L.canvas();
+      renderer.on("update", () => console.log("Render data done!"));
+      return {
+        preferCanvas: true,
+        renderer,
+      }
     }
   },
   watch: {

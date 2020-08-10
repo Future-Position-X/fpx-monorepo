@@ -50,7 +50,7 @@ class CollectionListApi(Resource):
     @jwt_required
     @ns.doc('create_collection')
     @ns.expect(create_collection_model)
-    @ns.marshal_with(collection_model, 201)
+    @ns.marshal_with(collection_model, code=201)
     def post(self):
         provider_uuid = get_provider_uuid_from_request()
         collection = CollectionDTO(**request.get_json())
@@ -97,7 +97,7 @@ class CollectionApi(Resource):
 class CollectionCopyApi(Resource):
     @jwt_required
     @ns.doc('copy_collection')
-    @ns.marshal_with(collection_model, 201)
+    @ns.marshal_with(collection_model, code=201)
     def post(self, src_collection_uuid, dst_collection_uuid=None):
         provider_uuid = get_provider_uuid_from_request()
         try:
