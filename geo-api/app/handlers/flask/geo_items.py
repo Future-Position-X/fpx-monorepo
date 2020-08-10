@@ -228,7 +228,7 @@ class CollectionItemListApi(Resource):
     @jwt_required
     @ns.doc('create_collection_item')
     @ns.expect(create_item_model)
-    @ns.marshal_with(item_model, 201)
+    @ns.marshal_with(item_model, code=201)
     def post(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
         item_new = ItemDTO(**request.get_json())

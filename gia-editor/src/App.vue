@@ -10,7 +10,7 @@
               @updateCodeView="onUpdateCodeView"
               ref="collectionTree"
             />
-            <div class="my-2 export-image-button">
+            <div class="my-2 export-image-button ma-3 flex-grow-0 flex-shrink-0">
               <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290">
                 <template v-slot:activator="{ on }">
                   <v-btn
@@ -19,6 +19,7 @@
                     v-on="on"
                     @click="onDeleteCollectionsClick"
                     :disabled="!authenticated"
+                    block
                   >Delete selected collections</v-btn>
                 </template>
                 <v-card>
@@ -32,36 +33,66 @@
                 </v-card>
               </v-dialog>
             </div>
-
-            <div style="background-color: #EEE">
-              <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-              <v-checkbox
-                v-model="isPublicCollection"
-                label="Public"
-                style="width: 100px; float: left;"
-              ></v-checkbox>
-              <v-btn
-                @click="onCreateCollectionClick"
-                small
-                color="primary"
-                style="width: 100px; float: right;"
-                :disabled="!authenticated"
-              >Create</v-btn>
-              <br clear="both" />
+            <v-row style="background-color: #EEE">
+              <v-col>
+                <div class="mx-3 pa-0">
+                  <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+                  <div class="d-flex justify-space-between ma-3">
+                    <v-checkbox
+                      v-model="isPublicCollection"
+                      label="Public"
+                      class="ma-0 pa-0"
+                    ></v-checkbox>
+                    <v-btn
+                      @click="onCreateCollectionClick"
+                      small
+                      color="primary"
+                      :disabled="!authenticated"
+                    >Create</v-btn>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+            <div v-show="!authenticated">
+              <div class="ma-3">
+              <v-text-field v-model="email" label="Email"></v-text-field>
+              <v-text-field
+              v-model="password" 
+              :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="showPassword ? 'text' : 'password'"
+              @click:append="showPassword = !showPassword" 
+              label="Password"></v-text-field>
+              </div>
+              <div class="d-flex justify-space-between ma-3">
+                <v-btn
+                    @click="onLoginClick"
+                    small
+                    color="primary"
+                    class=""
+                  >Login</v-btn>
+                <v-btn
+                    @click="onRegisterClick"
+                    small
+                    color="primary"
+                    class=""
+                  >Register</v-btn>
+              </div>
             </div>
-            <v-text-field v-model="email" label="Email"></v-text-field>
-            <v-text-field
-            v-model="password" 
-            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPassword ? 'text' : 'password'"
-            @click:append="showPassword = !showPassword" 
-            label="Password"></v-text-field>
-            <v-btn
-                @click="onLoginClick"
-                small
-                color="primary"
-                style="width: 100px; float: right;"
-              >Login</v-btn>
+            <div v-show="authenticated">
+              <div class="d-flex justify-space-between ma-3">
+              <v-btn
+                  @click="onLogoutClick"
+                  small
+                  color="primary"
+                  class=""
+                >Logout</v-btn>
+              </div>
+            </div>
+            <div class="ma-3">
+            <v-alert v-for="alert in alerts.slice().reverse()" :key="alert.ts" :type="alert.type" dismissible>
+              {{alert.message}}
+            </v-alert>
+            </div>
           </v-col>
           <v-col sm="7" style="padding: 0px;">
             <Map
@@ -108,6 +139,7 @@ import leafletImage from "leaflet-image";
 import collection from "./services/collection";
 import modify from "./services/modify";
 import session from "./services/session";
+import user from "./services/user";
 
 export default {
   name: "App",
@@ -139,7 +171,8 @@ export default {
       authenticated: false,
       email: null,
       password: null,
-      showPassword: false
+      showPassword: false,
+      alerts: [],
     };
   },
   watch: {
@@ -278,8 +311,7 @@ export default {
       let sortedCollections = groupBy(this.collections, "name");
       const len = Object.keys(sortedCollections).length;
       let i = 1;
-      for (let [key, value] of Object.entries(sortedCollections)) {
-        console.log(key);
+      for (let value of Object.values(sortedCollections)) {
         let color = selectColor(i, len);
         value = value.map(c => {
           c.color = color;
@@ -292,13 +324,41 @@ export default {
       this.sortedCollections = sortedCollections;
       console.log("sorted collections", this.sortedCollections);
     },
+    addAlert(alert) {
+      this.alerts.push({...alert, ...{ts: Date()}});
+    },
     async onLoginClick() {
       await session.create(this.email, this.password)
       .then(() => {
+        this.addAlert({"type": "success", "message": "Login successful"})
         this.authenticated = true;
         return this.showAvailableCollections();
       })
-      .catch((error) => console.error("backend error: ", error));
+      .catch((error) => {
+        console.error("backend error: ", error)
+        this.addAlert({"type": "error", "message": "Could not login! Check credentials"})
+        });
+    },
+    async onLogoutClick() {
+      session.clear();
+      this.authenticated = false;
+      return this.showAvailableCollections();
+    },
+    async onRegisterClick() {
+      await user.create(this.email, this.password)
+      .then(() => {
+        this.addAlert({"type": "success", "message": "Register successful"})
+        session.create(this.email, this.password)
+        .then(() => {
+        this.addAlert({"type": "success", "message": "Login successful"})
+          this.authenticated = true;
+          return this.showAvailableCollections();
+        })
+      })
+      .catch((error) => {
+        console.error("backend error: ", error)
+        this.addAlert({"type": "error", "message": "Could not register!"})
+        });
     },
     async fetchGeoJson(ids) {
       if (this.fetchController) {
@@ -376,6 +436,7 @@ const selectColor = function(colorNum, colors) {
   padding: 0;
   width: 100%;
 }
+
 .theme--light.v-tabs.mytabs > .v-tabs-bar {
   background: transparent;
 }

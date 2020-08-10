@@ -26,6 +26,10 @@ export default {
         this.token = (await response.json())["token"]
         this.user = await this.getUser();
     },
+    clear() {
+        this.token = null;
+        this.user = null;
+    },
     authenticated() {
         return !!this.token;
     },
