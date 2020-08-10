@@ -37,7 +37,7 @@
               <v-col>
                 <div class="mx-3 pa-0">
                   <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-                  <div class="d-flex justify-space-between ma-3">
+                  <div class="d-flex justify-space-between ma-0">
                     <v-checkbox
                       v-model="isPublicCollection"
                       label="Public"
