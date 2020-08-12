@@ -199,20 +199,36 @@ class Item(BaseModel):
             """
 
         if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "intersect":
-            where += """
-            AND ST_Intersects(
-                geometry,
-                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax)
-            )
-            """
+            if "envelope" in filters["spatial_filter"]:
+                where += """
+                AND ST_Intersects(
+                    geometry,
+                    ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax)
+                )
+                """
+            else:
+                where += """
+                AND ST_Intersects(
+                    geometry,
+                    ST_MakePoint(:point_lng, :point_lat)
+                )
+                """
 
         if filters["spatial_filter"] and filters["spatial_filter"]["filter"] == "within":
-            where += """
-            AND ST_Within(
-                geometry,
-                ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax)
-            )
-            """
+            if "envelope" in filters["spatial_filter"]:
+                where += """
+                AND ST_Within(
+                    geometry,
+                    ST_MakeEnvelope(:envelope_xmin, :envelope_ymin, :envelope_xmax, :envelope_ymax)
+                )
+                """
+            else:
+                where += """
+                AND ST_Intersects(
+                    geometry,
+                    ST_MakePoint(:point_lng, :point_lat)
+                )
+                """
 
         exec_dict = {
             "provider_uuid": filters.get('provider_uuid'),
@@ -223,12 +239,18 @@ class Item(BaseModel):
         }
 
         if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within', 'intersect']:
-            exec_dict.update({
-                "envelope_xmin": filters['spatial_filter']['envelope']['xmin'],
-                "envelope_ymin": filters['spatial_filter']['envelope']['ymin'],
-                "envelope_xmax": filters['spatial_filter']['envelope']['xmax'],
-                "envelope_ymax": filters['spatial_filter']['envelope']['ymax'],
-            })
+            if "envelope" in filters['spatial_filter']:
+                exec_dict.update({
+                    "envelope_xmin": filters['spatial_filter']['envelope']['xmin'],
+                    "envelope_ymin": filters['spatial_filter']['envelope']['ymin'],
+                    "envelope_xmax": filters['spatial_filter']['envelope']['xmax'],
+                    "envelope_ymax": filters['spatial_filter']['envelope']['ymax'],
+                })
+            else:
+                exec_dict.update({
+                    "point_lng": filters['spatial_filter']['point']['lng'],
+                    "point_lat": filters['spatial_filter']['point']['lat']
+                })
 
         if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within-distance']:
             exec_dict.update({
@@ -288,6 +310,24 @@ class Item(BaseModel):
             .limit(filters['limit']) \
             .offset(filters['offset']) \
             .all()
+        return result
+
+    @classmethod
+    def get_with_simplify(cls, provider_uuid, filters, transforms):
+        filters['provider_uuid'] = provider_uuid
+        where, exec_dict = cls.create_where(filters)
+        result = cls.session \
+            .query(cls.uuid, func.ST_Simplify(cls.geometry, transforms['simplify'], True).label('geometry'),
+                   cls.properties, cls.collection_uuid, cls.created_at,
+                   cls.updated_at, cls.revision) \
+            .join(Item.collection) \
+            .filter(db.text(where)) \
+            .params(exec_dict) \
+            .limit(filters['limit']) \
+            .offset(filters['offset']) \
+            .all()
+        result = [ItemDTO(**dict(zip(res.keys(), res))) for res in result if
+                  filters['valid'] is False or res[1] is not None]
         return result
 
     @classmethod

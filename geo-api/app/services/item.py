@@ -4,6 +4,10 @@ from uuid import UUID, uuid4
 from app.dto import ItemDTO
 from app.models import Item, to_models, Collection, to_model
 
+def get_items(provider_uuid: UUID, filters, transforms) -> List[ItemDTO]:
+    items = Item.get_with_simplify(provider_uuid, filters, transforms)
+    return to_models(items, ItemDTO)
+
 
 def get_collection_items(provider_uuid: UUID, collection_uuid: UUID, filters, transforms) -> List[ItemDTO]:
     items = Item.find_by_collection_uuid_with_simplify(provider_uuid, collection_uuid, filters, transforms)
