@@ -529,13 +529,13 @@ class GenerateWalkingPathsApi(Resource):
     @ns.doc('generate_walking_paths', security=None, params={**generate_walking_paths_params})
     def post(self, collection_uuid):
         provider_uuid = get_provider_uuid_from_request()
-        filters = {
+        filters = get_filters_from_request()
+        filters.update({
             "offset": 0,
             "limit": 1000,
             "property_filter": None,
-            "valid": False,
-            "spatial_filter": None,
-        }
+            "valid": False
+        })
         steps = min(int(request.args.get('steps', '200')), 200)
         n_agents = min(int(request.args.get('agents', '50')), 50)
         starting_points_collection_uuid = request.args.get('starting_points_collection_uuid')
