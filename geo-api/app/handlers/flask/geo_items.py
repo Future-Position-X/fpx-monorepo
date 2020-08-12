@@ -114,6 +114,16 @@ def get_spatial_filter(params):
             None
 
 
+def get_collection_uuid_filter(params):
+    value = params.get('collection_uuids')
+
+    if not value:
+        return None
+
+    collection_uuids = value.split(',')
+    return collection_uuids if len(collection_uuids) > 0 else None
+
+
 def get_transforms_from_request():
     simplify = 0.0
     params = request.args
@@ -132,6 +142,7 @@ def get_filters_from_request():
     property_filter = None
     valid = False
     spatial_filter = None
+    collection_uuids = None
     params = request.args
 
     if params is not None:
@@ -140,6 +151,7 @@ def get_filters_from_request():
         property_filter = params.get('property_filter', property_filter)
         valid = bool(strtobool(params.get('valid', 'false')))
         spatial_filter = get_spatial_filter(params)
+        collection_uuids = get_collection_uuid_filter(params)
 
     return {
         "offset": offset,
@@ -147,6 +159,7 @@ def get_filters_from_request():
         "property_filter": property_filter,
         "valid": valid,
         "spatial_filter": spatial_filter,
+        "collection_uuids": collection_uuids
     }
 
 
@@ -198,7 +211,8 @@ filter_params = {
     'spatial_filter.envelope.ymax': {'description': 'ymax of envelope for spatial filter within or intersect'},
     'spatial_filter.envelope.xmax': {'description': 'xmax of envelope for spatial filter within or intersect'},
     'spatial_filter.point.lng': {'description': 'longitude of point for spatial filter within or intersect'},
-    'spatial_filter.point.lat': {'description': 'latitude of point for spatial filter within or intersect'}
+    'spatial_filter.point.lat': {'description': 'latitude of point for spatial filter within or intersect'},
+    'collection_uuids': {'description', 'Comma-separated collection uuid filter'}
 }
 
 transform_params = {
