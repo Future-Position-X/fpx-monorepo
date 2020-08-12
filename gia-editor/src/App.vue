@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-content>
-      <v-container :fluid="true" style="padding: 0px">
+      <v-container :fluid="true" class="pa-0">
         <v-row no-gutter>
           <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden;">
             <Tree
@@ -94,7 +94,12 @@
             </v-alert>
             </div>
           </v-col>
-          <v-col sm="7" style="padding: 0px;">
+          <v-col sm="7" style="padding: 0px; position: relative;">
+            <v-progress-circular
+              :indeterminate="isLoading"
+              color="light-blue"
+              style="position: absolute; top: 4px; right: 4px; z-index: 999"
+            ></v-progress-circular>
             <Map
               v-show="!showDeleteConfirmationDialog"
               ref="leafletMap"
@@ -105,6 +110,7 @@
               @itemAdded="itemAddedToMap"
               @itemModified="itemModified"
               @zoomUpdate="zoomUpdate"
+              @rendered="onRendered"
             />
           </v-col>
           <v-col
@@ -141,6 +147,8 @@ import modify from "./services/modify";
 import session from "./services/session";
 import user from "./services/user";
 
+import debounce from "debounce-async";
+
 export default {
   name: "App",
   components: {
@@ -162,6 +170,8 @@ export default {
       dataBounds: null,
       fetchController: null,
       isFetchingItems: false,
+      isLoading: false,
+      isLoadingUuids: new Set(),
       collectionName: null,
       isPublicCollection: false,
       collectionColors: {},
@@ -177,17 +187,33 @@ export default {
   },
   watch: {
     selectedCollection(val) {
-      this.code = val == null ? {} : this.geojson[val.uuid].geojson;
+      console.debug("selectedCollection");
+      const geojson = val == null ? {} : this.geojson[val.uuid].geojson;
+      this.updateCodeView(geojson)
     }
   },
   methods: {
     geojsonUpdateFromCode(geojson) {
-      console.log("geojsonUpdateFromCode");
+      console.debug("geojsonUpdateFromCode");
       this.geojson = geojson;
     },
     geojsonUpdateFromMap(geojson) {
-      console.log("geojsonUpdateFromMap");
-      this.code = JSON.stringify(geojson, null, "  ");
+      console.debug("geojsonUpdateFromMap");
+      this.updateCodeView(geojson);
+    },
+    onRendered(id) {
+      console.debug("onRendered")
+      this.isLoadingUuids.delete(id);
+      this.isLoading = this.isLoadingUuids.length > 0;
+    },
+    updateCodeView(val) {
+      console.debug("update code view");
+      const dataLength = JSON.stringify(val).length;
+      if(dataLength > 1000*1000) {
+        this.code = "Data too big, " + dataLength;
+      } else {
+        this.code = val;
+      }
     },
     async selectionUpdate(ids) {
       let index = -1;
@@ -202,11 +228,14 @@ export default {
         }
       });
       this.renderedCollections.splice(index, 1);
-      this.fetchGeoJson(
+      console.debug("selectionUpdate");
+      await this.fetchGeoJson(
         ids.filter(id => !this.renderedCollections.some(c => c.uuid == id))
-      ).then(() => this.updateFetchedCollections(ids));
+      );
+      this.updateFetchedCollections(ids);
     },
     updateFetchedCollections(ids) {
+        console.debug("updateFetchedCollections");
         this.renderedCollections = this.collections.filter(c =>
           ids.some(id => id == c.uuid)
         );
@@ -215,17 +244,18 @@ export default {
         )[0];
     },
     onUpdateCodeView(collection) {
-      this.code = this.geojson[collection.uuid].geojson;
+      console.debug("onUpdateCodeView");
       this.selectedCollection = collection;
     },
     zoomUpdate(zoom) {
       if (this.zoom != zoom) {
+        console.debug("zoomUpdate");
         this.fetchGeoJson(this.renderedCollections.map(c => c.uuid));
       }
       this.zoom = zoom;
       /*
       if (Math.abs(this.zoom - zoom) >= 2) {
-        console.log("fetched zoom exceeded");
+        console.debug("fetched zoom exceeded");
         this.zoom = zoom;
         this.fetchGeoJson(this.renderedCollectionIds);
       }
@@ -248,10 +278,10 @@ export default {
             this.dataBounds.maxY < this.bounds.maxY;
 
           if (boundsExceeded) {
-            console.log("data bounds exceeded");
+            console.debug("data bounds exceeded");
             this.fetchGeoJson(this.renderedCollections.map(c => c.uuid));
           } else {
-            console.log("still within fetched bounds");
+            console.debug("still within fetched bounds");
           }
         }
       }
@@ -261,13 +291,13 @@ export default {
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
       let i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
-      this.code = fc;
+      this.updateCodeView(fc);
     },
     itemAddedToMap(item) {
       modify.onItemAdded(this.modCtx, item);
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
       fc.features.push(item);
-      this.code = fc;
+      this.updateCodeView(fc);
     },
     itemModified(item) {
       modify.onItemModified(this.modCtx, item);
@@ -322,7 +352,7 @@ export default {
       }
 
       this.sortedCollections = sortedCollections;
-      console.log("sorted collections", this.sortedCollections);
+      console.debug("sorted collections");
     },
     addAlert(alert) {
       this.alerts.push({...alert, ...{ts: Date()}});
@@ -361,25 +391,39 @@ export default {
         });
     },
     async fetchGeoJson(ids) {
+      console.debug("fetchGeoJson")
+      this.isLoading = ids.length > 0 || this.isLoading;
+      if (this.debouncedDoFetchGeoJson==undefined) {
+        this.debouncedDoFetchGeoJson = debounce(this.doFetchGeoJson, 100);
+      }
+      try {
+        await this.debouncedDoFetchGeoJson(ids)
+      } catch (err) {
+        console.log(err);
+        return;
+      }
+    },
+    async doFetchGeoJson(ids) {
+      console.debug("doFetchGeoJson")
       if (this.fetchController) {
         this.fetchController.abort();
       }
 
-      this.isFetchingItems = true;
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
-      this.dataBounds = this.$refs.leafletMap.getDataBounds();
+      const dataBounds = this.$refs.leafletMap.getDataBounds();
       const simplify =
         this.zoom >= 16
           ? 0.0
-          : Math.abs(this.dataBounds.maxX - this.dataBounds.minX) / 2500;
+          : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
 
       for (let id of ids) {
+        this.isLoadingUuids.add(id);
         try {
           const data = await collection.fetchItems(
             signal,
             id,
-            this.dataBounds,
+            dataBounds,
             simplify
           );
           
@@ -388,15 +432,19 @@ export default {
             color: this.collectionColors[id],
             geojson: data
           });
+          console.debug("$set geojson")
         } catch (err) {
           console.log(err);
-          this.isFetchingItems = false;
+          this.isLoadingUuids.delete(id)
           return;
         }
       }
+      this.dataBounds = dataBounds;
       this.isFetchingItems = false;
     }
   },
+
+  
   async created() {
     if (process.env.NODE_ENV == "development") {
       this.email = process.env.VUE_APP_EMAIL;

@@ -18,7 +18,7 @@ export default {
   watch: {
     code: {
       handler: function(val) {
-        console.log("editor.set: ", val);
+        console.debug("editor.set");
         this.editor.set(val);
       },
       deep: true
@@ -26,18 +26,18 @@ export default {
   },
   methods: {
     /*onCmCodeChange(newCode, changeObj) {
-      console.log("codeChanged: ", changeObj);
+      console.debug("codeChanged: ", changeObj);
       if (changeObj.origin == "setValue") return;
       try {
         const newCodeParsed = JSON.parse(newCode);
         if (gjv.valid(newCodeParsed)) {
-          console.log("newCode is valid!");
+          console.debug("newCode is valid!");
           this.$emit("geojsonUpdate", newCodeParsed);
         } else {
-          console.log("newCode is NOT valid!");
+          console.debug("newCode is NOT valid!");
         }
       } catch (e) {
-        console.log(e.name);
+        console.debug(e.name);
       }
     }*/
   },

@@ -89,7 +89,6 @@ export default {
           editable: false,
           children: collections.filter((coll) => coll.provider_uuid != provider_uuid),
         })
-        console.log(this.items);
         this.open = ["Owned collections"];
     }
   },
