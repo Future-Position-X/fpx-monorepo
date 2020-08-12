@@ -263,6 +263,19 @@ class Item(BaseModel):
             where = Item.append_property_filter_to_where_clause(
                 where, filters["property_filter"], exec_dict)
 
+        if filters["collection_uuids"] is not None:
+            where += " AND ("
+
+            for i, collection_uuid in enumerate(filters["collection_uuids"]):
+                where += "collection_uuid = :collection_uuid_" + str(i)
+                
+                if i < (len(filters['collection_uuids']) - 1):
+                    where += " OR "
+                
+                exec_dict["collection_uuid_" + str(i)] = collection_uuid
+
+            where += ")"
+
         return where, exec_dict
 
     @classmethod
