@@ -263,7 +263,7 @@ class Item(BaseModel):
             where = Item.append_property_filter_to_where_clause(
                 where, filters["property_filter"], exec_dict)
 
-        if filters["collection_uuids"] is not None:
+        if filters.get("collection_uuids", None) is not None:
             where += " AND ("
 
             for i, collection_uuid in enumerate(filters["collection_uuids"]):
