@@ -25,7 +25,7 @@ from app.services.ai import (
 )
 from app.services.item import get_collection_items, create_collection_item, add_collection_items, \
     replace_collection_items, delete_collection_items, get_collection_item, delete_collection_item, \
-    get_collection_items_by_name, \
+    get_collection_items_by_name, get_items, \
     update_items, get_item, delete_item, update_item
 from lib.visualizer.renderer import render_feature_collection, render_feature
 
@@ -58,6 +58,10 @@ update_item_model = api.model('UpdateItem', {
 bulk_create_item_response_model = api.model('BulkItemResponse', {
     'uuid': fields.String(description='uuid'),
 })
+
+
+def valid_point(params):
+    return 'spatial_filter.point.lng' in params and 'spatial_filter.point.lat' in params
 
 
 def valid_envelope(params):
@@ -96,6 +100,14 @@ def get_spatial_filter(params):
                     'xmin': float(params.get('spatial_filter.envelope.xmin')),
                     'ymax': float(params.get('spatial_filter.envelope.ymax')),
                     'xmax': float(params.get('spatial_filter.envelope.xmax'))
+                }
+            }
+        elif params.get('spatial_filter') in ['within', 'intersect'] and valid_point(params):
+            return {
+                'filter': params.get('spatial_filter'),
+                'point': {
+                    'lng': float(params.get('spatial_filter.point.lng')),
+                    'lat': float(params.get('spatial_filter.point.lat'))
                 }
             }
         else:
@@ -184,7 +196,9 @@ filter_params = {
     'spatial_filter.envelope.ymin': {'description': 'ymin of envelope for spatial filter within or intersect'},
     'spatial_filter.envelope.xmin': {'description': 'xmin of envelope for spatial filter within or intersect'},
     'spatial_filter.envelope.ymax': {'description': 'ymax of envelope for spatial filter within or intersect'},
-    'spatial_filter.envelope.xmax': {'description': 'xmax of envelope for spatial filter within or intersect'}
+    'spatial_filter.envelope.xmax': {'description': 'xmax of envelope for spatial filter within or intersect'},
+    'spatial_filter.point.lng': {'description': 'longitude of point for spatial filter within or intersect'},
+    'spatial_filter.point.lat': {'description': 'latitude of point for spatial filter within or intersect'}
 }
 
 transform_params = {
@@ -202,6 +216,50 @@ prediction_for_sensor_item_params = {
     'startdate': {'description': 'A date presented in YY-mm-dd format', 'type': 'string', 'default': None},
     'enddate': {'description': 'A date presented in YY-mm-dd format', 'type': 'string', 'default': None},
 }
+
+
+@ns.route('/items')
+class ItemListApi(Resource):
+    @accept_fallback
+    @jwt_optional
+    @ns.doc('get_items', security=None, params={**get_params, **filter_params, **transform_params})
+    @ns.marshal_list_with(item_model)
+    def get(self):
+        provider_uuid = get_provider_uuid_from_request()
+        filters = get_filters_from_request()
+        transforms = get_transforms_from_request()
+        items = get_items(provider_uuid, filters, transforms)
+        return items
+
+
+    @get.support('application/geojson')
+    @jwt_optional
+    @ns.doc('get_items', security=None, params={**get_params, **filter_params, **transform_params})
+    def get_geojson(self):
+        provider_uuid = get_provider_uuid_from_request()
+        filters = get_filters_from_request()
+        transforms = get_transforms_from_request()
+        items = get_items(provider_uuid, filters, transforms)
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if item.geometry is not None]
+        feature_collection = dumps(FeatureCollection(features))
+        return flask.make_response(feature_collection, 200)
+
+
+    @get.support('image/png')
+    @jwt_optional
+    @ns.doc('get_items', security=None, params={**get_params, **filter_params, **transform_params, **visualizer_params})
+    def get_png(self):
+        provider_uuid = get_provider_uuid_from_request()
+        filters = get_filters_from_request()
+        transforms = get_transforms_from_request()
+        items = get_items(provider_uuid, filters, transforms)
+        features = [Feature(to_shape(item.geometry), item.properties, str(item.uuid)) for item in items if
+                    item.geometry is not None]
+        feature_collection = FeatureCollection(features).__geo_interface__
+        params = get_visualizer_params_from_request()
+        data = render_feature_collection(feature_collection, params['width'], params['height'], params['map_id'])
+        return flask.make_response(data, 200, {'content-type': 'image/png'})
+
 
 @ns.route('/collections/<uuid:collection_uuid>/items')
 class CollectionItemListApi(Resource):
