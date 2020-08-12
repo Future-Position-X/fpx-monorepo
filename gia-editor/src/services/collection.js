@@ -8,6 +8,7 @@ export default {
             throw new Error(await response.text())
     },
     async fetchCollections() {
+        console.log("fetchCollections");
         const headers = {
             Accept: `application/json`
         }
@@ -25,6 +26,7 @@ export default {
         return data;
     },
     async fetchCollection(collectionId) {
+        console.log("fetchCollection");
         const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
@@ -38,6 +40,7 @@ export default {
         return data;
     },
     async fetchItems(signal, collectionId, bounds, simplify) {
+        console.log("fetchItems");
         const headers = {
             Accept: `application/geojson`
         }
@@ -56,6 +59,7 @@ export default {
         await this.validateResponse(response);
 
         const data = await response.json();
+        console.log("items fetched")
         return data;
     },
     async addItems(collectionId, items) {

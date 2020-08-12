@@ -2,7 +2,7 @@
   <div style="height: 100%">
     <l-map
       ref="theMap"
-      :options="mapOptions()"
+      :options="{preferCanvas:true}"
       :zoom="zoom"
       :center="center"
       style="height: 100vh; width: 100%"
@@ -10,12 +10,13 @@
       @update:zoom="zoomUpdate"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-geo-json
+      <gia-geo-json
         v-for="layer in layers"
         v-bind:key="layer.id"
         :geojson="layer.geojson"
         :options="geoJsonOptions(layer)"
         :options-style="styleFunction(layer)"
+        @rendered="onRendered"
       />
     </l-map>
   </div>
@@ -26,7 +27,9 @@
 import * as L from "leaflet";
 import { svgMarker } from "../vendor/svg-icon";
 
-import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
+import { LMap, LTileLayer } from "vue2-leaflet";
+
+import GiaGeoJson from "./GiaGeoJson"
 
 import "leaflet/dist/leaflet.css";
 
@@ -45,12 +48,11 @@ export default {
   components: {
     LMap,
     LTileLayer,
-    LGeoJson,
+    GiaGeoJson,
   },
   props: ["geojson"],
   data() {
     return {
-      renderer: L.canvas(),
       zoom: 16,
       center: [60.675744, 17.1402],
       layers: [],
@@ -62,15 +64,20 @@ export default {
     };
   },
   methods: {
+    onRendered(id) {
+      this.$emit("rendered", id);
+    },
     boundsUpdate(bounds) {
       this.$emit("boundsUpdate", bounds);
     },
     zoomUpdate(zoom) {
-      if (zoom >= 16) {
-        this.$refs.theMap.mapObject.pm.addControls();
-      } else {
-        this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
-        this.$refs.theMap.mapObject.pm.removeControls();
+      if(this.$refs.theMap.mapObject.pm !== undefined) {
+        if (zoom >= 16) {
+          this.$refs.theMap.mapObject.pm.addControls();
+        } else {
+          this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
+          this.$refs.theMap.mapObject.pm.removeControls();
+        }
       }
       this.$emit("zoomUpdate", zoom);
     },
@@ -122,10 +129,11 @@ export default {
     },
     geoJsonOptions(layer) {
       return {
-        onEachFeature: this.onEachFeatureFunction,
+        // onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
           return svgMarker(latlng, this.pointStyle(layer))
-        }
+        },
+        layer: layer
       };
     },
     styleFunction(layer) {
@@ -137,19 +145,11 @@ export default {
         }
       };
     },
-    mapOptions() {
-      const renderer = L.canvas();
-      renderer.on("update", () => console.log("Render data done!"));
-      return {
-        preferCanvas: true,
-        renderer,
-      }
-    }
   },
   watch: {
     geojson: {
       handler: function() {
-        console.log("geojson updated, ", this.geojson);
+        console.debug("geojson updated");
         const layers = Object.values(this.geojson);
         this.layers = layers;
       },
@@ -157,21 +157,24 @@ export default {
     }
   },
   mounted() {
+    console.debug("Map mounted")
     this.$nextTick(() => {
       const map = this.$refs.theMap.mapObject;
-      map.pm.addControls({
-        position: "topleft",
-        drawCircle: false
-      });
+      if(map.pm !== undefined) {
+        map.pm.addControls({
+          position: "topleft",
+          drawCircle: false
+        });
+      }
 
       map.on("pm:globaldragmodetoggled", e => {
-        console.log("globaldragmodetoggled: ", e);
+        console.debug("globaldragmodetoggled: ", e);
 
         if (e.enabled) {
           for (let id in e.map._layers) {
-            console.log("id: ", id);
+            console.debug("id: ", id);
             e.map._layers[id].on("pm:edit", ev => {
-              console.log("edit: ", ev);
+              console.debug("edit: ", ev);
               if (ev.target.feature != null) {
                 this.$emit("itemModified", ev.target.toGeoJSON());
               }
@@ -181,13 +184,13 @@ export default {
       });
 
       map.on("pm:globaleditmodetoggled", e => {
-        console.log("globaleditmodetoggled: ", e);
+        console.debug("globaleditmodetoggled: ", e);
 
         if (e.enabled) {
           for (let id in e.map._layers) {
-            console.log("id: ", id);
+            console.debug("id: ", id);
             e.map._layers[id].on("pm:edit", ev => {
-              console.log("edit: ", ev);
+              console.debug("edit: ", ev);
               if (ev.target.feature != null) {
                 this.$emit("itemModified", ev.target.toGeoJSON());
               }
@@ -225,9 +228,9 @@ export default {
       /*
       return (feature, layer) => {
         layer.on('pm:update', args => {
-            console.log("pm:update", args);
+            console.debug("pm:update", args);
             const geojsonData = this.$refs.geojsonChild.getGeoJSONData();
-            console.log(geojsonData);
+            console.debug(geojsonData);
             this.$emit('geojsonUpdate', geojsonData)
         });
         
@@ -244,18 +247,5 @@ export default {
       */
     }
   }
-  /*
-  async created() {
-    this.loading = true;
-    const response = await fetch("https://dev.gia.fpx.se/collections/by_name/obstacles/items/geojson?offset=0&limit=1000", {
-        headers: {
-            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIwNDQ1Y2Y5YS0zMTc4LTQ5YmQtODM5Mi1kNjA4ZWNkZGVmMWMiLCJuYmYiOjE1ODU2NDIyNDYsImV4cCI6MTkwMTE3NTA0NiwiaWF0IjoxNTg1NjQyMjQ2LCJpc3MiOiJnYXZsZWlubm92YXRpb25hcmVuYS5zZSIsImF1ZCI6Imh0dHBzOi8vYXBpLmdhdmxlaW5ub3ZhdGlvbmFyZW5hLnNlIn0.cFgPLVx11LSpb06qOo4GZojQYZG-lOEWHi6fDVbV9SI"
-        }
-    })
-    const data = await response.json();
-    this.geojson = data;
-    this.loading = false;
-  }
-  */
 };
 </script>
