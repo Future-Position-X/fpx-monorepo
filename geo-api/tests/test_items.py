@@ -378,3 +378,24 @@ def test_get_sequence(client, obstacles, sensors, collection):
 #
 #     #item2 = items[0]
 #     #print(item2.provider_uuid)
+
+def test_get_all_items(client):
+    res = client.get('/items', headers={'accept': 'application/json'})
+    assert res.status_code == 200
+    assert not ('FeatureCollection' in str(res.data))
+    items = json.loads(res.data.decode('utf-8'))
+    assert len(items) > 0
+
+
+def test_get_all_items_geojson(client):
+    res = client.get('/items', headers={'accept': 'application/geojson'})
+    assert res.status_code == 200
+    feature_collection = json.loads(res.data.decode('utf-8'))
+    assert len(feature_collection['features']) > 0
+
+
+def test_get_all_items_png(client):
+    res = client.get('/items', headers={'accept': 'image/png'})
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.data, mime=True)
+    assert mime == 'image/png'
