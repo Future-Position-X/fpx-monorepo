@@ -39,6 +39,8 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
             draw_linestring(draw_ctx, antialias, color,
                             geometry["coordinates"],
                             merc_center, zoom, img_size)
+        elif geo_type == "MultiPolygon":
+            draw_multi_polygon(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
 
     img = img.resize((img_size.width, img_size.height), Image.LANCZOS)
     bg_img.paste(img, (0, 0), img)
@@ -46,6 +48,12 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
     bg_img.save(buffer, "PNG")
     buffer.seek(0)
     return buffer.getvalue()
+
+
+def draw_multi_polygon(draw_ctx, antialias, color, multipolygon, merc_center, zoom, img_size):
+    for polygon in multipolygon:
+        for linestring in polygon:
+            draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom, img_size)
 
 
 def draw_polygon(draw_ctx, antialias, color, polygon, merc_center, zoom,
@@ -95,8 +103,8 @@ def get_center(bounds):
 def get_bounds(feature_collection):
     WGS84_LNG_MIN = -180.0
     WGS84_LNG_MAX = 180.0
-    WGS84_LAT_MIN = -180.0
-    WGS84_LAT_MAX = 180.0
+    WGS84_LAT_MIN = -90.0
+    WGS84_LAT_MAX = 90.0
 
     min_x = WGS84_LNG_MAX
     min_y = WGS84_LAT_MAX
@@ -110,7 +118,6 @@ def get_bounds(feature_collection):
         max_y = max(coord.lat, max_y)
 
     return Bounds(min_x, min_y, max_x, max_y)
-
 
 def enum_coords(feature_collection):
     for f in feature_collection["features"]:
@@ -126,6 +133,11 @@ def enum_coords(feature_collection):
                 yield Coords(point[0], point[1])
         elif geo_type == "Point":
             yield Coords(coords[0], coords[1])
+        elif geo_type == "MultiPolygon":
+            for polygon in coords:
+                for line_string in polygon:
+                    for point in line_string:
+                        yield Coords(point[0], point[1])
 
 
 def calculate_max_zoom(bounds, img_size, center, stroke_size):
@@ -155,6 +167,7 @@ def calculate_max_zoom(bounds, img_size, center, stroke_size):
 
         zoom -= 0.01
 
+    print("zoom:", zoom)
     return zoom
 
 
