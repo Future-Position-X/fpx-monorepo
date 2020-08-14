@@ -167,7 +167,6 @@ def calculate_max_zoom(bounds, img_size, center, stroke_size):
 
         zoom -= 0.01
 
-    print("zoom:", zoom)
     return zoom
 
 
