@@ -77,21 +77,43 @@ def draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom,
 
 
 def get_color(feature):
+    color = None
+    
     if "color" in feature["properties"]:
-        return parse_color(feature["properties"]["color"])
+        color = parse_color(feature["properties"]["color"])
+
+    if color is not None:
+        return color
 
     return (101, 232, 163, int(255 * 0.5))
 
 
 def parse_color(string):
-    tokens = string.replace("rgba(", "").replace(
-        ")", "").replace(",", "").split(" ")
-    r = int(tokens[0])
-    g = int(tokens[1])
-    b = int(tokens[2])
-    a = int(tokens[3])
+    buffer = ""
+    ints = [0, 0, 0, 0]
+    index = 0
 
-    return (r, g, b, a)
+    for i, char in enumerate(string):
+        if char == " ":
+            continue
+        
+        if char == "(":
+            if buffer != "rgba":
+                return None
+
+            buffer = ""
+        elif char == "," or char == ')':
+            ints[index] = int(buffer)
+            index += 1
+
+            if index == 4:
+                break
+
+            buffer = ""
+        else:
+            buffer += char
+
+    return (ints[0], ints[1], ints[2], ints[3])
 
 
 def get_center(bounds):
