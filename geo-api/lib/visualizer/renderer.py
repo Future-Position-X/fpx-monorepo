@@ -40,6 +40,8 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
             draw_multi_polygon(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
         elif geo_type == "MultiLineString":
             draw_multi_linestring(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+        elif geo_type == "Point":
+            draw_point(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
 
     img = img.resize((img_size.width, img_size.height), Image.LANCZOS)
     bg_img.paste(img, (0, 0), img)
@@ -78,6 +80,15 @@ def draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom,
         vectors.append((img_coord[0] * antialias, img_coord[1] * antialias))
 
     draw_ctx.line(ImagePath.Path(vectors), color, 10)
+
+
+def draw_point(draw_ctx, antialias, color, point, merc_center, zoom, img_size):
+    coord = Coords(point[0], point[1])
+    merc_point = transform_to_mercator(coord, zoom)
+    img_coord = convert_to_img_coords(merc_center, merc_point, img_size, 1)
+    draw_ctx.ellipse(
+        (img_coord[0] * antialias - 35, img_coord[1] * antialias - 35,
+        img_coord[0] * antialias + 35, img_coord[1] * antialias + 35), fill=color, outline=(0, 0, 0))
 
 
 def get_color(feature):
