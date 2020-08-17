@@ -33,14 +33,13 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
         color = get_color(f)
 
         if geo_type == "Polygon":
-            draw_polygon(draw_ctx, antialias, color, geometry["coordinates"],
-                         merc_center, zoom, img_size)
+            draw_polygon(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
         elif geo_type == "LineString":
-            draw_linestring(draw_ctx, antialias, color,
-                            geometry["coordinates"],
-                            merc_center, zoom, img_size)
+            draw_linestring(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
         elif geo_type == "MultiPolygon":
             draw_multi_polygon(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+        elif geo_type == "MultiLineString":
+            draw_multi_linestring(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
 
     img = img.resize((img_size.width, img_size.height), Image.LANCZOS)
     bg_img.paste(img, (0, 0), img)
@@ -48,6 +47,11 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
     bg_img.save(buffer, "PNG")
     buffer.seek(0)
     return buffer.getvalue()
+
+
+def draw_multi_linestring(draw_ctx, antialias, color, multilinestring, merc_center, zoom, img_size):
+    for linestring in multilinestring:
+        draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom, img_size)
 
 
 def draw_multi_polygon(draw_ctx, antialias, color, multipolygon, merc_center, zoom, img_size):
@@ -160,6 +164,10 @@ def enum_coords(feature_collection):
                 for line_string in polygon:
                     for point in line_string:
                         yield Coords(point[0], point[1])
+        elif geo_type == "MultiLineString":
+            for linestring in coords:
+                for point in linestring:
+                    yield Coords(point[0], point[1])
 
 
 def calculate_max_zoom(bounds, img_size, center, stroke_size):
