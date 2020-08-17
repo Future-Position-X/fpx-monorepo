@@ -210,7 +210,7 @@ class Item(BaseModel):
                 where += """
                 AND ST_Intersects(
                     geometry,
-                    ST_MakePoint(:point_lng, :point_lat)
+                    ST_MakePoint(:point_x, :point_y)
                 )
                 """
 
@@ -226,7 +226,7 @@ class Item(BaseModel):
                 where += """
                 AND ST_Intersects(
                     geometry,
-                    ST_MakePoint(:point_lng, :point_lat)
+                    ST_MakePoint(:point_x, :point_y)
                 )
                 """
 
@@ -248,8 +248,8 @@ class Item(BaseModel):
                 })
             else:
                 exec_dict.update({
-                    "point_lng": filters['spatial_filter']['point']['lng'],
-                    "point_lat": filters['spatial_filter']['point']['lat']
+                    "point_x": filters['spatial_filter']['point']['x'],
+                    "point_y": filters['spatial_filter']['point']['y']
                 })
 
         if filters['spatial_filter'] and filters['spatial_filter']['filter'] in ['within-distance']:

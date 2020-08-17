@@ -61,7 +61,7 @@ bulk_create_item_response_model = api.model('BulkItemResponse', {
 
 
 def valid_point(params):
-    return 'spatial_filter.point.lng' in params and 'spatial_filter.point.lat' in params
+    return 'spatial_filter.point.x' in params and 'spatial_filter.point.y' in params
 
 
 def valid_envelope(params):
@@ -106,8 +106,8 @@ def get_spatial_filter(params):
             return {
                 'filter': params.get('spatial_filter'),
                 'point': {
-                    'lng': float(params.get('spatial_filter.point.lng')),
-                    'lat': float(params.get('spatial_filter.point.lat'))
+                    'x': float(params.get('spatial_filter.point.x')),
+                    'y': float(params.get('spatial_filter.point.y'))
                 }
             }
         else:
@@ -210,8 +210,8 @@ filter_params = {
     'spatial_filter.envelope.xmin': {'description': 'xmin of envelope for spatial filter within or intersect'},
     'spatial_filter.envelope.ymax': {'description': 'ymax of envelope for spatial filter within or intersect'},
     'spatial_filter.envelope.xmax': {'description': 'xmax of envelope for spatial filter within or intersect'},
-    'spatial_filter.point.lng': {'description': 'longitude of point for spatial filter within or intersect'},
-    'spatial_filter.point.lat': {'description': 'latitude of point for spatial filter within or intersect'},
+    'spatial_filter.point.x': {'description': 'x (longitude) of point for spatial filter within or intersect'},
+    'spatial_filter.point.y': {'description': 'y (latitude) of point for spatial filter within or intersect'},
     'collection_uuids': {'description', 'Comma-separated collection uuid filter'}
 }
 
