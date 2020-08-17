@@ -42,6 +42,8 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
             draw_multi_linestring(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
         elif geo_type == "Point":
             draw_point(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+        elif geo_type == "MultiPoint":
+            draw_multi_point(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
 
     img = img.resize((img_size.width, img_size.height), Image.LANCZOS)
     bg_img.paste(img, (0, 0), img)
@@ -80,6 +82,11 @@ def draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom,
         vectors.append((img_coord[0] * antialias, img_coord[1] * antialias))
 
     draw_ctx.line(ImagePath.Path(vectors), color, 10)
+
+
+def draw_multi_point(draw_ctx, antialias, color, multipoint, merc_center, zoom, img_size):
+    for point in multipoint:
+        draw_point(draw_ctx, antialias, color, point, merc_center, img_size)
 
 
 def draw_point(draw_ctx, antialias, color, point, merc_center, zoom, img_size):
@@ -179,6 +186,9 @@ def enum_coords(feature_collection):
             for linestring in coords:
                 for point in linestring:
                     yield Coords(point[0], point[1])
+        elif geo_type == "MultiPoint":
+            for point in coords:
+                yield Coords(point[0], point[1])
 
 
 def calculate_max_zoom(bounds, img_size, center, stroke_size):
