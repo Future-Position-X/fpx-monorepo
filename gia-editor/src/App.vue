@@ -430,7 +430,7 @@ export default {
           this.$set(this.geojson, id, {
             id: id,
             color: this.collectionColors[id],
-            geojson: data
+            geojson: data,
           });
           console.debug("$set geojson")
         } catch (err) {

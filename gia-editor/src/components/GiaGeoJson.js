@@ -1,9 +1,10 @@
-import { optionsMerger, propsBinder, findRealParent, LayerGroupMixin, OptionsMixin  } from "vue2-leaflet";
-import { geoJSON, DomEvent } from 'leaflet';
+import {optionsMerger, propsBinder, findRealParent, LayerGroupMixin, OptionsMixin} from "vue2-leaflet";
+import {geoJSON, DomEvent} from 'leaflet';
 
 /**
  * Easily display a geo-json on the map
  */
+
 export default {
   name: 'GiaGeoJson',
   mixins: [LayerGroupMixin, OptionsMixin],
@@ -37,6 +38,7 @@ export default {
   },
   mounted() {
     console.debug("GiaGeoJson mounted")
+    console.time("GiaGeoJson mount")
     this.mapObject = geoJSON(this.geojson, this.mergedOptions);
     DomEvent.on(this.mapObject, this.$listeners);
     propsBinder(this, this.mapObject, this.$options.props);
@@ -49,18 +51,51 @@ export default {
        * @property {object} mapObject - reference to leaflet map object
        */
       this.$emit('ready', this.mapObject);
+      console.timeEnd("GiaGeoJson mount")
       this.$emit("rendered", this.options.layer.id);
     });
   },
   beforeDestroy() {
+    console.time("GiaGeoJson destroy")
     this.parentContainer.mapObject.removeLayer(this.mapObject);
+    console.timeEnd("GiaGeoJson destroy")
+  },
+  watch: {
+    geojson: {
+      handler: function (val, _oldVal) {
+        console.debug("GiaGeoJson geojson watch");
+        this.switchLayers(val);
+      },
+    }
   },
   methods: {
-    setGeojson(newVal) {
+    setGeojson(_newVal) {
       console.debug("setGeojson");
+      //this.switchLayers(newVal)
+      //this.clearLayers(newVal)
+    },
+    switchLayers(newVal) {
+      console.debug("switchLayers");
+      console.time("switchLayers removeLayer")
+      this.parentContainer.mapObject.removeLayer(this.mapObject);
+      console.timeEnd("switchLayers removeLayer")
+      console.time("switchLayers geoJSON")
+      this.mapObject = geoJSON(newVal, this.mergedOptions);
+      console.timeEnd("switchLayers geoJSON")
+      DomEvent.on(this.mapObject, this.$listeners);
+      console.time("switchLayers addLayer")
+      this.parentContainer.addLayer(this, !this.visible);
+      console.timeEnd("switchLayers addLayer")
+    },
+    clearLayers(newVal) {
+      console.debug("setGeojson");
+      console.time("GiaGeoJson clearLayers")
       this.mapObject.clearLayers();
+      console.timeEnd("GiaGeoJson clearLayers")
       console.debug("setGeojson layers cleared");
+      console.time("GiaGeoJson addData")
       this.mapObject.addData(newVal);
+      console.timeEnd("GiaGeoJson addData")
       console.debug("setGeojson data added");
     },
     getGeoJSONData() {
@@ -84,11 +119,11 @@ export default {
     },
     setOptionsStyle(_newVal, _oldVal) {
       console.debug("setOptionsStyle")
-        /*
+      /*
       this.mapObject.setStyle(newVal);
       console.debug("setOptionsStyle style set")
       */
-     this.$emit("rendered", this.options.layer.id);
+      this.$emit("rendered", this.options.layer.id);
     },
   },
   render() {
