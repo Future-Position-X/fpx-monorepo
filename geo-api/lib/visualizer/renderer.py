@@ -112,7 +112,8 @@ def get_color(feature):
 
 def parse_color(string):
     buffer = ""
-    ints = [0, 0, 0, 0]
+    ctype = None
+    ints = [0, 0, 0, 255 * 0.5]
     index = 0
 
     for i, char in enumerate(string):
@@ -120,15 +121,16 @@ def parse_color(string):
             continue
         
         if char == "(":
-            if buffer != "rgba":
+            if buffer != "rgba" and buffer != "rgb":
                 return None
 
+            ctype = buffer
             buffer = ""
         elif char == "," or char == ')':
             ints[index] = int(buffer)
             index += 1
 
-            if index == 4:
+            if ctype == "rgba" and index == 4 or ctype == "rgb" and index == 3:
                 break
 
             buffer = ""
