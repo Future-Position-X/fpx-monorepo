@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Tree data should render to a snapshot when tree has items 1`] = `
+exports[`Tree data should render "owned" and "other" root elems when tree has items 1`] = `
 <div
   class="v-treeview theme--light"
 >
@@ -82,13 +82,7 @@ exports[`Tree data should render to a snapshot when tree has items 1`] = `
 </div>
 `;
 
-exports[`Tree data should render to a snapshot when tree is empty 1`] = `
-<div
-  class="v-treeview theme--light"
-/>
-`;
-
-exports[`Tree should render to a snapshot when tree has items 1`] = `
+exports[`Tree data should render $checkboxOn when item is selected 1`] = `
 <div
   class="v-treeview theme--light"
 >
@@ -130,13 +124,95 @@ exports[`Tree should render to a snapshot when tree has items 1`] = `
   </div>
   <div
     aria-expanded="false"
-    class="v-treeview-node"
+    class="v-treeview-node v-treeview-node--selected"
   >
     <div
       class="v-treeview-node__root"
     >
       <button
         class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $subgroup
+      </button>
+      <button
+        class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light accent--text"
+        type="button"
+      >
+        $checkboxOn
+      </button>
+      <div
+        class="v-treeview-node__content"
+      >
+        <div
+          class="v-treeview-node__label"
+        >
+          Other collections
+        </div>
+        <div
+          class="v-treeview-node__append"
+        >
+          <i
+            aria-hidden="true"
+            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+            style="color: rgb(255, 255, 255); caret-color: #FFF;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Tree data should render child items when opened 1`] = `
+<div
+  class="v-treeview theme--light"
+>
+  <div
+    aria-expanded="false"
+    class="v-treeview-node v-treeview-node--leaf"
+  >
+    <div
+      class="v-treeview-node__root"
+    >
+      <div
+        class="v-treeview-node__level"
+      />
+      <button
+        class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $checkboxOff
+      </button>
+      <div
+        class="v-treeview-node__content"
+      >
+        <div
+          class="v-treeview-node__label"
+        >
+          Owned collections
+        </div>
+        <div
+          class="v-treeview-node__append"
+        >
+          <i
+            aria-hidden="true"
+            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+            style="color: rgb(255, 255, 255); caret-color: #FFF;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    aria-expanded="true"
+    class="v-treeview-node"
+  >
+    <div
+      class="v-treeview-node__root"
+    >
+      <button
+        class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light v-treeview-node__toggle--open"
         type="button"
       >
         $subgroup
@@ -166,11 +242,99 @@ exports[`Tree should render to a snapshot when tree has items 1`] = `
         </div>
       </div>
     </div>
+    <div
+      class="v-treeview-node__children"
+    >
+      <div
+        aria-expanded="false"
+        class="v-treeview-node"
+      >
+        <div
+          class="v-treeview-node__root"
+        >
+          <div
+            class="v-treeview-node__level"
+          />
+          <button
+            class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light"
+            type="button"
+          >
+            $subgroup
+          </button>
+          <button
+            class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+            type="button"
+          >
+            $checkboxOff
+          </button>
+          <div
+            class="v-treeview-node__content"
+          >
+            <div
+              class="v-treeview-node__label"
+            >
+              __test
+            </div>
+            <div
+              class="v-treeview-node__append"
+            >
+              <i
+                aria-hidden="true"
+                class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+                style="color: rgb(255, 255, 255); caret-color: #FFF;"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        aria-expanded="false"
+        class="v-treeview-node"
+      >
+        <div
+          class="v-treeview-node__root"
+        >
+          <div
+            class="v-treeview-node__level"
+          />
+          <button
+            class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light"
+            type="button"
+          >
+            $subgroup
+          </button>
+          <button
+            class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+            type="button"
+          >
+            $checkboxOff
+          </button>
+          <div
+            class="v-treeview-node__content"
+          >
+            <div
+              class="v-treeview-node__label"
+            >
+              gg
+            </div>
+            <div
+              class="v-treeview-node__append"
+            >
+              <i
+                aria-hidden="true"
+                class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+                style="color: rgb(255, 255, 255); caret-color: #FFF;"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 `;
 
-exports[`Tree should render to a snapshot when tree is empty 1`] = `
+exports[`Tree data should render no elements when tree is empty 1`] = `
 <div
   class="v-treeview theme--light"
 />
