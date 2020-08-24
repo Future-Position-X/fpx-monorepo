@@ -1,0 +1,177 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tree data should render to a snapshot when tree has items 1`] = `
+<div
+  class="v-treeview theme--light"
+>
+  <div
+    aria-expanded="false"
+    class="v-treeview-node v-treeview-node--leaf"
+  >
+    <div
+      class="v-treeview-node__root"
+    >
+      <div
+        class="v-treeview-node__level"
+      />
+      <button
+        class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $checkboxOff
+      </button>
+      <div
+        class="v-treeview-node__content"
+      >
+        <div
+          class="v-treeview-node__label"
+        >
+          Owned collections
+        </div>
+        <div
+          class="v-treeview-node__append"
+        >
+          <i
+            aria-hidden="true"
+            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+            style="color: rgb(255, 255, 255); caret-color: #FFF;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    aria-expanded="false"
+    class="v-treeview-node"
+  >
+    <div
+      class="v-treeview-node__root"
+    >
+      <button
+        class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $subgroup
+      </button>
+      <button
+        class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $checkboxOff
+      </button>
+      <div
+        class="v-treeview-node__content"
+      >
+        <div
+          class="v-treeview-node__label"
+        >
+          Other collections
+        </div>
+        <div
+          class="v-treeview-node__append"
+        >
+          <i
+            aria-hidden="true"
+            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+            style="color: rgb(255, 255, 255); caret-color: #FFF;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Tree data should render to a snapshot when tree is empty 1`] = `
+<div
+  class="v-treeview theme--light"
+/>
+`;
+
+exports[`Tree should render to a snapshot when tree has items 1`] = `
+<div
+  class="v-treeview theme--light"
+>
+  <div
+    aria-expanded="false"
+    class="v-treeview-node v-treeview-node--leaf"
+  >
+    <div
+      class="v-treeview-node__root"
+    >
+      <div
+        class="v-treeview-node__level"
+      />
+      <button
+        class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $checkboxOff
+      </button>
+      <div
+        class="v-treeview-node__content"
+      >
+        <div
+          class="v-treeview-node__label"
+        >
+          Owned collections
+        </div>
+        <div
+          class="v-treeview-node__append"
+        >
+          <i
+            aria-hidden="true"
+            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+            style="color: rgb(255, 255, 255); caret-color: #FFF;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    aria-expanded="false"
+    class="v-treeview-node"
+  >
+    <div
+      class="v-treeview-node__root"
+    >
+      <button
+        class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $subgroup
+      </button>
+      <button
+        class="v-icon notranslate v-treeview-node__checkbox v-icon--link material-icons theme--light"
+        type="button"
+      >
+        $checkboxOff
+      </button>
+      <div
+        class="v-treeview-node__content"
+      >
+        <div
+          class="v-treeview-node__label"
+        >
+          Other collections
+        </div>
+        <div
+          class="v-treeview-node__append"
+        >
+          <i
+            aria-hidden="true"
+            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
+            style="color: rgb(255, 255, 255); caret-color: #FFF;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Tree should render to a snapshot when tree is empty 1`] = `
+<div
+  class="v-treeview theme--light"
+/>
+`;
