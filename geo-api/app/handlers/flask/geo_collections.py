@@ -20,20 +20,20 @@ collection_model = api.model('Collection', {
     'uuid': fields.String(description='uuid'),
     'provider_uuid': fields.String(description='provider_uuid'),
     'name': fields.String(description='name'),
-    'is_public': fields.String(description='is_public'),
-    'revision': fields.String(description='revision'),
+    'is_public': fields.Boolean(description='is_public'),
+    'revision': fields.Integer(description='revision'),
     'created_at': fields.String(description='created_at'),
     'updated_at': fields.String(description='updated_at'),
 })
 
 create_collection_model = api.model('CreateCollection', {
     'name': fields.String(description='name'),
-    'is_public': fields.String(description='is_public'),
+    'is_public': fields.Boolean(description='is_public'),
 })
 
 update_collection_model = api.model('UpdateCollection', {
     'name': fields.String(description='name'),
-    'is_public': fields.String(description='is_public'),
+    'is_public': fields.Boolean(description='is_public'),
 })
 
 

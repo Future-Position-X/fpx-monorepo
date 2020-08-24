@@ -18,8 +18,9 @@ export default {
         this.$emit("updateCodeView", collection);
       }
     },
-    selectionUpdate(selectedIds) {
-      this.$emit("selectionUpdate", selectedIds.map(x => x.uuid));
+    selectionUpdate(selectedItems) {
+      const selectedUuids = selectedItems.filter(x => !!x.uuid).map(x => x.uuid);
+      this.$emit("selectionUpdate", selectedUuids);
     },
     addCollection(collection) {
       let colorNum = this.items.length;
