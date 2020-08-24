@@ -84,15 +84,33 @@ const items = [{
 
 describe('Tree', () => {
   describe('data', () => {
-    it('should render to a snapshot when tree is empty', async () => {
+    it('should render no elements when tree is empty', async () => {
       const wrapper = mount(Tree)
       expect(wrapper.element).toMatchSnapshot();
     })
 
-    it('should render to a snapshot when tree has items', async () => {
+    it('should render "owned" and "other" root elems when tree has items', async () => {
       const wrapper = mount(Tree)
       await wrapper.setProps({sortedCollections});
       expect(wrapper.vm.items).toMatchObject(items);
+      expect(wrapper.element).toMatchSnapshot();
+    });
+
+    it('should render child items when opened', async () => {
+      const wrapper = mount(Tree)
+      await wrapper.setProps({sortedCollections});
+      await wrapper.findComponent({name:"v-treeview"}).vm.updateOpen("Owned collections", false);
+      await wrapper.findComponent({name:"v-treeview"}).vm.updateOpen("Other collections", true);
+      expect(wrapper.text()).toContain("__test")
+      expect(wrapper.text()).toContain("gg")
+      expect(wrapper.element).toMatchSnapshot();
+    });
+
+    it('should render $checkboxOn when item is selected', async () => {
+      const wrapper = mount(Tree)
+      await wrapper.setProps({sortedCollections});
+      await wrapper.findComponent({name:"v-treeview"}).vm.updateSelected("Other collections", true);
+      expect(wrapper.text()).toContain("$checkboxOnOther collections")
       expect(wrapper.element).toMatchSnapshot();
     });
   });
