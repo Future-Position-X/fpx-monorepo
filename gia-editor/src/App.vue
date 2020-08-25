@@ -3,7 +3,7 @@
     <v-content>
       <v-container :fluid="true" class="pa-0">
         <v-row no-gutter>
-          <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden;">
+          <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden">
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
@@ -20,20 +20,23 @@
                     @click="onDeleteCollectionsClick"
                     :disabled="!authenticated"
                     block
-                  >Delete selected collections</v-btn>
+                    >Delete selected collections</v-btn
+                  >
                 </template>
                 <v-card>
                   <v-card-title class="headline">Delete collections?</v-card-title>
                   <v-card-text v-html="deleteConfirmationContent" />
                   <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" text @click="showDeleteConfirmationDialog = false">No</v-btn>
+                    <v-btn color="primary" text @click="showDeleteConfirmationDialog = false"
+                      >No</v-btn
+                    >
                     <v-btn color="primary" text @click="onConfirmDeleteCollections">Yes</v-btn>
                   </v-card-actions>
                 </v-card>
               </v-dialog>
             </div>
-            <v-row style="background-color: #EEE">
+            <v-row style="background-color: #eee">
               <v-col>
                 <div class="mx-3 pa-0">
                   <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
@@ -48,53 +51,45 @@
                       small
                       color="primary"
                       :disabled="!authenticated"
-                    >Create</v-btn>
+                      >Create</v-btn
+                    >
                   </div>
                 </div>
               </v-col>
             </v-row>
             <div v-show="!authenticated">
               <div class="ma-3">
-              <v-text-field v-model="email" label="Email"></v-text-field>
-              <v-text-field
-              v-model="password" 
-              :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              :type="showPassword ? 'text' : 'password'"
-              @click:append="showPassword = !showPassword" 
-              label="Password"></v-text-field>
+                <v-text-field v-model="email" label="Email"></v-text-field>
+                <v-text-field
+                  v-model="password"
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  :type="showPassword ? 'text' : 'password'"
+                  @click:append="showPassword = !showPassword"
+                  label="Password"
+                ></v-text-field>
               </div>
               <div class="d-flex justify-space-between ma-3">
-                <v-btn
-                    @click="onLoginClick"
-                    small
-                    color="primary"
-                    class=""
-                  >Login</v-btn>
-                <v-btn
-                    @click="onRegisterClick"
-                    small
-                    color="primary"
-                    class=""
-                  >Register</v-btn>
+                <v-btn @click="onLoginClick" small color="primary" class="">Login</v-btn>
+                <v-btn @click="onRegisterClick" small color="primary" class="">Register</v-btn>
               </div>
             </div>
             <div v-show="authenticated">
               <div class="d-flex justify-space-between ma-3">
-              <v-btn
-                  @click="onLogoutClick"
-                  small
-                  color="primary"
-                  class=""
-                >Logout</v-btn>
+                <v-btn @click="onLogoutClick" small color="primary" class="">Logout</v-btn>
               </div>
             </div>
             <div class="ma-3">
-            <v-alert v-for="alert in alerts.slice().reverse()" :key="alert.ts" :type="alert.type" dismissible>
-              {{alert.message}}
-            </v-alert>
+              <v-alert
+                v-for="alert in alerts.slice().reverse()"
+                :key="alert.ts"
+                :type="alert.type"
+                dismissible
+              >
+                {{ alert.message }}
+              </v-alert>
             </div>
           </v-col>
-          <v-col sm="7" style="padding: 0px; position: relative;">
+          <v-col sm="7" style="padding: 0px; position: relative">
             <v-progress-circular
               :indeterminate="isLoading"
               color="light-blue"
@@ -115,16 +110,24 @@
           </v-col>
           <v-col
             sm="3"
-            style="display: flex; flex-direction:column; background-color: #4b4b4b; height: 100vh; padding: 0;"
+            style="
+              display: flex;
+              flex-direction: column;
+              background-color: #4b4b4b;
+              height: 100vh;
+              padding: 0;
+            "
           >
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
-              <v-tab-item style="display: flex;flex-direction:column; flex:1;">
-                <Code v-bind:code="code" style="display: flex;flex-direction:column; flex:1;" />
+              <v-tab-item style="display: flex; flex-direction: column; flex: 1">
+                <Code v-bind:code="code" style="display: flex; flex-direction: column; flex: 1" />
               </v-tab-item>
             </v-tabs>
             <div class="my-2 save-button">
-              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated">Save modifications</v-btn>
+              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated"
+                >Save modifications</v-btn
+              >
             </div>
             <div class="my-2 export-image-button">
               <v-btn small color="primary" @click="onExportImageClick">Export image</v-btn>
@@ -137,29 +140,44 @@
 </template>
 
 <script>
-//import Table from "./components/Table.vue";
-import Map from "./components/Map.vue";
-import Code from "./components/Code.vue";
-import Tree from "./components/Tree.vue";
-import leafletImage from "leaflet-image";
-import collection from "./services/collection";
-import modify from "./services/modify";
-import session from "./services/session";
-import user from "./services/user";
+// import Table from "./components/Table.vue";
+import leafletImage from 'leaflet-image';
+import debounce from 'debounce-async';
+import Map from './components/Map.vue';
+import Code from './components/Code.vue';
+import Tree from './components/Tree.vue';
+import collection from './services/collection';
+import modify from './services/modify';
+import session from './services/session';
+import user from './services/user';
 
-import debounce from "debounce-async";
+function groupBy(xs, key) {
+  return xs.reduce((rv, x) => {
+    // eslint-disable-next-line no-param-reassign
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
+}
+
+function selectColor(colorNum, colors) {
+  // eslint-disable-next-line no-param-reassign
+  if (colors < 1) colors = 1; // defaults to one color - avoid divide by zero
+  // const saturation = 60 + (colorNum % 5) * 10;
+  const saturation = 100;
+  return `hsl(${(colorNum * (360 / colors)) % 360},${saturation}%,50%)`;
+}
 
 export default {
-  name: "App",
+  name: 'App',
   components: {
-    //Table,
+    // Table,
     Map,
     Code,
-    Tree
+    Tree,
   },
   data() {
     return {
-      code: "",
+      code: '',
       zoom: 16,
       collections: [],
       sortedCollections: [],
@@ -187,39 +205,39 @@ export default {
   },
   watch: {
     selectedCollection(val) {
-      console.debug("selectedCollection");
+      console.debug('selectedCollection');
       const geojson = val == null ? {} : this.geojson[val.uuid].geojson;
-      this.updateCodeView(geojson)
-    }
+      this.updateCodeView(geojson);
+    },
   },
   methods: {
     geojsonUpdateFromCode(geojson) {
-      console.debug("geojsonUpdateFromCode");
+      console.debug('geojsonUpdateFromCode');
       this.geojson = geojson;
     },
     geojsonUpdateFromMap(geojson) {
-      console.debug("geojsonUpdateFromMap");
+      console.debug('geojsonUpdateFromMap');
       this.updateCodeView(geojson);
     },
     onRendered(id) {
-      console.debug("onRendered")
+      console.debug('onRendered');
       this.isLoadingUuids.delete(id);
       this.isLoading = this.isLoadingUuids.length > 0;
     },
     updateCodeView(val) {
-      console.debug("update code view");
+      console.debug('update code view');
       const dataLength = JSON.stringify(val).length;
-      if(dataLength > 1000*1000) {
-        this.code = "Data too big, " + dataLength;
+      if (dataLength > 1000 * 1000) {
+        this.code = `Data too big, ${dataLength}`;
       } else {
         this.code = val;
       }
     },
     async selectionUpdate(ids) {
       let index = -1;
-      this.renderedCollections.forEach(c => {
+      this.renderedCollections.forEach((c) => {
         if (!ids.includes(c.uuid)) {
-          if (this.selectedCollection == c) {
+          if (this.selectedCollection === c) {
             this.selectedCollection = null;
           }
 
@@ -228,29 +246,25 @@ export default {
         }
       });
       this.renderedCollections.splice(index, 1);
-      console.debug("selectionUpdate");
+      console.debug('selectionUpdate');
       await this.fetchGeoJson(
-        ids.filter(id => !this.renderedCollections.some(c => c.uuid == id))
+        ids.filter((id) => !this.renderedCollections.some((c) => c.uuid === id))
       );
       this.updateFetchedCollections(ids);
     },
     updateFetchedCollections(ids) {
-        console.debug("updateFetchedCollections");
-        this.renderedCollections = this.collections.filter(c =>
-          ids.some(id => id == c.uuid)
-        );
-        this.selectedCollection = this.collections.filter(
-          c => c.uuid == ids[ids.length - 1]
-        )[0];
+      console.debug('updateFetchedCollections');
+      this.renderedCollections = this.collections.filter((c) => ids.some((id) => id === c.uuid));
+      [this.selectedCollection] = this.collections.filter((c) => c.uuid === ids[ids.length - 1]);
     },
-    onUpdateCodeView(collection) {
-      console.debug("onUpdateCodeView");
-      this.selectedCollection = collection;
+    onUpdateCodeView(selectedCollection) {
+      console.debug('onUpdateCodeView');
+      this.selectedCollection = selectedCollection;
     },
     zoomUpdate(zoom) {
-      if (this.zoom != zoom) {
-        console.debug("zoomUpdate");
-        this.fetchGeoJson(this.renderedCollections.map(c => c.uuid));
+      if (this.zoom !== zoom) {
+        console.debug('zoomUpdate');
+        this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
       }
       this.zoom = zoom;
       /*
@@ -263,10 +277,14 @@ export default {
     },
     boundsUpdate(bounds) {
       this.bounds = {
+        // eslint-disable-next-line no-underscore-dangle
         minX: bounds._southWest.lng,
+        // eslint-disable-next-line no-underscore-dangle
         minY: bounds._southWest.lat,
+        // eslint-disable-next-line no-underscore-dangle
         maxX: bounds._northEast.lng,
-        maxY: bounds._northEast.lat
+        // eslint-disable-next-line no-underscore-dangle
+        maxY: bounds._northEast.lat,
       };
 
       if (this.renderedCollections.length > 0) {
@@ -278,10 +296,10 @@ export default {
             this.dataBounds.maxY < this.bounds.maxY;
 
           if (boundsExceeded) {
-            console.debug("data bounds exceeded");
-            this.fetchGeoJson(this.renderedCollections.map(c => c.uuid));
+            console.debug('data bounds exceeded');
+            this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
           } else {
-            console.debug("still within fetched bounds");
+            console.debug('still within fetched bounds');
           }
         }
       }
@@ -289,7 +307,7 @@ export default {
     itemRemovedFromMap(item) {
       modify.onItemRemoved(this.modCtx, item);
       const fc = this.geojson[this.selectedCollection.uuid].geojson;
-      let i = fc.features.indexOf(item);
+      const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.updateCodeView(fc);
     },
@@ -303,70 +321,81 @@ export default {
       modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      await modify.commit(this.modCtx, this.selectedCollection.uuid)
-        .then(() => this.modCtx = modify.createContext())
-        .catch((error) => console.error("backend error: ", error));
+      await modify
+        .commit(this.modCtx, this.selectedCollection.uuid)
+        .then(() => {
+          this.modCtx = modify.createContext();
+        })
+        .catch((error) => console.error('backend error: ', error));
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
 
-      leafletImage(map, function(err, canvas) {
-        var a = document.createElement("a");
-        a.download = "image.png";
-        a.href = canvas.toDataURL("image/png");
+      leafletImage(map, (err, canvas) => {
+        const a = document.createElement('a');
+        a.download = 'image.png';
+        a.href = canvas.toDataURL('image/png');
         a.click();
       });
     },
     onDeleteCollectionsClick() {
       this.deleteConfirmationContent = `Are you sure you want to delete the following collections?</br></br>${this.renderedCollections
-        .map(c => c.name)
-        .join("</br>")}</br></br>This cannot be undone.`;
+        .map((c) => c.name)
+        .join('</br>')}</br></br>This cannot be undone.`;
       this.showDeleteConfirmationDialog = true;
     },
     async onConfirmDeleteCollections() {
       this.showDeleteConfirmationDialog = false;
 
-      for (let coll of this.renderedCollections) {
+      // TODO: Fix
+      // eslint-disable-next-line no-restricted-syntax
+      for (const coll of this.renderedCollections) {
+        // TODO: Fix
+        // eslint-disable-next-line no-await-in-loop
         await collection.remove(coll.uuid);
         this.$refs.collectionTree.removeCollection(coll);
       }
     },
     async onCreateCollectionClick() {
-      await collection.create(this.collectionName, this.isPublicCollection)
-      .then((coll) => this.$refs.collectionTree.addCollection(coll))
-      .catch((error) => console.error("backend error: ", error));
+      await collection
+        .create(this.collectionName, this.isPublicCollection)
+        .then((coll) => this.$refs.collectionTree.addCollection(coll))
+        .catch((error) => console.error('backend error: ', error));
     },
-    async showAvailableCollections(){
+    async showAvailableCollections() {
       this.collections = await collection.fetchCollections();
-      let sortedCollections = groupBy(this.collections, "name");
+      const sortedCollections = groupBy(this.collections, 'name');
       const len = Object.keys(sortedCollections).length;
       let i = 1;
+      // eslint-disable-next-line no-restricted-syntax
       for (let value of Object.values(sortedCollections)) {
-        let color = selectColor(i, len);
-        value = value.map(c => {
+        const color = selectColor(i, len);
+        value = value.map((c) => {
+          // eslint-disable-next-line no-param-reassign
           c.color = color;
           this.collectionColors[c.uuid] = color;
           return c;
         });
-        i++;
+        i += 1;
       }
 
       this.sortedCollections = sortedCollections;
-      console.debug("sorted collections");
+      console.debug('sorted collections');
     },
     addAlert(alert) {
-      this.alerts.push({...alert, ...{ts: Date()}});
+      this.alerts.push({ ...alert, ...{ ts: Date() } });
     },
     async onLoginClick() {
-      await session.create(this.email, this.password)
-      .then(() => {
-        this.addAlert({"type": "success", "message": "Login successful"})
-        this.authenticated = true;
-        return this.showAvailableCollections();
-      })
-      .catch((error) => {
-        console.error("backend error: ", error)
-        this.addAlert({"type": "error", "message": "Could not login! Check credentials"})
+      await session
+        .create(this.email, this.password)
+        .then(() => {
+          this.addAlert({ type: 'success', message: 'Login successful' });
+          this.authenticated = true;
+          return this.showAvailableCollections();
+        })
+        .catch((error) => {
+          console.error('backend error: ', error);
+          this.addAlert({ type: 'error', message: 'Could not login! Check credentials' });
         });
     },
     async onLogoutClick() {
@@ -375,36 +404,35 @@ export default {
       return this.showAvailableCollections();
     },
     async onRegisterClick() {
-      await user.create(this.email, this.password)
-      .then(() => {
-        this.addAlert({"type": "success", "message": "Register successful"})
-        session.create(this.email, this.password)
+      await user
+        .create(this.email, this.password)
         .then(() => {
-        this.addAlert({"type": "success", "message": "Login successful"})
-          this.authenticated = true;
-          return this.showAvailableCollections();
+          this.addAlert({ type: 'success', message: 'Register successful' });
+          session.create(this.email, this.password).then(() => {
+            this.addAlert({ type: 'success', message: 'Login successful' });
+            this.authenticated = true;
+            return this.showAvailableCollections();
+          });
         })
-      })
-      .catch((error) => {
-        console.error("backend error: ", error)
-        this.addAlert({"type": "error", "message": "Could not register!"})
+        .catch((error) => {
+          console.error('backend error: ', error);
+          this.addAlert({ type: 'error', message: 'Could not register!' });
         });
     },
     async fetchGeoJson(ids) {
-      console.debug("fetchGeoJson")
+      console.debug('fetchGeoJson');
       this.isLoading = ids.length > 0 || this.isLoading;
-      if (this.debouncedDoFetchGeoJson==undefined) {
+      if (this.debouncedDoFetchGeoJson === undefined) {
         this.debouncedDoFetchGeoJson = debounce(this.doFetchGeoJson, 100);
       }
       try {
-        await this.debouncedDoFetchGeoJson(ids)
+        await this.debouncedDoFetchGeoJson(ids);
       } catch (err) {
-        console.log(err);
-        return;
+        console.error(err);
       }
     },
     async doFetchGeoJson(ids) {
-      console.debug("doFetchGeoJson")
+      console.debug('doFetchGeoJson');
       if (this.fetchController) {
         this.fetchController.abort();
       }
@@ -412,62 +440,40 @@ export default {
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
       const dataBounds = this.$refs.leafletMap.getDataBounds();
-      const simplify =
-        this.zoom >= 16
-          ? 0.0
-          : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
+      const simplify = this.zoom >= 16 ? 0.0 : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
 
-      for (let id of ids) {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const id of ids) {
         this.isLoadingUuids.add(id);
         try {
-          const data = await collection.fetchItems(
-            signal,
-            id,
-            dataBounds,
-            simplify
-          );
-          
+          // eslint-disable-next-line no-await-in-loop
+          const data = await collection.fetchItems(signal, id, dataBounds, simplify);
+
           this.$set(this.geojson, id, {
-            id: id,
+            id,
             color: this.collectionColors[id],
             geojson: data,
           });
-          console.debug("$set geojson")
+          console.debug('$set geojson');
         } catch (err) {
-          console.log(err);
-          this.isLoadingUuids.delete(id)
+          console.error(err);
+          this.isLoadingUuids.delete(id);
           return;
         }
       }
       this.dataBounds = dataBounds;
       this.isFetchingItems = false;
-    }
+    },
   },
 
-  
   async created() {
-    if (process.env.NODE_ENV == "development") {
+    if (process.env.NODE_ENV === 'development') {
       this.email = process.env.VUE_APP_EMAIL;
       this.password = process.env.VUE_APP_PASSWORD;
     }
 
     await this.showAvailableCollections();
-  }
-};
-
-const groupBy = function(xs, key) {
-  return xs.reduce(function(rv, x) {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
-    return rv;
-  }, {});
-};
-const selectColor = function(colorNum, colors) {
-  if (colors < 1) colors = 1; // defaults to one color - avoid divide by zero
-  //const saturation = 60 + (colorNum % 5) * 10;
-  const saturation = 100;
-  return (
-    "hsl(" + ((colorNum * (360 / colors)) % 360) + "," + saturation + "%,50%)"
-  );
+  },
 };
 </script>
 

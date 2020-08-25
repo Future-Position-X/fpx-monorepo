@@ -1,6 +1,10 @@
 module.exports = {
   "devServer": {
-    "disableHostCheck": true
+    "disableHostCheck": true,
+    overlay: {
+      warnings: true,
+      errors: true
+    }
   },
   "transpileDependencies": [
     "vuetify"
