@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.5.0",
+    "@mdi/font": "^5.2.45",
     "core-js": "^3.6.4",
     "debounce-async": "0.0.2",
     "geojson-validation": "^1.0.1",
@@ -23,7 +24,6 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/preset-env": "^7.11.0",
-    "@mdi/font": "^5.2.45",
     "@types/leaflet": "^1.5.17",
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-eslint": "~4.3.0",
@@ -36,6 +36,7 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jest": "^23.20.0",
     "eslint-plugin-vue": "^6.2.2",
     "jest": "^26.4.2",
     "prettier": "^2.1.0",
@@ -49,20 +50,41 @@
   "eslintConfig": {
     "root": true,
     "env": {
-      "node": true
+      "node": true,
+      "jest/globals": true
     },
     "extends": [
       "plugin:vue/essential",
-      "eslint:recommended"
+      "airbnb-base",
+      "prettier",
+      "prettier/vue"
     ],
+    "globals": {
+      "Atomics": "readonly",
+      "SharedArrayBuffer": "readonly"
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     },
+    "plugins": [
+      "vue",
+      "jest"
+    ],
     "rules": {
       "no-unused-vars": [
         "error",
         {
           "argsIgnorePattern": "^_"
+        }
+      ],
+      "no-console": [
+        "error",
+        {
+          "allow": [
+            "debug",
+            "warn",
+            "error"
+          ]
         }
       ]
     }
