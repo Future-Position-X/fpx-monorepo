@@ -83,7 +83,9 @@
           "allow": [
             "debug",
             "warn",
-            "error"
+            "error",
+            "time",
+            "timeEnd"
           ]
         }
       ]
