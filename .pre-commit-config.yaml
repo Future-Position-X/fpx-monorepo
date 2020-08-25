@@ -1,0 +1,12 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: local
+    hooks:
+    -   id: gia-editor
+        name: git-editor run eslint and prettier
+        language: system
+        entry: bash -c 'cd gia-editor && exec npx eslint src --fix --ext .js,.vue && exec npx prettier --write --list-different --ignore-unknown src'
+        pass_filenames: false
+        types: [text]
+        files: ^gia-editor/src/.*\.(vue|js)$
