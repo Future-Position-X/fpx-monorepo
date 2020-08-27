@@ -4,22 +4,33 @@ from uuid import UUID, uuid4
 from app.dto import ItemDTO
 from app.models import Item, to_models, Collection, to_model
 
+
 def get_items(provider_uuid: UUID, filters, transforms) -> List[ItemDTO]:
     items = Item.get_with_simplify(provider_uuid, filters, transforms)
     return to_models(items, ItemDTO)
 
 
-def get_collection_items(provider_uuid: UUID, collection_uuid: UUID, filters, transforms) -> List[ItemDTO]:
-    items = Item.find_by_collection_uuid_with_simplify(provider_uuid, collection_uuid, filters, transforms)
+def get_collection_items(
+    provider_uuid: UUID, collection_uuid: UUID, filters, transforms
+) -> List[ItemDTO]:
+    items = Item.find_by_collection_uuid_with_simplify(
+        provider_uuid, collection_uuid, filters, transforms
+    )
     return to_models(items, ItemDTO)
 
 
-def get_collection_items_by_name(provider_uuid: UUID, collection_name: UUID, filters, transforms) -> List[ItemDTO]:
-    items = Item.find_by_collection_name_with_simplify(provider_uuid, collection_name, filters, transforms)
+def get_collection_items_by_name(
+    provider_uuid: UUID, collection_name: UUID, filters, transforms
+) -> List[ItemDTO]:
+    items = Item.find_by_collection_name_with_simplify(
+        provider_uuid, collection_name, filters, transforms
+    )
     return to_models(items, ItemDTO)
 
 
-def create_collection_item(provider_uuid: UUID, collection_uuid: UUID, item: ItemDTO) -> ItemDTO:
+def create_collection_item(
+    provider_uuid: UUID, collection_uuid: UUID, item: ItemDTO
+) -> ItemDTO:
     coll = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
     item.collection_uuid = coll.uuid
     item = Item(**item.to_dict())
@@ -28,16 +39,24 @@ def create_collection_item(provider_uuid: UUID, collection_uuid: UUID, item: Ite
     return to_model(item, ItemDTO)
 
 
-def replace_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]) -> List[ItemDTO]:
+def replace_collection_items(
+    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]
+) -> List[ItemDTO]:
     return create_collection_items(provider_uuid, collection_uuid, items, replace=True)
 
 
-def add_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]) -> List[ItemDTO]:
+def add_collection_items(
+    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]
+) -> List[ItemDTO]:
     return create_collection_items(provider_uuid, collection_uuid, items, replace=False)
 
 
-def create_collection_items(provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO], replace=False) -> List[ItemDTO]:
-    collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+def create_collection_items(
+    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO], replace=False
+) -> List[ItemDTO]:
+    collection = Collection.first_or_fail(
+        uuid=collection_uuid, provider_uuid=provider_uuid
+    )
 
     if replace:
         Item.where(collection_uuid=collection.uuid).delete()
@@ -52,7 +71,9 @@ def delete_collection_items(provider_uuid: UUID, collection_uuid: UUID) -> None:
     Item.delete_by_collection_uuid(provider_uuid, collection_uuid)
 
 
-def get_collection_item(provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID) -> ItemDTO:
+def get_collection_item(
+    provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID
+) -> ItemDTO:
     item = Item.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
     return to_model(item, ItemDTO)
 
@@ -62,7 +83,9 @@ def get_item(provider_uuid: UUID, item_uuid: UUID) -> ItemDTO:
     return to_model(item, ItemDTO)
 
 
-def delete_collection_item(provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID) -> None:
+def delete_collection_item(
+    provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID
+) -> None:
     Item.delete_owned(provider_uuid, item_uuid, collection_uuid)
 
 
@@ -74,7 +97,11 @@ def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemD
     items = Item.find_owned(provider_uuid, [item.uuid for item in items_update])
 
     for item in items:
-        item_new = [item_new for item_new in items_update if str(item_new.uuid) == str(item.uuid)][0]
+        item_new = [
+            item_new
+            for item_new in items_update
+            if str(item_new.uuid) == str(item.uuid)
+        ][0]
         item.properties = item_new.properties
         item.geometry = item_new.geometry
         item.save()

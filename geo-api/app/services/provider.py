@@ -28,4 +28,3 @@ def create_provider(provider: ProviderDTO) -> ProviderDTO:
     provider.save()
     provider.session.commit()
     return to_model(provider, ProviderDTO)
-

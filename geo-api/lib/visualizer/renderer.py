@@ -1,14 +1,14 @@
 import math
 import io
 from PIL import Image, ImageDraw, ImagePath
-from . geo_types import Coords, Bounds, Size
-from . stitcher import stitch_mapbox_images
+from .geo_types import Coords, Bounds, Size
+from .stitcher import stitch_mapbox_images
 
 TILE_SIZE = 256
 
 
 def render_feature(f, width, height, map_id, antialias=6):
-    fc = { "features": [f] }
+    fc = {"features": [f]}
     return render_feature_collection(fc, width, height, map_id, antialias)
 
 
@@ -19,8 +19,7 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
     zoom = calculate_max_zoom(bounds, img_size, center, 1)
     merc_center = transform_to_mercator(center, zoom)
     bg_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    img = Image.new("RGBA", (width * antialias,
-                             height * antialias), (0, 0, 0, 0))
+    img = Image.new("RGBA", (width * antialias, height * antialias), (0, 0, 0, 0))
 
     if map_id != "transparent":
         stitch_mapbox_images(bg_img, width, height, center, zoom, map_id)
@@ -33,17 +32,65 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
         color = get_color(f)
 
         if geo_type == "Polygon":
-            draw_polygon(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+            draw_polygon(
+                draw_ctx,
+                antialias,
+                color,
+                geometry["coordinates"],
+                merc_center,
+                zoom,
+                img_size,
+            )
         elif geo_type == "LineString":
-            draw_linestring(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+            draw_linestring(
+                draw_ctx,
+                antialias,
+                color,
+                geometry["coordinates"],
+                merc_center,
+                zoom,
+                img_size,
+            )
         elif geo_type == "MultiPolygon":
-            draw_multi_polygon(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+            draw_multi_polygon(
+                draw_ctx,
+                antialias,
+                color,
+                geometry["coordinates"],
+                merc_center,
+                zoom,
+                img_size,
+            )
         elif geo_type == "MultiLineString":
-            draw_multi_linestring(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+            draw_multi_linestring(
+                draw_ctx,
+                antialias,
+                color,
+                geometry["coordinates"],
+                merc_center,
+                zoom,
+                img_size,
+            )
         elif geo_type == "Point":
-            draw_point(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+            draw_point(
+                draw_ctx,
+                antialias,
+                color,
+                geometry["coordinates"],
+                merc_center,
+                zoom,
+                img_size,
+            )
         elif geo_type == "MultiPoint":
-            draw_multi_point(draw_ctx, antialias, color, geometry["coordinates"], merc_center, zoom, img_size)
+            draw_multi_point(
+                draw_ctx,
+                antialias,
+                color,
+                geometry["coordinates"],
+                merc_center,
+                zoom,
+                img_size,
+            )
 
     img = img.resize((img_size.width, img_size.height), Image.LANCZOS)
     bg_img.paste(img, (0, 0), img)
@@ -53,26 +100,35 @@ def render_feature_collection(fc, width, height, map_id, antialias=6):
     return buffer.getvalue()
 
 
-def draw_multi_linestring(draw_ctx, antialias, color, multilinestring, merc_center, zoom, img_size):
+def draw_multi_linestring(
+    draw_ctx, antialias, color, multilinestring, merc_center, zoom, img_size
+):
     for linestring in multilinestring:
-        draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom, img_size)
+        draw_linestring(
+            draw_ctx, antialias, color, linestring, merc_center, zoom, img_size
+        )
 
 
-def draw_multi_polygon(draw_ctx, antialias, color, multipolygon, merc_center, zoom, img_size):
+def draw_multi_polygon(
+    draw_ctx, antialias, color, multipolygon, merc_center, zoom, img_size
+):
     for polygon in multipolygon:
         for linestring in polygon:
-            draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom, img_size)
+            draw_linestring(
+                draw_ctx, antialias, color, linestring, merc_center, zoom, img_size
+            )
 
 
-def draw_polygon(draw_ctx, antialias, color, polygon, merc_center, zoom,
-                 img_size):
+def draw_polygon(draw_ctx, antialias, color, polygon, merc_center, zoom, img_size):
     for linestring in polygon:
-        draw_linestring(draw_ctx, antialias, color, linestring,
-                        merc_center, zoom, img_size)
+        draw_linestring(
+            draw_ctx, antialias, color, linestring, merc_center, zoom, img_size
+        )
 
 
-def draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom,
-                    img_size):
+def draw_linestring(
+    draw_ctx, antialias, color, linestring, merc_center, zoom, img_size
+):
     vectors = []
 
     for point in linestring:
@@ -84,7 +140,9 @@ def draw_linestring(draw_ctx, antialias, color, linestring, merc_center, zoom,
     draw_ctx.line(ImagePath.Path(vectors), color, 10)
 
 
-def draw_multi_point(draw_ctx, antialias, color, multipoint, merc_center, zoom, img_size):
+def draw_multi_point(
+    draw_ctx, antialias, color, multipoint, merc_center, zoom, img_size
+):
     for point in multipoint:
         draw_point(draw_ctx, antialias, color, point, merc_center, img_size)
 
@@ -94,13 +152,20 @@ def draw_point(draw_ctx, antialias, color, point, merc_center, zoom, img_size):
     merc_point = transform_to_mercator(coord, zoom)
     img_coord = convert_to_img_coords(merc_center, merc_point, img_size, 1)
     draw_ctx.ellipse(
-        (img_coord[0] * antialias - 35, img_coord[1] * antialias - 35,
-        img_coord[0] * antialias + 35, img_coord[1] * antialias + 35), fill=color, outline=(0, 0, 0))
+        (
+            img_coord[0] * antialias - 35,
+            img_coord[1] * antialias - 35,
+            img_coord[0] * antialias + 35,
+            img_coord[1] * antialias + 35,
+        ),
+        fill=color,
+        outline=(0, 0, 0),
+    )
 
 
 def get_color(feature):
     color = None
-    
+
     if "color" in feature["properties"]:
         color = parse_color(feature["properties"]["color"])
 
@@ -119,14 +184,14 @@ def parse_color(string):
     for i, char in enumerate(string):
         if char == " ":
             continue
-        
+
         if char == "(":
             if buffer != "rgba" and buffer != "rgb":
                 return None
 
             ctype = buffer
             buffer = ""
-        elif char == "," or char == ')':
+        elif char == "," or char == ")":
             ints[index] = int(buffer)
             index += 1
 
@@ -164,6 +229,7 @@ def get_bounds(feature_collection):
         max_y = max(coord.lat, max_y)
 
     return Bounds(min_x, min_y, max_x, max_y)
+
 
 def enum_coords(feature_collection):
     for f in feature_collection["features"]:
@@ -204,16 +270,22 @@ def calculate_max_zoom(bounds, img_size, center, stroke_size):
         merc_center = transform_to_mercator(center, zoom)
         merc_min = transform_to_mercator(min, zoom)
         merc_max = transform_to_mercator(max, zoom)
-        img_min = convert_to_img_coords(
-            merc_center, merc_min, img_size, stroke_size)
-        img_max = convert_to_img_coords(
-            merc_center, merc_max, img_size, stroke_size)
+        img_min = convert_to_img_coords(merc_center, merc_min, img_size, stroke_size)
+        img_max = convert_to_img_coords(merc_center, merc_max, img_size, stroke_size)
 
-        minok = (img_min[0] > 0 and img_min[1] > 0 and
-                 img_min[0] < img_size.width and img_min[1] < img_size.height)
+        minok = (
+            img_min[0] > 0
+            and img_min[1] > 0
+            and img_min[0] < img_size.width
+            and img_min[1] < img_size.height
+        )
 
-        maxok = (img_max[0] > 0 and img_max[1] > 0 and
-                 img_max[0] < img_size.width and img_max[1] < img_size.height)
+        maxok = (
+            img_max[0] > 0
+            and img_max[1] > 0
+            and img_max[0] < img_size.width
+            and img_max[1] < img_size.height
+        )
 
         if minok and maxok:
             break
@@ -239,9 +311,9 @@ def transform_to_mercator(coords, zoom):
     bc = size / 360
     cc = size / (2 * math.pi)
     ac = size
-    f = min(max(math.sin(d2r * coords.lat), -.9999), .9999)
+    f = min(max(math.sin(d2r * coords.lat), -0.9999), 0.9999)
     x = d + coords.lng * bc
-    y = d + .5 * (math.log((1 + f) / (1 - f)) * -cc)
+    y = d + 0.5 * (math.log((1 + f) / (1 - f)) * -cc)
 
     if x > ac:
         x = ac

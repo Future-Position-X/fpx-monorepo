@@ -26,14 +26,19 @@ def get_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> Collec
 
 
 def delete_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> None:
-    collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+    collection = Collection.first_or_fail(
+        uuid=collection_uuid, provider_uuid=provider_uuid
+    )
     collection.delete()
     collection.session.commit()
 
 
-def update_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID,
-                              collection_update: CollectionDTO) -> CollectionDTO:
-    collection = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+def update_collection_by_uuid(
+    provider_uuid: UUID, collection_uuid: UUID, collection_update: CollectionDTO
+) -> CollectionDTO:
+    collection = Collection.first_or_fail(
+        uuid=collection_uuid, provider_uuid=provider_uuid
+    )
     collection.name = collection_update.name
     collection.is_public = collection_update.is_public
     collection.save()
@@ -41,7 +46,9 @@ def update_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID,
     return to_model(collection, CollectionDTO)
 
 
-def copy_collection_from(provider_uuid: UUID, src_collection_uuid: UUID, dst_collection_uuid: UUID) -> CollectionDTO:
+def copy_collection_from(
+    provider_uuid: UUID, src_collection_uuid: UUID, dst_collection_uuid: UUID
+) -> CollectionDTO:
     src_collection = Collection.find_or_fail(src_collection_uuid)
     if src_collection.provider_uuid != provider_uuid and not src_collection.is_public:
         raise PermissionError()
@@ -49,8 +56,8 @@ def copy_collection_from(provider_uuid: UUID, src_collection_uuid: UUID, dst_col
     if dst_collection_uuid is None:
         dst_collection = {
             "provider_uuid": provider_uuid,
-            "name": src_collection.name + '_copy',
-            "is_public": False
+            "name": src_collection.name + "_copy",
+            "is_public": False,
         }
 
         dst_collection = Collection.create(**dst_collection)

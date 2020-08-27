@@ -1,4 +1,5 @@
 import os
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -6,11 +7,18 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SECRET_KEY = os.environ.get('JWT_SECRET', 'mRJZQrLE6HlStXd4eEQcMLNDDIltgo1eYUzA5TbAcaRlwCX6FI2SLYKjgq19')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'postgresql://master:master@localhost:5432/development')
+    SECRET_KEY = os.environ.get(
+        "JWT_SECRET", "mRJZQrLE6HlStXd4eEQcMLNDDIltgo1eYUzA5TbAcaRlwCX6FI2SLYKjgq19"
+    )
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL", "postgresql://master:master@localhost:5432/development"
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_IDENTITY_CLAIM = 'sub'
-    MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1IjoidGVmcHgiLCJhIjoiY2s3dTg3N2YzMDB2MjNvbW92b3g2dGpybyJ9.PVGtG461oWUisZPnfZx-uw')
+    JWT_IDENTITY_CLAIM = "sub"
+    MAPBOX_TOKEN = os.environ.get(
+        "MAPBOX_TOKEN",
+        "pk.eyJ1IjoidGVmcHgiLCJhIjoiY2s3dTg3N2YzMDB2MjNvbW92b3g2dGpybyJ9.PVGtG461oWUisZPnfZx-uw",
+    )
 
 
 class ProductionConfig(Config):
@@ -29,12 +37,15 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_TESTING', 'postgresql://master:master@localhost:5432/testing')
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL_TESTING", "postgresql://master:master@localhost:5432/testing"
+    )
     SQLALCHEMY_ECHO = False
 
+
 app_config = {
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'staging': StagingConfig,
-    'production': ProductionConfig,
+    "development": DevelopmentConfig,
+    "testing": TestingConfig,
+    "staging": StagingConfig,
+    "production": ProductionConfig,
 }

@@ -2,22 +2,22 @@ from flask import request
 from flask_restx import Resource, fields
 
 from app import api
-from app.services.session import (
-    create_session
+from app.services.session import create_session
+
+ns = api.namespace("sessions", "Session operations", path="/")
+
+create_session_model = api.model(
+    "CreateSession",
+    {
+        "email": fields.String(description="email"),
+        "password": fields.String(description="password"),
+    },
 )
 
-ns = api.namespace('sessions', 'Session operations', path="/")
+token_model = api.model("Token", {"token": fields.String(description="token")})
 
-create_session_model = api.model('CreateSession', {
-    'email': fields.String(description='email'),
-    'password': fields.String(description='password')
-})
 
-token_model = api.model('Token', {
-    'token': fields.String(description='token'),
-})
-
-@ns.route('/sessions')
+@ns.route("/sessions")
 class Session(Resource):
     @ns.doc(security=None)
     @ns.expect(create_session_model)
@@ -28,9 +28,7 @@ class Session(Resource):
         password = json["password"]
         try:
             token = create_session(email, password)
-            response = {
-                       'token': token
-                   }
+            response = {"token": token}
             return response, 201
         except ValueError:
-            return '', 401
+            return "", 401

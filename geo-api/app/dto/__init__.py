@@ -4,8 +4,7 @@ from geoalchemy2 import WKTElement
 
 
 class BaseModelDTO:
-    __slots__ = ['uuid',
-                 'created_at', 'updated_at', 'revision']
+    __slots__ = ["uuid", "created_at", "updated_at", "revision"]
 
     def __init__(self, kwargs, slots):
         self.add_slots(slots)
@@ -29,24 +28,23 @@ class CollectionDTO(BaseModelDTO):
     is_public: bool
 
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['provider_uuid', 'name', 'is_public'])
+        super().__init__(kwargs, ["provider_uuid", "name", "is_public"])
 
 
 class ItemDTO(BaseModelDTO):
     collection_uuid: UUID
     geometry: WKTElement
     properties: dict
+
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['collection_uuid', 'geometry', 'properties'])
+        super().__init__(kwargs, ["collection_uuid", "geometry", "properties"])
 
 
 class ProviderDTO(BaseModelDTO):
-
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['name'])
+        super().__init__(kwargs, ["name"])
 
 
 class UserDTO(BaseModelDTO):
-
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ['provider_uuid', 'email', 'password'])
+        super().__init__(kwargs, ["provider_uuid", "email", "password"])
