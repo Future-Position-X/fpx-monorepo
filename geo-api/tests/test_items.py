@@ -385,10 +385,10 @@ def test_api_error_on_item_not_found(client, collection):
 def test_generate_walking_paths(client, obstacles, sensors, collection):
     res = client.post(
         "/collections/{}/items/ai/generate/walkingpaths?{}={}&{}={}".format(
-            "starting_points_collection_uuid",
             collection["uuid"],
-            "environment_collection_uuid",
+            "starting_points_collection_uuid",
             sensors["uuid"],
+            "environment_collection_uuid",
             obstacles["uuid"],
         )
     )
