@@ -1,10 +1,10 @@
 from app import api
 from flask_restx import Resource
 
-ns = api.namespace('health', 'Api health check')
+ns = api.namespace("health", "Api health check")
 
 
-@ns.route('/')
+@ns.route("/")
 class Health(Resource):
     @ns.doc(security=None)
     def get(self):

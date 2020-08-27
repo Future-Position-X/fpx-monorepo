@@ -11,11 +11,13 @@ repos:
     rev: 3.8.3
     hooks:
     -   id: flake8
-        args: [--exclude */venv/*]
+        args: ["--config=geo-api/.flake8", "--ignore=E203,W503"]
+        files: ^geo-api/
 -   repo: https://github.com/psf/black
     rev: 19.3b0
     hooks:
     -   id: black
+        files: ^geo-api/
 -   repo: local
     hooks:
     -   id: gia-editor

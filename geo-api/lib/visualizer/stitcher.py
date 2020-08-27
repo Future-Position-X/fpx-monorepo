@@ -3,7 +3,7 @@ import requests
 import io
 import os
 from PIL import Image
-from . geo_types import Coords, Size
+from .geo_types import Coords, Size
 
 
 class ImageTile:
@@ -43,10 +43,17 @@ def stitch_mapbox_images(full_image, width, height, center, zoom, map_id):
 
         is_last_image_tile = current.next is None
         latlng = meters_to_coords(x, y)
-        img = fetch_mapbox_image(latlng, zoom, Size(
-            current.width, current.height), map_id, is_last_image_tile)
-        full_image.paste(img, (offset_x, offset_y, offset_x +
-                               current.width, offset_y + current.height))
+        img = fetch_mapbox_image(
+            latlng,
+            zoom,
+            Size(current.width, current.height),
+            map_id,
+            is_last_image_tile,
+        )
+        full_image.paste(
+            img,
+            (offset_x, offset_y, offset_x + current.width, offset_y + current.height),
+        )
 
         offset_x += current.width
 
@@ -58,8 +65,13 @@ def stitch_mapbox_images(full_image, width, height, center, zoom, map_id):
 
 
 def meters_per_pixel(lat, zoom):
-    return (math.cos(lat * math.pi / 180.0) * 2 * math.pi * 6378137 /
-            (TILE_SIZE * math.pow(2, zoom)))
+    return (
+        math.cos(lat * math.pi / 180.0)
+        * 2
+        * math.pi
+        * 6378137
+        / (TILE_SIZE * math.pow(2, zoom))
+    )
 
 
 def create_tile_list(image_width, image_height):
@@ -108,8 +120,7 @@ def get_column_width(image_width, column, n_columns):
 
 def coords_to_meters(coords):
     lng = coords.lng * ORIGIN_SHIFT / 180.0
-    lat = math.log(
-        math.tan((90 + coords.lat) * math.pi / 360.0)) / (math.pi / 180.0)
+    lat = math.log(math.tan((90 + coords.lat) * math.pi / 360.0)) / (math.pi / 180.0)
     lat *= ORIGIN_SHIFT / 180.0
 
     return Coords(lng, lat)
@@ -118,8 +129,11 @@ def coords_to_meters(coords):
 def meters_to_coords(lng, lat):
     lng = lng / ORIGIN_SHIFT * 180.0
     lat = lat / ORIGIN_SHIFT * 180.0
-    lat = 180.0 / math.pi * \
-        (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2.0)
+    lat = (
+        180.0
+        / math.pi
+        * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2.0)
+    )
 
     return Coords(lng, lat)
 
@@ -127,10 +141,12 @@ def meters_to_coords(lng, lat):
 def fetch_mapbox_image(center, zoom, size, map_id, include_attribution):
     token = os.environ["MAPBOX_TOKEN"]
 
-    url = (f"https://api.mapbox.com/styles/v1/mapbox/{map_id}/static"
-           f"/{center.lng},{center.lat},{zoom}/{size.width}x{size.height}"
-           f"?logo=false&attribution={str(include_attribution).lower()}"
-           f"&access_token={token}")
+    url = (
+        f"https://api.mapbox.com/styles/v1/mapbox/{map_id}/static"
+        f"/{center.lng},{center.lat},{zoom}/{size.width}x{size.height}"
+        f"?logo=false&attribution={str(include_attribution).lower()}"
+        f"&access_token={token}"
+    )
 
     response = requests.get(url)
     bytesio = io.BytesIO(response.content)
