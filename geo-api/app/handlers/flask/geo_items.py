@@ -274,7 +274,7 @@ filter_params = {
     "spatial_filter.point.y": {
         "description": "y (latitude) of point for spatial filter within or intersect"
     },
-    "collection_uuids": {"description", "Comma-separated collection uuid filter"},
+    "collection_uuids": {"description": "Comma-separated collection uuid filter"},
 }
 
 transform_params = {
