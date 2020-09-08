@@ -1,29 +1,29 @@
 from typing import List
 from uuid import UUID, uuid4
 
-from app.dto import ItemDTO
+from app.dto import ItemDTO, InternalUserDTO
 from app.models import Item, to_models, Collection, to_model
 
 
-def get_items(provider_uuid: UUID, filters, transforms) -> List[ItemDTO]:
-    items = Item.get_with_simplify(provider_uuid, filters, transforms)
+def get_items(user: InternalUserDTO, filters, transforms) -> List[ItemDTO]:
+    items = Item.get_with_simplify(user, filters, transforms)
     return to_models(items, ItemDTO)
 
 
 def get_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, filters, transforms
+    user: InternalUserDTO, collection_uuid: UUID, filters, transforms
 ) -> List[ItemDTO]:
     items = Item.find_by_collection_uuid_with_simplify(
-        provider_uuid, collection_uuid, filters, transforms
+        user, collection_uuid, filters, transforms
     )
     return to_models(items, ItemDTO)
 
 
 def get_collection_items_by_name(
-    provider_uuid: UUID, collection_name: UUID, filters, transforms
+    user: InternalUserDTO, collection_name: UUID, filters, transforms
 ) -> List[ItemDTO]:
     items = Item.find_by_collection_name_with_simplify(
-        provider_uuid, collection_name, filters, transforms
+        user, collection_name, filters, transforms
     )
     return to_models(items, ItemDTO)
 
@@ -72,25 +72,25 @@ def delete_collection_items(provider_uuid: UUID, collection_uuid: UUID) -> None:
 
 
 def get_collection_item(
-    provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID
 ) -> ItemDTO:
-    item = Item.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
+    item = Item.find_accessible_or_fail(user, item_uuid, collection_uuid)
     return to_model(item, ItemDTO)
 
 
-def get_item(provider_uuid: UUID, item_uuid: UUID) -> ItemDTO:
-    item = Item.find_accessible_or_fail(provider_uuid, item_uuid)
+def get_item(user: InternalUserDTO, item_uuid: UUID) -> ItemDTO:
+    item = Item.find_accessible_or_fail(user, item_uuid)
     return to_model(item, ItemDTO)
 
 
 def delete_collection_item(
-    provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID
 ) -> None:
-    Item.delete_owned(provider_uuid, item_uuid, collection_uuid)
+    Item.delete_owned(user, item_uuid, collection_uuid)
 
 
-def delete_item(provider_uuid: UUID, item_uuid: UUID) -> None:
-    Item.delete_owned(provider_uuid, item_uuid)
+def delete_item(user: InternalUserDTO, item_uuid: UUID) -> None:
+    Item.delete_owned(user, item_uuid)
 
 
 def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemDTO]:
@@ -110,8 +110,8 @@ def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemD
     return to_models(items, ItemDTO)
 
 
-def update_item(provider_uuid: UUID, item_uuid: UUID, item_update) -> ItemDTO:
-    item = Item.find_accessible_or_fail(provider_uuid, item_uuid)
+def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
+    item = Item.find_accessible_or_fail(user, item_uuid)
 
     item.properties = item_update.properties
     item.geometry = item_update.geometry

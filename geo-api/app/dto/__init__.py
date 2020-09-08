@@ -1,10 +1,10 @@
 from uuid import UUID
-
+from enum import Enum
 from geoalchemy2 import WKTElement
 
 
-class BaseModelDTO:
-    __slots__ = ["uuid", "created_at", "updated_at", "revision"]
+class BaseDTO:
+    __slots__ = []
 
     def __init__(self, kwargs, slots):
         self.add_slots(slots)
@@ -20,6 +20,10 @@ class BaseModelDTO:
             if hasattr(self, att):
                 attrs[att] = getattr(self, att)
         return attrs
+
+
+class BaseModelDTO(BaseDTO):
+    __slots__ = ["uuid", "created_at", "updated_at", "revision"]
 
 
 class CollectionDTO(BaseModelDTO):
@@ -48,3 +52,22 @@ class ProviderDTO(BaseModelDTO):
 class UserDTO(BaseModelDTO):
     def __init__(self, **kwargs):
         super().__init__(kwargs, ["provider_uuid", "email", "password"])
+
+
+class NoValue(Enum):
+    def __repr__(self):
+        return "<%s.%s>" % (self.__class__.__name__, self.name)
+
+
+class Access(NoValue):
+    READ = "read"
+    WRITE = "write"
+
+
+class InternalUserDTO(BaseDTO):
+    uuid: UUID
+    provider_uuid: UUID
+    access: Access
+
+    def __init__(self, **kwargs):
+        super().__init__(kwargs, ["uuid", "provider_uuid", "access"])

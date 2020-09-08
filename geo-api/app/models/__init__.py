@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Type, TypeVar
-from app.dto import BaseModelDTO, ItemDTO
+from app.dto import BaseModelDTO, ItemDTO, InternalUserDTO
 import sqlalchemy_mixins
 from geoalchemy2 import Geometry
 from shapely_geojson import Feature as BaseFeature
@@ -13,7 +13,7 @@ from sqlalchemy_mixins import (
     SerializeMixin,
     ModelNotFoundError,
 )
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 
 from app import db
 
@@ -203,10 +203,11 @@ class Item(BaseModel):
         (
             collections.is_public=true
             OR collections.provider_uuid = :provider_uuid
+            OR ((acls.collection_uuid = collections.uuid OR acls.item_uuid = items.uuid) AND acls.access = 'read')
         )"""
 
         if filters.get("collection_uuid"):
-            where += " AND collection_uuid = :collection_uuid"
+            where += " AND items.collection_uuid = :collection_uuid"
 
         if filters.get("collection_name"):
             where += " AND collections.name = :collection_name"
@@ -328,12 +329,21 @@ class Item(BaseModel):
         return where, exec_dict
 
     @classmethod
-    def find_by_collection_name(cls, provider_uuid, collection_name, filters):
+    def find_by_collection_name(cls, user: InternalUserDTO, collection_name, filters):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         filters["collection_name"] = collection_name
         where, exec_dict = cls.create_where(filters)
         result = (
             cls.query.join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -344,8 +354,10 @@ class Item(BaseModel):
 
     @classmethod
     def find_by_collection_name_with_simplify(
-        cls, provider_uuid, collection_name, filters, transforms
+        cls, user: InternalUserDTO, collection_name, filters, transforms
     ):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         filters["collection_name"] = collection_name
         where, exec_dict = cls.create_where(filters)
@@ -363,6 +375,13 @@ class Item(BaseModel):
                 cls.revision,
             )
             .join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -377,12 +396,21 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_by_collection_uuid(cls, provider_uuid, collection_uuid, filters):
+    def find_by_collection_uuid(cls, user: InternalUserDTO, collection_uuid, filters):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         filters["collection_uuid"] = collection_uuid
         where, exec_dict = cls.create_where(filters)
         result = (
             cls.query.join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -392,7 +420,9 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def get_with_simplify(cls, provider_uuid, filters, transforms):
+    def get_with_simplify(cls, user: InternalUserDTO, filters, transforms):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         where, exec_dict = cls.create_where(filters)
         result = (
@@ -408,6 +438,13 @@ class Item(BaseModel):
                 cls.revision,
             )
             .join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -423,8 +460,10 @@ class Item(BaseModel):
 
     @classmethod
     def find_by_collection_uuid_with_simplify(
-        cls, provider_uuid, collection_uuid, filters, transforms
+        cls, user: InternalUserDTO, collection_uuid, filters, transforms
     ):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         filters["collection_uuid"] = collection_uuid
         where, exec_dict = cls.create_where(filters)
@@ -441,6 +480,13 @@ class Item(BaseModel):
                 cls.revision,
             )
             .join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -455,8 +501,18 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_accessible_or_fail(cls, provider_uuid, item_uuid, collection_uuid=None):
-        q = cls.query.filter(cls.uuid == item_uuid)
+    def find_accessible_or_fail(
+        cls, user: InternalUserDTO, item_uuid, collection_uuid=None
+    ):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = cls.query.outerjoin(
+            ACL,
+            or_(
+                ACL.granted_provider_uuid == provider_uuid,
+                ACL.granted_user_uuid == user_uuid,
+            ),
+        ).filter(cls.uuid == item_uuid)
         if collection_uuid is not None:
             q = q.filter(cls.collection_uuid == collection_uuid)
 
@@ -464,6 +520,13 @@ class Item(BaseModel):
             or_(
                 Item.collection.has(is_public=True),
                 Item.collection.has(provider_uuid=provider_uuid),
+                and_(
+                    or_(
+                        ACL.collection_uuid == Item.collection_uuid,
+                        ACL.item_uuid == Item.uuid,
+                    ),
+                    ACL.access == user.access.value,
+                ),
             )
         )
 
@@ -483,8 +546,8 @@ class Item(BaseModel):
         return q
 
     @classmethod
-    def delete_owned(cls, provider_uuid, item_uuid, collection_uuid=None):
-        cls.owned_query(provider_uuid, item_uuid, collection_uuid).delete(
+    def delete_owned(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+        cls.owned_query(user, item_uuid, collection_uuid).delete(
             synchronize_session=False
         )
         cls.session().commit()
@@ -532,6 +595,53 @@ class Item(BaseModel):
                 "dest_collection_uuid": dest_collection_uuid,
             },
         )
+
+
+class ACL(BaseModel):
+    __tablename__ = "acls"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "granted_provider_uuid",
+            "granted_user_uuid",
+            "collection_uuid",
+            "item_uuid",
+            "access",
+        ),
+        db.CheckConstraint(
+            "((granted_provider_uuid is not null)::integer + (granted_user_uuid is not null)::integer) = 1",
+            name="check_granted",
+        ),
+        db.CheckConstraint(
+            "((item_uuid is not null)::integer + (collection_uuid is not null)::integer) = 1",
+            name="check_granted_object",
+        ),
+    )
+    uuid = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+
+    provider_uuid = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("providers.uuid"), index=True, nullable=False
+    )
+
+    granted_provider_uuid = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("providers.uuid"), index=True, nullable=True
+    )
+    granted_user_uuid = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("users.uuid"), index=True, nullable=True
+    )
+    collection_uuid = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("collections.uuid"), index=True, nullable=True
+    )
+    item_uuid = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("items.uuid"), index=True, nullable=True
+    )
+
+    access = db.Column(db.Enum("read", "write", name="permission"), nullable=False)
 
 
 BDTO = TypeVar("BDTO", bound=BaseModelDTO)

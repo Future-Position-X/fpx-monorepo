@@ -57,12 +57,34 @@ def provider(app, db, request):
 
 
 @pytest.fixture(scope="session")
+def provider2(app, db, request):
+    from app.models import Provider
+
+    with app.app_context():
+        provider = Provider.create(name="test-provider2")
+        Provider.session().commit()
+        return provider.to_dict()
+
+
+@pytest.fixture(scope="session")
 def user(app, db, provider, request):
     from app.models import User
 
     with app.app_context():
         user = User.create(
             email="test-user@test.se", password="test", provider_uuid=provider["uuid"]
+        )
+        user.session().commit()
+        return user.to_dict()
+
+
+@pytest.fixture(scope="session")
+def user2(app, db, provider2, request):
+    from app.models import User
+
+    with app.app_context():
+        user = User.create(
+            email="test-user2@test.se", password="test", provider_uuid=provider2["uuid"]
         )
         user.session().commit()
         return user.to_dict()
@@ -220,6 +242,36 @@ def client(
     provider_uuid = str(provider["uuid"])
     with app.app_context():
         token = create_access_token(user["uuid"], provider_uuid)
+    client = app.test_client()
+    client.environ_base["HTTP_AUTHORIZATION"] = "Bearer " + token
+    client.environ_base["HTTP_CONTENT_TYPE"] = "application/json"
+    client.environ_base["HTTP_ACCEPT"] = "application/json"
+    return client
+
+
+@pytest.fixture(scope="session")
+def client2(
+    app,
+    db,
+    provider,
+    user,
+    provider2,
+    user2,
+    collection,
+    collection_private,
+    collection_empty,
+    obstacles,
+    sensors,
+    item,
+    item_empty_geom,
+    item_private,
+    request,
+):
+    from app.services.session import create_access_token
+
+    provider_uuid = str(provider2["uuid"])
+    with app.app_context():
+        token = create_access_token(user2["uuid"], provider_uuid)
     client = app.test_client()
     client.environ_base["HTTP_AUTHORIZATION"] = "Bearer " + token
     client.environ_base["HTTP_CONTENT_TYPE"] = "application/json"

@@ -194,6 +194,32 @@ def test_get_items(client, collection):
     assert "test-item-empty" not in str(res.data)
 
 
+# def test_get_shared_items(session, user, user2, client2, collection_private):
+#     from app.models import ACL
+#     ACL.set_session(session)
+#
+#     res = client2.get(
+#         "/collections/{}/items".format(collection_private["uuid"]),
+#         headers={"accept": "application/json"},
+#     )
+#     print(res.data)
+#     assert res.status_code == 200
+#     items_array = json.loads(res.data.decode("utf-8"))
+#     assert len(items_array) == 0
+#
+#     ACL.create(provider_uuid=user["provider_uuid"],
+#                   granted_provider_uuid=user2["provider_uuid"],
+#                   collection_uuid=collection_private['uuid'],
+#                   access="read")
+#
+#     res = client2.get(
+#         "/collections/{}/items".format(collection_private["uuid"]),
+#         headers={"accept": "application/json"},
+#     )
+#     assert res.status_code == 200
+#     assert "test-item-private" in str(res.data)
+
+
 def test_get_items_geojson(client, collection):
     res = client.get(
         "/collections/{}/items".format(collection["uuid"]),
