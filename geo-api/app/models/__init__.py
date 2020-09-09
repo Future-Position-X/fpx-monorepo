@@ -141,7 +141,7 @@ class Collection(BaseModel):
     )
 
     @classmethod
-    def writeable_query(cls, user: InternalUserDTO):
+    def writeable_query(cls, user: InternalUserDTO, collection_uuid):
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = (
@@ -157,7 +157,7 @@ class Collection(BaseModel):
                 or_(
                     cls.provider_uuid == provider_uuid,
                     and_(
-                        ACL.collection_uuid == Item.collection_uuid,
+                        ACL.collection_uuid == collection_uuid,
                         ACL.access == Access.WRITE.value,
                     ),
                 )
@@ -215,7 +215,7 @@ class Collection(BaseModel):
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
     def find_writeable_or_fail(cls, user: InternalUserDTO, collection_uuid):
-        writeable_sq = cls.writeable_query(user).subquery()
+        writeable_sq = cls.writeable_query(user, collection_uuid).subquery()
         q = cls.query.filter(cls.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(writeable_sq))
         res = q.first()

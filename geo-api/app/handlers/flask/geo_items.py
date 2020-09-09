@@ -13,7 +13,7 @@ from shapely.geometry import mapping
 from shapely_geojson import dumps, FeatureCollection
 
 from app import api
-from app.dto import ItemDTO, Access
+from app.dto import ItemDTO
 from app.handlers.flask import get_user_from_request
 from app.models import Feature
 from app.services.ai import generate_paths_from_points, get_sequence_for_sensor
@@ -528,7 +528,6 @@ class CollectionItemApi(Resource):
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
         user = get_user_from_request()
-        user.access = Access.READ
         item = get_collection_item(user, collection_uuid, item_uuid)
         return item
 
