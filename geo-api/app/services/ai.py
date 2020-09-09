@@ -34,10 +34,10 @@ def generate_paths_from_points(
     filters,
 ):
     global env
-    starting_points = ItemDB.find_by_collection_uuid(
+    starting_points = ItemDB.find_readable_by_collection_uuid(
         provider_uuid, points_collection_uuid, filters
     )
-    obstacles = ItemDB.find_by_collection_uuid(
+    obstacles = ItemDB.find_readable_by_collection_uuid(
         provider_uuid, obstacles_collection_uuid, filters
     )
 

@@ -141,7 +141,7 @@ class Collection(BaseModel):
     )
 
     @classmethod
-    def writeable_query(cls, user: InternalUserDTO, collection_uuid):
+    def writeable_query(cls, user: InternalUserDTO):
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = (
@@ -157,7 +157,7 @@ class Collection(BaseModel):
                 or_(
                     cls.provider_uuid == provider_uuid,
                     and_(
-                        ACL.collection_uuid == collection_uuid,
+                        ACL.collection_uuid == cls.uuid,
                         ACL.access == Access.WRITE.value,
                     ),
                 )
@@ -183,8 +183,7 @@ class Collection(BaseModel):
                     cls.provider_uuid == provider_uuid,
                     cls.is_public == True,  # noqa: E712
                     and_(
-                        ACL.collection_uuid == Item.collection_uuid,
-                        ACL.access == Access.READ.value,
+                        ACL.collection_uuid == cls.uuid, ACL.access == Access.READ.value
                     ),
                 )
             )
@@ -215,7 +214,7 @@ class Collection(BaseModel):
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
     def find_writeable_or_fail(cls, user: InternalUserDTO, collection_uuid):
-        writeable_sq = cls.writeable_query(user, collection_uuid).subquery()
+        writeable_sq = cls.writeable_query(user).subquery()
         q = cls.query.filter(cls.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(writeable_sq))
         res = q.first()
@@ -436,30 +435,6 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_by_collection_uuid(cls, user: InternalUserDTO, collection_uuid, filters):
-        user_uuid = user.uuid
-        provider_uuid = user.provider_uuid
-        filters["provider_uuid"] = provider_uuid
-        filters["collection_uuid"] = collection_uuid
-        where, exec_dict = cls.create_where(filters)
-        result = (
-            cls.query.join(Item.collection)
-            .outerjoin(
-                ACL,
-                or_(
-                    ACL.granted_provider_uuid == provider_uuid,
-                    ACL.granted_user_uuid == user_uuid,
-                ),
-            )
-            .filter(db.text(where))
-            .params(exec_dict)
-            .limit(filters["limit"])
-            .offset(filters["offset"])
-            .all()
-        )
-        return result
-
-    @classmethod
     def simplified_geometry(cls, simplify):
         return (
             cls.geometry
@@ -506,7 +481,7 @@ class Item(BaseModel):
 
     @classmethod
     def find_readable_by_collection_uuid(
-        cls, user: InternalUserDTO, collection_uuid, filters, transforms
+        cls, user: InternalUserDTO, collection_uuid, filters, transforms={}
     ):
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
@@ -580,7 +555,7 @@ class Item(BaseModel):
         return res
 
     @classmethod
-    def owned_query(cls, user: InternalUserDTO):
+    def writeable_query_subquery(cls, user: InternalUserDTO):
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = (
@@ -605,44 +580,47 @@ class Item(BaseModel):
                 )
             )
         )
-        return q
+        return q.subquery()
 
     @classmethod
-    def delete_owned(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
-        owned_sq = cls.owned_query(user).subquery()
+    def writeable_query(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+        writeable_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(cls.uuid == item_uuid)
         if collection_uuid is not None:
             q = q.filter(Collection.uuid == collection_uuid)
-        q = q.filter(cls.uuid.in_(owned_sq))
+        q = q.filter(cls.uuid.in_(writeable_sq))
+        return q
+
+    @classmethod
+    def delete_writeable(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+        q = cls.writeable_query(user, item_uuid, collection_uuid)
         q.delete(synchronize_session=False)
         cls.session().commit()
         cls.session().expire_all()
 
+    # TODO: Perhaps use JOIN instead of SUBQUERY
     @classmethod
-    def find_owned_or_fail(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
-        owned_sq = cls.owned_query(user).subquery()
-        q = cls.query.filter(cls.uuid == item_uuid)
-        if collection_uuid is not None:
-            q = q.filter(Collection.uuid == collection_uuid)
-        q = q.filter(cls.uuid.in_(owned_sq))
+    def find_writeable_or_fail(
+        cls, user: InternalUserDTO, item_uuid, collection_uuid=None
+    ):
+        q = cls.writeable_query(user, item_uuid, collection_uuid)
         res = q.first()
         if res is None:
             raise sqlalchemy_mixins.ModelNotFoundError
         return res
 
     @classmethod
-    def find_owned(cls, user: InternalUserDTO, item_uuids=None):
-        owned_sq = cls.owned_query(user).subquery()
-        q = cls.query.filter(cls.uuid.in_(owned_sq))
+    def find_writeable(cls, user: InternalUserDTO, item_uuids=None):
+        writeable_sq = cls.writeable_query_subquery(user)
+        q = cls.query.filter(cls.uuid.in_(writeable_sq))
         if item_uuids is not None:
             q = q.filter(cls.uuid.in_(item_uuids))
-
         res = q.all()
         return res
 
     @classmethod
     def delete_by_collection_uuid(cls, user: InternalUserDTO, collection_uuid):
-        owned_sq = cls.owned_query(user).subquery()
+        owned_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(Collection.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(owned_sq))
         q.delete(synchronize_session=False)

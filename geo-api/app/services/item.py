@@ -84,15 +84,15 @@ def get_item(user: InternalUserDTO, item_uuid: UUID) -> ItemDTO:
 def delete_collection_item(
     user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID
 ) -> None:
-    Item.delete_owned(user, item_uuid, collection_uuid)
+    Item.delete_writeable(user, item_uuid, collection_uuid)
 
 
 def delete_item(user: InternalUserDTO, item_uuid: UUID) -> None:
-    Item.delete_owned(user, item_uuid)
+    Item.delete_writeable(user, item_uuid)
 
 
 def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemDTO]:
-    items = Item.find_owned(provider_uuid, [item.uuid for item in items_update])
+    items = Item.find_writeable(provider_uuid, [item.uuid for item in items_update])
 
     for item in items:
         item_new = [
@@ -109,7 +109,7 @@ def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemD
 
 
 def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
-    item = Item.find_owned_or_fail(user, item_uuid)
+    item = Item.find_writeable_or_fail(user, item_uuid)
 
     item.properties = item_update.properties
     item.geometry = item_update.geometry
@@ -122,7 +122,7 @@ def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
 def update_collection_item(
     user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID, item_update
 ) -> ItemDTO:
-    item = Item.find_owned_or_fail(user, item_uuid, collection_uuid)
+    item = Item.find_writeable_or_fail(user, item_uuid, collection_uuid)
 
     item.properties = item_update.properties
     item.geometry = item_update.geometry
