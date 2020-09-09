@@ -1,34 +1,36 @@
 from typing import List
 from uuid import UUID
 
-from app.dto import CollectionDTO
+from app.dto import CollectionDTO, InternalUserDTO
 from app.models import Collection, to_model
 from app.models import to_models
 from app.services.item import copy_items_by_collection_uuid
 
 
-def get_all_accessable_collections(provider_uuid: UUID) -> List[CollectionDTO]:
-    collections = Collection.find_accessible(provider_uuid)
+def get_all_accessable_collections(user: InternalUserDTO) -> List[CollectionDTO]:
+    collections = Collection.find_readable(user)
     return to_models(collections, CollectionDTO)
 
 
-def create_collection(provider_uuid, collection: CollectionDTO) -> CollectionDTO:
-    collection.provider_uuid = provider_uuid
+def create_collection(
+    user: InternalUserDTO, collection: CollectionDTO
+) -> CollectionDTO:
+    collection.provider_uuid = user.provider_uuid
     collection = Collection(**collection.to_dict())
     collection.save()
     collection.session.commit()
     return to_model(collection, CollectionDTO)
 
 
-def get_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> CollectionDTO:
-    collection = Collection.find_accessible_or_fail(provider_uuid, collection_uuid)
+def get_collection_by_uuid(
+    user: InternalUserDTO, collection_uuid: UUID
+) -> CollectionDTO:
+    collection = Collection.find_readable_or_fail(user, collection_uuid)
     return to_model(collection, CollectionDTO)
 
 
-def delete_collection_by_uuid(provider_uuid: UUID, collection_uuid: UUID) -> None:
-    collection = Collection.first_or_fail(
-        uuid=collection_uuid, provider_uuid=provider_uuid
-    )
+def delete_collection_by_uuid(user: InternalUserDTO, collection_uuid: UUID) -> None:
+    collection = Collection.find_writeable_or_fail(user, collection_uuid)
     collection.delete()
     collection.session.commit()
 

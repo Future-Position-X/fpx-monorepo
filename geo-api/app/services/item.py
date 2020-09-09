@@ -29,9 +29,9 @@ def get_collection_items_by_name(
 
 
 def create_collection_item(
-    provider_uuid: UUID, collection_uuid: UUID, item: ItemDTO
+    user: InternalUserDTO, collection_uuid: UUID, item: ItemDTO
 ) -> ItemDTO:
-    coll = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+    coll = Collection.find_writeable_or_fail(user, collection_uuid)
     item.collection_uuid = coll.uuid
     item = Item(**item.to_dict())
     item.save()
@@ -40,23 +40,21 @@ def create_collection_item(
 
 
 def replace_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]
+    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO]
 ) -> List[ItemDTO]:
-    return create_collection_items(provider_uuid, collection_uuid, items, replace=True)
+    return create_collection_items(user, collection_uuid, items, replace=True)
 
 
 def add_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]
+    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO]
 ) -> List[ItemDTO]:
-    return create_collection_items(provider_uuid, collection_uuid, items, replace=False)
+    return create_collection_items(user, collection_uuid, items, replace=False)
 
 
 def create_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO], replace=False
+    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO], replace=False
 ) -> List[ItemDTO]:
-    collection = Collection.first_or_fail(
-        uuid=collection_uuid, provider_uuid=provider_uuid
-    )
+    collection = Collection.find_writeable_or_fail(user, collection_uuid)
 
     if replace:
         Item.where(collection_uuid=collection.uuid).delete()
@@ -67,8 +65,8 @@ def create_collection_items(
     return to_models(items, ItemDTO)
 
 
-def delete_collection_items(provider_uuid: UUID, collection_uuid: UUID) -> None:
-    Item.delete_by_collection_uuid(provider_uuid, collection_uuid)
+def delete_collection_items(user: InternalUserDTO, collection_uuid: UUID) -> None:
+    Item.delete_by_collection_uuid(user, collection_uuid)
 
 
 def get_collection_item(
