@@ -6,14 +6,14 @@ from app.models import Item, to_models, Collection, to_model
 
 
 def get_items(user: InternalUserDTO, filters, transforms) -> List[ItemDTO]:
-    items = Item.get_with_simplify(user, filters, transforms)
+    items = Item.find_readable(user, filters, transforms)
     return to_models(items, ItemDTO)
 
 
 def get_collection_items(
     user: InternalUserDTO, collection_uuid: UUID, filters, transforms
 ) -> List[ItemDTO]:
-    items = Item.find_by_collection_uuid_with_simplify(
+    items = Item.find_readable_by_collection_uuid(
         user, collection_uuid, filters, transforms
     )
     return to_models(items, ItemDTO)
@@ -22,7 +22,7 @@ def get_collection_items(
 def get_collection_items_by_name(
     user: InternalUserDTO, collection_name: UUID, filters, transforms
 ) -> List[ItemDTO]:
-    items = Item.find_by_collection_name_with_simplify(
+    items = Item.find_readable_by_collection_name(
         user, collection_name, filters, transforms
     )
     return to_models(items, ItemDTO)
@@ -72,12 +72,12 @@ def delete_collection_items(user: InternalUserDTO, collection_uuid: UUID) -> Non
 def get_collection_item(
     user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID
 ) -> ItemDTO:
-    item = Item.find_accessible_or_fail(user, item_uuid, collection_uuid)
+    item = Item.find_readable_or_fail(user, item_uuid, collection_uuid)
     return to_model(item, ItemDTO)
 
 
 def get_item(user: InternalUserDTO, item_uuid: UUID) -> ItemDTO:
-    item = Item.find_accessible_or_fail(user, item_uuid)
+    item = Item.find_readable_or_fail(user, item_uuid)
     return to_model(item, ItemDTO)
 
 
@@ -109,7 +109,20 @@ def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemD
 
 
 def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
-    item = Item.find_accessible_or_fail(user, item_uuid)
+    item = Item.find_owned_or_fail(user, item_uuid)
+
+    item.properties = item_update.properties
+    item.geometry = item_update.geometry
+
+    item.save()
+    item.session.commit()
+    return to_model(item, ItemDTO)
+
+
+def update_collection_item(
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID, item_update
+) -> ItemDTO:
+    item = Item.find_owned_or_fail(user, item_uuid, collection_uuid)
 
     item.properties = item_update.properties
     item.geometry = item_update.geometry

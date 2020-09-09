@@ -14,7 +14,7 @@ from shapely_geojson import dumps, FeatureCollection
 
 from app import api
 from app.dto import ItemDTO, Access
-from app.handlers.flask import get_read_user_from_request, get_write_user_from_request
+from app.handlers.flask import get_user_from_request
 from app.models import Feature
 from app.services.ai import generate_paths_from_points, get_sequence_for_sensor
 from app.services.item import (
@@ -31,6 +31,7 @@ from app.services.item import (
     get_item,
     delete_item,
     update_item,
+    update_collection_item,
 )
 from lib.visualizer.renderer import render_feature_collection, render_feature
 
@@ -333,7 +334,7 @@ class ItemListApi(Resource):
     )
     @ns.marshal_list_with(item_model)
     def get(self):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_items(user, filters, transforms)
@@ -347,7 +348,7 @@ class ItemListApi(Resource):
         params={**get_params, **filter_params, **transform_params},
     )
     def get_geojson(self):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_items(user, filters, transforms)
@@ -367,7 +368,7 @@ class ItemListApi(Resource):
         params={**get_params, **filter_params, **transform_params, **visualizer_params},
     )
     def get_png(self):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_items(user, filters, transforms)
@@ -390,7 +391,7 @@ class ItemListApi(Resource):
     def put(self):
         from shapely.geometry import shape
 
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         geojson = request.get_json(force=True)
         items_new = [
             ItemDTO(
@@ -419,7 +420,7 @@ class CollectionItemListApi(Resource):
     )
     @ns.marshal_list_with(item_model)
     def get(self, collection_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items(user, collection_uuid, filters, transforms)
@@ -433,7 +434,7 @@ class CollectionItemListApi(Resource):
         params={**get_params, **filter_params, **transform_params},
     )
     def get_geojson(self, collection_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items(user, collection_uuid, filters, transforms)
@@ -453,7 +454,7 @@ class CollectionItemListApi(Resource):
         params={**get_params, **filter_params, **transform_params, **visualizer_params},
     )
     def get_png(self, collection_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items(user, collection_uuid, filters, transforms)
@@ -475,7 +476,7 @@ class CollectionItemListApi(Resource):
     @ns.expect(create_item_model)
     @ns.marshal_with(item_model, code=201)
     def post(self, collection_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         item_new = ItemDTO(**request.get_json())
         item = create_collection_item(user, collection_uuid, item_new)
         return item, 201
@@ -486,7 +487,7 @@ class CollectionItemListApi(Resource):
     @ns.expect(create_item_model)
     @ns.marshal_list_with(bulk_create_item_response_model, code=201)
     def post_geojson(self, collection_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         geojson = request.get_json(force=True)
         items = feature_collection_to_items(collection_uuid, geojson)
 
@@ -499,7 +500,7 @@ class CollectionItemListApi(Resource):
     @ns.doc("add_collection_items")
     @ns.marshal_list_with(bulk_create_item_response_model, code=201)
     def put(self, collection_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         geojson = request.get_json(force=True)
         items = feature_collection_to_items(collection_uuid, geojson)
 
@@ -511,7 +512,7 @@ class CollectionItemListApi(Resource):
     @jwt_required
     @ns.doc("delete_collection_items")
     def delete(self, collection_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         delete_collection_items(user, collection_uuid)
         return "", 204
 
@@ -526,7 +527,7 @@ class CollectionItemApi(Resource):
     @ns.doc("get_item", security=None)
     @ns.marshal_with(item_model)
     def get(self, collection_uuid, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         user.access = Access.READ
         item = get_collection_item(user, collection_uuid, item_uuid)
         return item
@@ -535,7 +536,7 @@ class CollectionItemApi(Resource):
     @jwt_optional
     @ns.doc("get_item", security=None)
     def get_geojson(self, collection_uuid, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         item = get_collection_item(user, collection_uuid, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties, str(item.uuid))
         return flask.make_response(dumps(feature), 200)
@@ -548,7 +549,7 @@ class CollectionItemApi(Resource):
         params={**get_params, **filter_params, **transform_params, **visualizer_params},
     )
     def get_png(self, collection_uuid, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         item = get_collection_item(user, collection_uuid, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
         params = get_visualizer_params_from_request()
@@ -561,8 +562,18 @@ class CollectionItemApi(Resource):
     @jwt_required
     @ns.doc("delete_item")
     def delete(self, collection_uuid, item_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         delete_collection_item(user, collection_uuid, item_uuid)
+        return "", 204
+
+    @accept_fallback
+    @jwt_required
+    @ns.doc("update_item")
+    @ns.expect(update_item_model)
+    def put(self, collection_uuid, item_uuid):
+        user = get_user_from_request()
+        item_update = ItemDTO(**request.get_json(force=True))
+        update_collection_item(user, collection_uuid, item_uuid, item_update)
         return "", 204
 
 
@@ -578,7 +589,7 @@ class CollectionByNameItemListApi(Resource):
     )
     @ns.marshal_list_with(item_model)
     def get(self, collection_name):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items_by_name(user, collection_name, filters, transforms)
@@ -592,7 +603,7 @@ class CollectionByNameItemListApi(Resource):
         params={**get_params, **filter_params, **transform_params},
     )
     def get_geojson(self, collection_name):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items_by_name(user, collection_name, filters, transforms)
@@ -613,7 +624,7 @@ class CollectionByNameItemListApi(Resource):
     )
     def get_png(self, collection_name):
         filters = get_filters_from_request()
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         transforms = get_transforms_from_request()
         items = get_collection_items_by_name(user, collection_name, filters, transforms)
         features = [
@@ -642,7 +653,7 @@ class ItemApi(Resource):
     )
     @ns.marshal_with(item_model)
     def get(self, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         item = get_item(user, item_uuid)
         return item
 
@@ -654,7 +665,7 @@ class ItemApi(Resource):
         params={**get_params, **filter_params, **transform_params},
     )
     def get_geojson(self, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         item = get_item(user, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties)
         return flask.make_response(dumps(feature), 200)
@@ -667,7 +678,7 @@ class ItemApi(Resource):
         params={**get_params, **filter_params, **transform_params, **visualizer_params},
     )
     def get_png(self, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         item = get_item(user, item_uuid)
         feature = Feature(to_shape(item.geometry), item.properties).__geo_interface__
         params = get_visualizer_params_from_request()
@@ -680,7 +691,7 @@ class ItemApi(Resource):
     @jwt_required
     @ns.doc("delete_item")
     def delete(self, item_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         delete_item(user, item_uuid)
         return "", 204
 
@@ -689,7 +700,7 @@ class ItemApi(Resource):
     @ns.doc("update_item")
     @ns.expect(update_item_model)
     def put(self, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         item_update = ItemDTO(**request.get_json(force=True))
         update_item(user, item_uuid, item_update)
         return "", 204
@@ -706,7 +717,7 @@ class GenerateWalkingPathsApi(Resource):
         params={**generate_walking_paths_params},
     )
     def post(self, collection_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         filters = get_filters_from_request()
         filters.update(
             {"offset": 0, "limit": 1000, "property_filter": None, "valid": False}
@@ -739,7 +750,7 @@ class PredictionForSensorItemApi(Resource):
         params={**prediction_for_sensor_item_params},
     )
     def get(self, item_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         start_date = request.args.get("startdate")
         end_date = request.args.get("enddate")
         sequence_data = get_sequence_for_sensor(user, item_uuid, start_date, end_date)

@@ -395,31 +395,7 @@ class Item(BaseModel):
         return where, exec_dict
 
     @classmethod
-    def find_by_collection_name(cls, user: InternalUserDTO, collection_name, filters):
-        user_uuid = user.uuid
-        provider_uuid = user.provider_uuid
-        filters["provider_uuid"] = provider_uuid
-        filters["collection_name"] = collection_name
-        where, exec_dict = cls.create_where(filters)
-        result = (
-            cls.query.join(Item.collection)
-            .outerjoin(
-                ACL,
-                or_(
-                    ACL.granted_provider_uuid == provider_uuid,
-                    ACL.granted_user_uuid == user_uuid,
-                ),
-            )
-            .filter(db.text(where))
-            .params(exec_dict)
-            .limit(filters["limit"])
-            .offset(filters["offset"])
-            .all()
-        )
-        return result
-
-    @classmethod
-    def find_by_collection_name_with_simplify(
+    def find_readable_by_collection_name(
         cls, user: InternalUserDTO, collection_name, filters, transforms
     ):
         user_uuid = user.uuid
@@ -431,9 +407,7 @@ class Item(BaseModel):
             cls.session()
             .query(
                 cls.uuid,
-                func.ST_Simplify(cls.geometry, transforms["simplify"], False).label(
-                    "geometry"
-                ),
+                cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
                 cls.collection_uuid,
                 cls.created_at,
@@ -486,7 +460,15 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def get_with_simplify(cls, user: InternalUserDTO, filters, transforms):
+    def simplified_geometry(cls, simplify):
+        return (
+            cls.geometry
+            if simplify == 0.0
+            else func.ST_Simplify(cls.geometry, simplify, True).label("geometry")
+        )
+
+    @classmethod
+    def find_readable(cls, user: InternalUserDTO, filters, transforms):
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
@@ -494,9 +476,7 @@ class Item(BaseModel):
         result = (
             cls.session.query(
                 cls.uuid,
-                func.ST_Simplify(cls.geometry, transforms["simplify"], True).label(
-                    "geometry"
-                ),
+                cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
                 cls.collection_uuid,
                 cls.created_at,
@@ -525,7 +505,7 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_by_collection_uuid_with_simplify(
+    def find_readable_by_collection_uuid(
         cls, user: InternalUserDTO, collection_uuid, filters, transforms
     ):
         user_uuid = user.uuid
@@ -536,9 +516,7 @@ class Item(BaseModel):
         result = (
             cls.session.query(
                 cls.uuid,
-                func.ST_Simplify(cls.geometry, transforms["simplify"], True).label(
-                    "geometry"
-                ),
+                cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
                 cls.collection_uuid,
                 cls.created_at,
@@ -567,7 +545,7 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_accessible_or_fail(
+    def find_readable_or_fail(
         cls, user: InternalUserDTO, item_uuid, collection_uuid=None
     ):
         user_uuid = user.uuid
@@ -591,7 +569,7 @@ class Item(BaseModel):
                         ACL.collection_uuid == Item.collection_uuid,
                         ACL.item_uuid == Item.uuid,
                     ),
-                    ACL.access == user.access.value,
+                    ACL.access == Access.READ.value,
                 ),
             )
         )

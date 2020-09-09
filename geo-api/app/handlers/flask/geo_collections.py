@@ -4,11 +4,7 @@ from flask_restx import Resource, fields
 
 from app import api
 from app.dto import CollectionDTO
-from app.handlers.flask import (
-    get_provider_uuid_from_request,
-    get_read_user_from_request,
-    get_write_user_from_request,
-)
+from app.handlers.flask import get_user_from_request
 from app.services.collection import (
     copy_collection_from,
     get_all_accessable_collections,
@@ -56,7 +52,7 @@ class CollectionListApi(Resource):
     @ns.doc("list_collections", security=None)
     @ns.marshal_list_with(collection_model)
     def get(self):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         collections = get_all_accessable_collections(user)
         return collections
 
@@ -65,7 +61,7 @@ class CollectionListApi(Resource):
     @ns.expect(create_collection_model)
     @ns.marshal_with(collection_model, code=201)
     def post(self):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         collection = CollectionDTO(**request.get_json())
         collection = create_collection(user, collection)
         return collection, 201
@@ -79,7 +75,7 @@ class CollectionApi(Resource):
     @ns.doc("get_collection", security=None)
     @ns.marshal_with(collection_model)
     def get(self, collection_uuid):
-        user = get_read_user_from_request()
+        user = get_user_from_request()
         collection = get_collection_by_uuid(user, collection_uuid)
         return collection
 
@@ -87,7 +83,7 @@ class CollectionApi(Resource):
     @ns.doc("delete_collection")
     @ns.response(204, "Collection deleted")
     def delete(self, collection_uuid):
-        user = get_write_user_from_request()
+        user = get_user_from_request()
         delete_collection_by_uuid(user, collection_uuid)
         return "", 204
 
@@ -97,11 +93,9 @@ class CollectionApi(Resource):
     @ns.marshal_with(collection_model)
     @ns.response(200, "Collection updated")
     def put(self, collection_uuid):
-        provider_uuid = get_provider_uuid_from_request()
+        user = get_user_from_request()
         collection_update = CollectionDTO(**request.get_json())
-        collection = update_collection_by_uuid(
-            provider_uuid, collection_uuid, collection_update
-        )
+        collection = update_collection_by_uuid(user, collection_uuid, collection_update)
         return collection
 
 
@@ -114,10 +108,10 @@ class CollectionCopyApi(Resource):
     @ns.doc("copy_collection")
     @ns.marshal_with(collection_model, code=201)
     def post(self, src_collection_uuid, dst_collection_uuid=None):
-        provider_uuid = get_provider_uuid_from_request()
+        user = get_user_from_request()
         try:
             collection = copy_collection_from(
-                provider_uuid, src_collection_uuid, dst_collection_uuid
+                user, src_collection_uuid, dst_collection_uuid
             )
         except PermissionError:
             return "", 403

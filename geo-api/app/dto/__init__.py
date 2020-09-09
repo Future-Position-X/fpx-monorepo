@@ -67,7 +67,6 @@ class Access(NoValue):
 class InternalUserDTO(BaseDTO):
     uuid: UUID
     provider_uuid: UUID
-    access: Access
 
     def __init__(self, **kwargs):
-        super().__init__(kwargs, ["uuid", "provider_uuid", "access"])
+        super().__init__(kwargs, ["uuid", "provider_uuid"])

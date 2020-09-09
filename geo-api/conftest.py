@@ -6,6 +6,8 @@ from app import create_app
 from app import db as _db
 from sqlalchemy import event
 
+UUID_ZERO = "00000000-0000-0000-0000-000000000000"
+
 
 def pytest_addoption(parser):
     parser.addoption(

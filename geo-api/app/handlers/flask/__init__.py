@@ -1,7 +1,7 @@
 from app import app
 from flask_jwt_extended import get_raw_jwt, get_jwt_identity
 from uuid import UUID
-from app.dto import InternalUserDTO, Access
+from app.dto import InternalUserDTO
 
 
 def handle_model_not_found_error(e):
@@ -24,17 +24,10 @@ def get_user_uuid_from_request():
     return get_jwt_identity()
 
 
-def get_read_user_from_request() -> InternalUserDTO:
+def get_user_from_request() -> InternalUserDTO:
     return InternalUserDTO(
         **{
             "uuid": get_user_uuid_from_request(),
             "provider_uuid": get_provider_uuid_from_request(),
-            "access": Access.READ,
         }
     )
-
-
-def get_write_user_from_request() -> InternalUserDTO:
-    user = get_read_user_from_request()
-    user.access = Access.WRITE
-    return user
