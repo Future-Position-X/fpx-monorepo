@@ -98,4 +98,5 @@ def downgrade():
     op.drop_index(op.f("ix_acls_granted_provider_uuid"), table_name="acls")
     op.drop_index(op.f("ix_acls_collection_uuid"), table_name="acls")
     op.drop_table("acls")
+    op.execute("DROP TYPE permission")
     # ### end Alembic commands ###
