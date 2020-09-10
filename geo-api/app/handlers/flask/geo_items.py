@@ -383,6 +383,30 @@ class ItemListApi(Resource):
         )
         return flask.make_response(data, 200, {"content-type": "image/png"})
 
+    @accept("application/geojson")
+    @jwt_required
+    @ns.doc("update_items")
+    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
+    def put(self):
+        from shapely.geometry import shape
+
+        provider_uuid = get_provider_uuid_from_request()
+        geojson = request.get_json(force=True)
+        items_new = [
+            ItemDTO(
+                **{
+                    "uuid": feature["id"],
+                    "geometry": shape(feature["geometry"]).to_wkt(),
+                    "properties": feature["properties"],
+                }
+            )
+            for feature in geojson["features"]
+        ]
+
+        items = update_items(provider_uuid, items_new)
+
+        return items, 201
+
 
 @ns.route("/collections/<uuid:collection_uuid>/items")
 class CollectionItemListApi(Resource):
@@ -614,33 +638,6 @@ class CollectionByNameItemListApi(Resource):
             feature_collection, params["width"], params["height"], params["map_id"]
         )
         return flask.make_response(data, 200, {"content-type": "image/png"})
-
-
-@ns.route("/items")
-class GeoJsonItemListApi(Resource):
-    @accept("application/geojson")
-    @jwt_required
-    @ns.doc("update_items")
-    @ns.marshal_list_with(bulk_create_item_response_model, code=201)
-    def put(self):
-        from shapely.geometry import shape
-
-        provider_uuid = get_provider_uuid_from_request()
-        geojson = request.get_json(force=True)
-        items_new = [
-            ItemDTO(
-                **{
-                    "uuid": feature["id"],
-                    "geometry": shape(feature["geometry"]).to_wkt(),
-                    "properties": feature["properties"],
-                }
-            )
-            for feature in geojson["features"]
-        ]
-
-        items = update_items(provider_uuid, items_new)
-
-        return items, 201
 
 
 @ns.route("/items/<uuid:item_uuid>")
