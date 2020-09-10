@@ -55,11 +55,8 @@ class UserList(Resource):
     def post(self):
         print(request.get_json())
         user = UserDTO(**request.get_json())
-        try:
-            user = create_user(user)
-            return user, 201
-        except ValueError:
-            return "", 400
+        user = create_user(user)
+        return user, 201
 
 
 @ns.route("/<uuid:user_uuid>")

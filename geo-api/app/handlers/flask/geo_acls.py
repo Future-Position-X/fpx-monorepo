@@ -5,7 +5,12 @@ from flask_restx import Resource, fields
 from app import api
 from app.dto import ACLDTO
 from app.handlers.flask import get_user_from_request
-from app.models import ACL, Collection, Item, Provider, User, to_model
+from app.services.acl import (
+    get_all_readable_acls,
+    create_acl,
+    get_acl_by_uuid,
+    delete_acl_by_uuid,
+)
 
 ns = api.namespace("acls", "ACL operations")
 
@@ -44,7 +49,7 @@ class ACLListApi(Resource):
     @ns.marshal_list_with(acl_model)
     def get(self):
         user = get_user_from_request()
-        acls = ACL.find_readable(user)
+        acls = get_all_readable_acls(user)
         return acls
 
     @jwt_required
@@ -61,30 +66,9 @@ class ACLListApi(Resource):
             and bool(acl.collection_uuid) != bool(acl.item_uuid)
             and acl.access in ["read", "write"]
         ):
-            return None, 400
+            raise ValueError
 
-        if acl.collection_uuid:
-            collection = Collection.find_writeable_or_fail(user, acl.collection_uuid)
-            if collection.provider_uuid != user.provider_uuid:
-                return None, 403
-
-        if acl.item_uuid:
-            item = Item.find_writeable_or_fail(user, acl.item_uuid)
-            if item.collection.provider_uuid != user.provider_uuid:
-                return None, 403
-
-        if acl.granted_provider_uuid:
-            Provider.find_or_fail(acl.granted_provider_uuid)
-
-        if acl.granted_user_uuid:
-            User.find_or_fail(acl.granted_user_uuid)
-
-        acl.provider_uuid = user.provider_uuid
-
-        acl = ACL(**acl.to_dict())
-        acl.save()
-        acl.session.commit()
-        acl = to_model(acl, ACLDTO)
+        acl = create_acl(user, acl)
         return acl, 201
 
 
@@ -97,7 +81,7 @@ class ACLApi(Resource):
     @ns.marshal_with(acl_model)
     def get(self, acl_uuid):
         user = get_user_from_request()
-        acl = ACL.find_readable_or_fail(user, acl_uuid)
+        acl = get_acl_by_uuid(user, acl_uuid)
         return acl
 
     @jwt_required
@@ -105,7 +89,5 @@ class ACLApi(Resource):
     @ns.response(204, "ACL deleted")
     def delete(self, acl_uuid):
         user = get_user_from_request()
-        acl = ACL.find_readable_or_fail(user, acl_uuid)
-        acl.delete()
-        acl.session.commit()
+        delete_acl_by_uuid(user, acl_uuid)
         return "", 204

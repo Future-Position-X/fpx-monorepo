@@ -8,6 +8,18 @@ def handle_model_not_found_error(e):
     return {"error": "not found"}, 404
 
 
+def handle_permission_error(e):
+    return {"error": "no permission"}, 403
+
+
+def handle_value_error(e):
+    return {"error": "value error"}, 400
+
+
+def handle_validation_error(e):
+    return {"error": "validation error"}, 422
+
+
 def response(status_code, payload=None):
     response = app.response_class(
         response=payload, status=status_code, mimetype="application/json"

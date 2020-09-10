@@ -29,4 +29,4 @@ def create_session(email: str, password: str) -> str:
         token = create_access_token(user.uuid, user.provider_uuid)
         return str(token)
     else:
-        raise ValueError()
+        raise ValueError

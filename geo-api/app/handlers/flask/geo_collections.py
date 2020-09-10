@@ -109,11 +109,8 @@ class CollectionCopyApi(Resource):
     @ns.marshal_with(collection_model, code=201)
     def post(self, src_collection_uuid, dst_collection_uuid=None):
         user = get_user_from_request()
-        try:
-            collection = copy_collection_from(
-                user, src_collection_uuid, dst_collection_uuid
-            )
-        except PermissionError:
-            return "", 403
+        collection = copy_collection_from(
+            user, src_collection_uuid, dst_collection_uuid
+        )
 
         return collection, 201
