@@ -52,7 +52,7 @@ def test_get_non_existing_user(client, user):
 
 def test_update_user(client, user):
     res = client.post(
-        "/sessions", json={"email": "test-user@test.se", "password": "testing"}
+        "/sessions", json={"email": "test-user1@test.se", "password": "testing"}
     )
     assert res.status_code == 401
     assert "" in str(res.data)
@@ -62,7 +62,7 @@ def test_update_user(client, user):
     assert "" in str(res.data)
 
     res = client.post(
-        "/sessions", json={"email": "test-user@test.se", "password": "testing"}
+        "/sessions", json={"email": "test-user1@test.se", "password": "testing"}
     )
     assert res.status_code == 201
     assert "token" in str(res.data)

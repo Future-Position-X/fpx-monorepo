@@ -382,7 +382,7 @@ class Item(BaseModel):
             where += " AND ("
 
             for i, collection_uuid in enumerate(filters["collection_uuids"]):
-                where += "collection_uuid = :collection_uuid_" + str(i)
+                where += "items.collection_uuid = :collection_uuid_" + str(i)
 
                 if i < (len(filters["collection_uuids"]) - 1):
                     where += " OR "
@@ -704,7 +704,7 @@ class ACL(BaseModel):
     access = db.Column(db.Enum("read", "write", name="permission"), nullable=False)
 
     @classmethod
-    def readable_query(cls, user: InternalUserDTO):
+    def accessable_query(cls, user: InternalUserDTO):
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = cls.session.query(cls.uuid).filter(
@@ -718,8 +718,8 @@ class ACL(BaseModel):
 
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
-    def find_readable(cls, user: InternalUserDTO):
-        readable_sq = cls.readable_query(user).subquery()
+    def find_accessable(cls, user: InternalUserDTO):
+        readable_sq = cls.accessable_query(user).subquery()
         q = cls.query.filter(cls.uuid.in_(readable_sq))
         res = q.all()
 
@@ -727,8 +727,8 @@ class ACL(BaseModel):
 
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
-    def find_readable_or_fail(cls, user: InternalUserDTO, acl_uuid):
-        readable_sq = cls.readable_query(user).subquery()
+    def find_accessable_or_fail(cls, user: InternalUserDTO, acl_uuid):
+        readable_sq = cls.accessable_query(user).subquery()
         q = cls.query.filter(cls.uuid.in_(readable_sq))
         q = q.filter(cls.uuid == acl_uuid)
         res = q.first()

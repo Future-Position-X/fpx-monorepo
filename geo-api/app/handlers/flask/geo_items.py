@@ -106,7 +106,7 @@ def get_spatial_filter(params):
     else:
         if params.get("spatial_filter") == "within-distance":
             if not valid_distance(params):
-                return None
+                raise ValueError
             else:
                 return {
                     "filter": params.get("spatial_filter"),
@@ -141,7 +141,7 @@ def get_spatial_filter(params):
                 },
             }
         else:
-            None
+            raise ValueError
 
 
 def get_collection_uuid_filter(params):

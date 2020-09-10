@@ -4,6 +4,8 @@ import uuid
 import magic
 import pytest
 
+from conftest import UUID_ZERO
+
 
 def collection_attributes():
     return {"name": "gg", "is_public": True}
@@ -53,8 +55,8 @@ def test_get_collection_item_json(client, item):
     assert {
         "uuid": str(item["uuid"]),
         "collection_uuid": str(item["collection_uuid"]),
-        "geometry": {"type": "Point", "coordinates": [1.0, 1.0]},
-        "properties": {"name": "test-item"},
+        "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
+        "properties": {"name": "test-item1", "second_prop": "test-prop1"},
     }.items() <= item_hash.items()
 
 
@@ -78,8 +80,8 @@ def test_get_collection_item_geojson(client, item):
 
     assert {
         "type": "Feature",
-        "geometry": {"type": "Point", "coordinates": [1.0, 1.0]},
-        "properties": {"name": "test-item"},
+        "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
+        "properties": {"name": "test-item1", "second_prop": "test-prop1"},
     }.items() <= item_hash.items()
 
 
@@ -134,8 +136,8 @@ def test_get_item_json(client, item):
     assert {
         "uuid": str(item["uuid"]),
         "collection_uuid": str(item["collection_uuid"]),
-        "geometry": {"type": "Point", "coordinates": [1.0, 1.0]},
-        "properties": {"name": "test-item"},
+        "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
+        "properties": {"name": "test-item1", "second_prop": "test-prop1"},
     }.items() <= item_hash.items()
 
 
@@ -158,8 +160,8 @@ def test_get_item_geojson(client, item):
 
     assert {
         "type": "Feature",
-        "geometry": {"type": "Point", "coordinates": [1.0, 1.0]},
-        "properties": {"name": "test-item"},
+        "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
+        "properties": {"name": "test-item1", "second_prop": "test-prop1"},
     }.items() <= item_hash.items()
 
 
@@ -181,8 +183,8 @@ def test_get_items(client, collection):
     )
     assert res.status_code == 200
     assert not ("FeatureCollection" in str(res.data))
-    assert "test-item" in str(res.data)
-    assert "test-item-empty" in str(res.data)
+    assert "test-item1" in str(res.data)
+    assert "test-item-empty1" in str(res.data)
 
     res = client.get(
         "/collections/{}/items?valid=true".format(collection["uuid"]),
@@ -190,8 +192,8 @@ def test_get_items(client, collection):
     )
     assert res.status_code == 200
     assert not ("FeatureCollection" in str(res.data))
-    assert "test-item" in str(res.data)
-    assert "test-item-empty" not in str(res.data)
+    assert "test-item1" in str(res.data)
+    assert "test-item-empty1" not in str(res.data)
 
 
 def test_get_shared_items(client, user2, client2, collection_private):
@@ -220,7 +222,7 @@ def test_get_shared_items(client, user2, client2, collection_private):
         headers={"accept": "application/json"},
     )
     assert res.status_code == 200
-    assert "test-item-private" in str(res.data)
+    assert "test-item-private1" in str(res.data)
 
     res = client.delete(
         "/acls/{}".format(acl["uuid"]), headers={"accept": "application/json"}
@@ -243,9 +245,9 @@ def test_get_items_geojson(client, collection):
     )
     assert res.status_code == 200
     assert "FeatureCollection" in str(res.data)
-    assert "test-item" in str(res.data)
+    assert "test-item1" in str(res.data)
     # We can't represent empty geometry in a FeatureCollection
-    assert "test-item-empty" not in str(res.data)
+    assert "test-item-empty1" not in str(res.data)
 
 
 def test_get_items_png(client, collection):
@@ -265,7 +267,7 @@ def test_get_items_by_name(client, collection):
     )
     assert res.status_code == 200
     assert not ("FeatureCollection" in str(res.data))
-    assert "test-item" in str(res.data)
+    assert "test-item1" in str(res.data)
 
 
 def test_get_items_by_name_geojson(client, collection):
@@ -275,7 +277,7 @@ def test_get_items_by_name_geojson(client, collection):
     )
     assert res.status_code == 200
     assert "FeatureCollection" in str(res.data)
-    assert "test-item" in str(res.data)
+    assert "test-item1" in str(res.data)
 
 
 def test_get_items_by_name_png(client, collection):
@@ -366,6 +368,31 @@ def test_item_update(client, item):
     assert "somename" in str(res.data)
 
 
+def test_item_update_non_existing(client, item):
+    res = client.put(
+        "/items/{}".format(UUID_ZERO),
+        headers={"accept": "application/json"},
+        json=item_attributes(),
+    )
+    assert res.status_code == 404
+
+
+def test_collection_item_update(client, item):
+    res = client.put(
+        "/collections/{}/items/{}".format(item["collection_uuid"], item["uuid"]),
+        headers={"accept": "application/json"},
+        json=item_attributes(),
+    )
+    assert res.status_code == 204
+
+    res = client.get(
+        "/collections/{}/items/{}".format(item["collection_uuid"], item["uuid"]),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "somename" in str(res.data)
+
+
 def test_items_update_geojson(client, item):
     geojson = item_attributes_geojson()
     geojson["features"][0]["id"] = item["uuid"]
@@ -394,7 +421,7 @@ def test_collection_update_items_geojson(client, item):
     )
     assert res.status_code == 200
     assert "somegeojson" in str(res.data)
-    assert "test-item" in str(res.data)
+    assert "test-item1" in str(res.data)
 
 
 def test_item_creation_in_non_existent_collection(client):
@@ -492,3 +519,266 @@ def test_get_all_items_png(client):
     assert res.status_code == 200
     mime = magic.from_buffer(res.data, mime=True)
     assert mime == "image/png"
+
+
+def test_get_items_by_name_with_collection_uuids(client, collection, collection2):
+    res = client.get(
+        "/collections/by_name/{}/items?collection_uuids={}".format(
+            collection["name"], collection["uuid"]
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert not ("FeatureCollection" in str(res.data))
+    assert "test-item1" in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    res = client.get(
+        "/collections/by_name/{}/items?collection_uuids={}".format(
+            collection2["name"], collection2["uuid"]
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert not ("FeatureCollection" in str(res.data))
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" in str(res.data)
+
+    res = client.get(
+        "/collections/by_name/{}/items?collection_uuids={},{}".format(
+            collection["name"], collection["uuid"], collection2["uuid"]
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert not ("FeatureCollection" in str(res.data))
+    assert "test-item1" in str(res.data)
+    assert "test-item2" in str(res.data)
+
+
+def test_get_items_by_name_with_invalid_spatial_filter(client, collection, collection2):
+    spatial_filter = "NON_EXISTING"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}".format(
+            collection["name"], spatial_filter
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 400
+
+
+def test_get_items_by_name_with_invalid_within_distance(
+    client, collection, collection2
+):
+    # Missing spatial_filter.distance.d should make it return 400
+    spatial_filter = "within-distance"
+    fp = "spatial_filter.distance"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}".format(
+            collection["name"], spatial_filter, fp + ".x", "0.0", fp + ".y", "0.0"
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 400
+
+
+def test_get_items_by_name_with_within_distance(client, collection, collection2):
+    spatial_filter = "within-distance"
+    fp = "spatial_filter.distance"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}&{}={}".format(
+            collection["name"],
+            spatial_filter,
+            fp + ".x",
+            "0.0",
+            fp + ".y",
+            "0.0",
+            fp + ".d",
+            "1000.0",
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item1" in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}&{}={}".format(
+            collection["name"],
+            spatial_filter,
+            fp + ".x",
+            "1.0",
+            fp + ".y",
+            "1.0",
+            fp + ".d",
+            "1000.0",
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" in str(res.data)
+
+
+def test_get_items_by_name_with_within_envelope(client, collection, collection2):
+    spatial_filter = "within"
+    fp = "spatial_filter.envelope"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}&{}={}&{}={}".format(
+            collection["name"],
+            spatial_filter,
+            fp + ".ymin",
+            "-0.5",
+            fp + ".xmin",
+            "-0.5",
+            fp + ".ymax",
+            "0.5",
+            fp + ".xmax",
+            "0.5",
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item1" in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    spatial_filter = "within"
+    fp = "spatial_filter.envelope"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}&{}={}&{}={}".format(
+            collection["name"],
+            spatial_filter,
+            fp + ".ymin",
+            "0.5",
+            fp + ".xmin",
+            "0.5",
+            fp + ".ymax",
+            "1.5",
+            fp + ".xmax",
+            "1.5",
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" in str(res.data)
+
+
+def test_get_items_by_name_with_within_point(client, collection, collection2):
+    spatial_filter = "within"
+    fp = "spatial_filter.point"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}".format(
+            collection["name"], spatial_filter, fp + ".y", "0.5", fp + ".x", "0.5"
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-poly1" in str(res.data)
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}".format(
+            collection["name"], spatial_filter, fp + ".y", "1.5", fp + ".x", "1.5"
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-poly1" not in str(res.data)
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+
+def test_get_items_by_name_with_intersect_envelope(client, collection, collection2):
+    spatial_filter = "intersect"
+    fp = "spatial_filter.envelope"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}&{}={}&{}={}".format(
+            collection["name"],
+            spatial_filter,
+            fp + ".ymin",
+            "-0.5",
+            fp + ".xmin",
+            "-0.5",
+            fp + ".ymax",
+            "0.5",
+            fp + ".xmax",
+            "0.5",
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item1" in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    spatial_filter = "within"
+    fp = "spatial_filter.envelope"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}&{}={}&{}={}".format(
+            collection["name"],
+            spatial_filter,
+            fp + ".ymin",
+            "0.5",
+            fp + ".xmin",
+            "0.5",
+            fp + ".ymax",
+            "1.5",
+            fp + ".xmax",
+            "1.5",
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" in str(res.data)
+
+
+def test_get_items_by_name_with_intersect_point(client, collection, collection2):
+    spatial_filter = "intersect"
+    fp = "spatial_filter.point"
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}".format(
+            collection["name"], spatial_filter, fp + ".y", "0.5", fp + ".x", "0.5"
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-poly1" in str(res.data)
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    res = client.get(
+        "/collections/by_name/{}/items?spatial_filter={}&{}={}&{}={}".format(
+            collection["name"], spatial_filter, fp + ".y", "1.5", fp + ".x", "1.5"
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-poly1" not in str(res.data)
+    assert "test-item1" not in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+
+def test_get_items_by_name_with_property_filter(client, collection, collection2):
+    res = client.get(
+        "/collections/by_name/{}/items?property_filter=name=test-item1".format(
+            collection["name"]
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-poly1" not in str(res.data)
+    assert "test-item1" in str(res.data)
+    assert "test-item2" not in str(res.data)
+
+    res = client.get(
+        "/collections/by_name/{}/items?property_filter=name=test-item1,second_prop=test-prop1".format(
+            collection["name"]
+        ),
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-poly1" not in str(res.data)
+    assert "test-item1" in str(res.data)
+    assert "test-item2" not in str(res.data)

@@ -6,12 +6,12 @@ from app.models import ACL, to_models, to_model, Collection, Item, Provider, Use
 
 
 def get_all_readable_acls(user: InternalUserDTO) -> List[ACLDTO]:
-    acls = ACL.find_readable(user)
+    acls = ACL.find_accessable(user)
     return to_models(acls, ACLDTO)
 
 
 def get_acl_by_uuid(user: InternalUserDTO, acl_uuid: UUID) -> ACLDTO:
-    acl = ACL.find_readable_or_fail(user, acl_uuid)
+    acl = ACL.find_accessable_or_fail(user, acl_uuid)
     return to_model(acl, ACLDTO)
 
 
@@ -40,6 +40,6 @@ def create_acl(user: InternalUserDTO, acl: ACLDTO) -> ACLDTO:
 
 
 def delete_acl_by_uuid(user: InternalUserDTO, acl_uuid: UUID) -> None:
-    acl = ACL.find_readable_or_fail(user, acl_uuid)
+    acl = ACL.find_accessable_or_fail(user, acl_uuid)
     acl.delete()
     acl.session.commit()

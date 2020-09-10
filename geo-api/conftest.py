@@ -1,4 +1,5 @@
 # module conftest.py
+import bcrypt
 import pytest
 from sqlalchemy_utils import database_exists, create_database
 
@@ -7,6 +8,10 @@ from app import db as _db
 from sqlalchemy import event
 
 UUID_ZERO = "00000000-0000-0000-0000-000000000000"
+
+
+def hash_pw(password):
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def pytest_addoption(parser):
@@ -53,7 +58,7 @@ def provider(app, db, request):
     from app.models import Provider
 
     with app.app_context():
-        provider = Provider.create(name="test-provider")
+        provider = Provider.create(name="test-provider1")
         Provider.session().commit()
         return provider.to_dict()
 
@@ -74,7 +79,9 @@ def user(app, db, provider, request):
 
     with app.app_context():
         user = User.create(
-            email="test-user@test.se", password="test", provider_uuid=provider["uuid"]
+            email="test-user1@test.se",
+            password=hash_pw("test"),
+            provider_uuid=provider["uuid"],
         )
         user.session().commit()
         return user.to_dict()
@@ -86,7 +93,9 @@ def user2(app, db, provider2, request):
 
     with app.app_context():
         user = User.create(
-            email="test-user2@test.se", password="test", provider_uuid=provider2["uuid"]
+            email="test-user2@test.se",
+            password=hash_pw("test"),
+            provider_uuid=provider2["uuid"],
         )
         user.session().commit()
         return user.to_dict()
@@ -98,7 +107,19 @@ def collection(app, db, provider, request):
 
     with app.app_context():
         collection = Collection.create(
-            name="test-collection", is_public=True, provider_uuid=provider["uuid"]
+            name="test-collection1", is_public=True, provider_uuid=provider["uuid"]
+        )
+        Collection.session().commit()
+        return collection.to_dict()
+
+
+@pytest.fixture(scope="session")
+def collection2(app, db, provider2, request):
+    from app.models import Collection
+
+    with app.app_context():
+        collection = Collection.create(
+            name="test-collection1", is_public=True, provider_uuid=provider2["uuid"]
         )
         Collection.session().commit()
         return collection.to_dict()
@@ -110,7 +131,9 @@ def collection_empty(app, db, provider, request):
 
     with app.app_context():
         collection = Collection.create(
-            name="test-collection-empty", is_public=True, provider_uuid=provider["uuid"]
+            name="test-collection-empty1",
+            is_public=True,
+            provider_uuid=provider["uuid"],
         )
         Collection.session().commit()
         return collection.to_dict()
@@ -122,7 +145,7 @@ def collection_private(app, db, provider, request):
 
     with app.app_context():
         collection = Collection.create(
-            name="test-collection-private",
+            name="test-collection-private1",
             is_public=False,
             provider_uuid=provider["uuid"],
         )
@@ -188,8 +211,36 @@ def item(app, db, provider, collection, request):
     with app.app_context():
         item = Item.create(
             collection_uuid=collection["uuid"],
+            geometry="POINT(0 0)",
+            properties={"name": "test-item1", "second_prop": "test-prop1"},
+        )
+        Item.session().commit()
+        return item.to_dict()
+
+
+@pytest.fixture(scope="session")
+def item2(app, db, provider2, collection2, request):
+    from app.models import Item
+
+    with app.app_context():
+        item = Item.create(
+            collection_uuid=collection2["uuid"],
             geometry="POINT(1 1)",
-            properties={"name": "test-item"},
+            properties={"name": "test-item2"},
+        )
+        Item.session().commit()
+        return item.to_dict()
+
+
+@pytest.fixture(scope="session")
+def item_poly(app, db, provider, collection, request):
+    from app.models import Item
+
+    with app.app_context():
+        item = Item.create(
+            collection_uuid=collection["uuid"],
+            geometry="POLYGON((0.0 1.0,1.0 1.0,1.0 0.0,0.0 0.0,0.0 1.0))",
+            properties={"name": "test-item-poly1"},
         )
         Item.session().commit()
         return item.to_dict()
@@ -203,7 +254,7 @@ def item_private(app, db, provider, collection_private, request):
         item = Item.create(
             collection_uuid=collection_private["uuid"],
             geometry="POINT(1 1)",
-            properties={"name": "test-item-private"},
+            properties={"name": "test-item-private1"},
         )
         Item.session().commit()
         return item.to_dict()
@@ -217,7 +268,7 @@ def item_empty_geom(app, db, provider, collection, request):
         item = Item.create(
             collection_uuid=collection["uuid"],
             geometry=None,
-            properties={"name": "test-item-empty"},
+            properties={"name": "test-item-empty1"},
         )
         Item.session().commit()
         return item.to_dict()
@@ -232,11 +283,14 @@ def client(
     provider2,
     user2,
     collection,
+    collection2,
     collection_private,
     collection_empty,
     obstacles,
     sensors,
     item,
+    item2,
+    item_poly,
     item_empty_geom,
     item_private,
     request,
@@ -262,11 +316,14 @@ def client2(
     provider2,
     user2,
     collection,
+    collection2,
     collection_private,
     collection_empty,
     obstacles,
     sensors,
     item,
+    item2,
+    item_poly,
     item_empty_geom,
     item_private,
     request,
@@ -292,11 +349,14 @@ def anon_client(
     provider2,
     user2,
     collection,
+    collection2,
     collection_private,
     collection_empty,
     obstacles,
     sensors,
     item,
+    item2,
+    item_poly,
     item_empty_geom,
     item_private,
     request,

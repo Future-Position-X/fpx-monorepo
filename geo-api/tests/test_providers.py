@@ -5,13 +5,13 @@ def provider_attributes():
 def test_get_providers(client, provider):
     res = client.get("/providers")
     assert res.status_code == 200
-    assert "test-provider" in str(res.data)
+    assert "test-provider1" in str(res.data)
 
 
 def test_get_provider(client, provider):
     res = client.get("/providers/{}".format(provider["uuid"]))
     assert res.status_code == 200
-    assert "test-provider" in str(res.data)
+    assert "test-provider1" in str(res.data)
 
 
 def test_update_provider(client, provider):
