@@ -703,6 +703,40 @@ class ACL(BaseModel):
 
     access = db.Column(db.Enum("read", "write", name="permission"), nullable=False)
 
+    @classmethod
+    def readable_query(cls, user: InternalUserDTO):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = cls.session.query(cls.uuid).filter(
+            or_(
+                cls.provider_uuid == provider_uuid,
+                cls.granted_provider_uuid == provider_uuid,
+                cls.granted_user_uuid == user_uuid,
+            )
+        )
+        return q
+
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
+    @classmethod
+    def find_readable(cls, user: InternalUserDTO):
+        readable_sq = cls.readable_query(user).subquery()
+        q = cls.query.filter(cls.uuid.in_(readable_sq))
+        res = q.all()
+
+        return res
+
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
+    @classmethod
+    def find_readable_or_fail(cls, user: InternalUserDTO, acl_uuid):
+        readable_sq = cls.readable_query(user).subquery()
+        q = cls.query.filter(cls.uuid.in_(readable_sq))
+        q = q.filter(cls.uuid == acl_uuid)
+        res = q.first()
+        if res is None:
+            raise sqlalchemy_mixins.ModelNotFoundError
+
+        return res
+
 
 BDTO = TypeVar("BDTO", bound=BaseModelDTO)
 BM = TypeVar("BM", bound=BaseModel)

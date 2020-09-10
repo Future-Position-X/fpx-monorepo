@@ -54,6 +54,28 @@ class UserDTO(BaseModelDTO):
         super().__init__(kwargs, ["provider_uuid", "email", "password"])
 
 
+class ACLDTO(BaseModelDTO):
+    provider_uuid: UUID = None
+    granted_provider_uuid: UUID = None
+    granted_user_uuid: UUID = None
+    collection_uuid: UUID = None
+    item_uuid: UUID = None
+    access: str = None
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            kwargs,
+            [
+                "provider_uuid",
+                "granted_provider_uuid",
+                "granted_user_uuid",
+                "collection_uuid",
+                "item_uuid",
+                "access",
+            ],
+        )
+
+
 class NoValue(Enum):
     def __repr__(self):
         return "<%s.%s>" % (self.__class__.__name__, self.name)

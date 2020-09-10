@@ -50,7 +50,8 @@ def create_app(config_name=None):
         sqlalchemy_mixins.ModelNotFoundError, handle_model_not_found_error
     )
 
-    from app.handlers.flask import (  # noqa: F401
+    from app.handlers.flask import (  # noqa:
+        geo_acls,
         geo_collections,
         geo_items,
         geo_sessions,
