@@ -670,20 +670,35 @@ class ACL(BaseModel):
     )
 
     provider_uuid = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("providers.uuid"), index=True, nullable=False
+        UUID(as_uuid=True),
+        db.ForeignKey("providers.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
     )
 
     granted_provider_uuid = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("providers.uuid"), index=True, nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("providers.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
     )
     granted_user_uuid = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("users.uuid"), index=True, nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("users.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
     )
     collection_uuid = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("collections.uuid"), index=True, nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("collections.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
     )
     item_uuid = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("items.uuid"), index=True, nullable=True
+        UUID(as_uuid=True),
+        db.ForeignKey("items.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
     )
 
     access = db.Column(db.Enum("read", "write", name="permission"), nullable=False)

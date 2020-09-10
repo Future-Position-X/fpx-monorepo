@@ -1,8 +1,8 @@
 """Add acl
 
-Revision ID: 9ef6c7c73667
+Revision ID: 127e35875881
 Revises: 3bc1f1d70aca
-Create Date: 2020-09-08 13:38:35.287720
+Create Date: 2020-09-10 07:10:11.480785
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "9ef6c7c73667"
+revision = "127e35875881"
 down_revision = "3bc1f1d70aca"
 branch_labels = None
 depends_on = None
@@ -48,11 +48,19 @@ def upgrade():
             "((item_uuid is not null)::integer + (collection_uuid is not null)::integer) = 1",
             name="check_granted_object",
         ),
-        sa.ForeignKeyConstraint(["collection_uuid"], ["collections.uuid"]),
-        sa.ForeignKeyConstraint(["granted_provider_uuid"], ["providers.uuid"]),
-        sa.ForeignKeyConstraint(["granted_user_uuid"], ["users.uuid"]),
-        sa.ForeignKeyConstraint(["item_uuid"], ["items.uuid"]),
-        sa.ForeignKeyConstraint(["provider_uuid"], ["providers.uuid"]),
+        sa.ForeignKeyConstraint(
+            ["collection_uuid"], ["collections.uuid"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(
+            ["granted_provider_uuid"], ["providers.uuid"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(
+            ["granted_user_uuid"], ["users.uuid"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(["item_uuid"], ["items.uuid"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["provider_uuid"], ["providers.uuid"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("uuid"),
         sa.UniqueConstraint(
             "granted_provider_uuid",
