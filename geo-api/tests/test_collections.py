@@ -1,5 +1,7 @@
 import json
 
+from conftest import UUID_ZERO
+
 
 def item_attributes():
     return {"geometry": "POINT(1 1)", "properties": {"name": "somename"}}
@@ -81,3 +83,8 @@ def test_collection_can_be_copied_to_other_collection(
     assert result.status_code == 200
     assert item["properties"]["name"] in str(result.data)
     assert str(item["uuid"]) not in str(result.data)
+
+
+def test_copy_non_existent_collection(client, collection, collection_empty, item):
+    res = client.post("/collections/{}/copy".format(UUID_ZERO))
+    assert res.status_code == 403

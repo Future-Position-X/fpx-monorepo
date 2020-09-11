@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from flask_restx import Api
+from flask_restx import Api, ValidationError
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -44,13 +44,22 @@ def create_app(config_name=None):
 
     BaseModel.set_session(db.session)
 
-    from app.handlers.flask import handle_model_not_found_error
+    from app.handlers.flask import (
+        handle_model_not_found_error,
+        handle_permission_error,
+        handle_value_error,
+        handle_validation_error,
+    )
 
     app.register_error_handler(
         sqlalchemy_mixins.ModelNotFoundError, handle_model_not_found_error
     )
+    app.register_error_handler(PermissionError, handle_permission_error)
+    app.register_error_handler(ValidationError, handle_validation_error)
+    app.register_error_handler(ValueError, handle_value_error)
 
-    from app.handlers.flask import (  # noqa: F401
+    from app.handlers.flask import (  # noqa:
+        geo_acls,
         geo_collections,
         geo_items,
         geo_sessions,

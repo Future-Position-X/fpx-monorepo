@@ -25,8 +25,11 @@ def create_access_token(user_uuid, provider_uuid):
 def create_session(email: str, password: str) -> str:
     user = User.first_or_fail(email=email)
 
-    if authenticate(user, password):
-        token = create_access_token(user.uuid, user.provider_uuid)
-        return str(token)
-    else:
-        raise ValueError()
+    try:
+        if authenticate(user, password):
+            token = create_access_token(user.uuid, user.provider_uuid)
+            return str(token)
+        else:
+            raise ValueError
+    except Exception:
+        raise ValueError

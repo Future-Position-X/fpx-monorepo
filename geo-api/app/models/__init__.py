@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Type, TypeVar
-from app.dto import BaseModelDTO, ItemDTO
+from app.dto import BaseModelDTO, ItemDTO, InternalUserDTO, Access
 import sqlalchemy_mixins
 from geoalchemy2 import Geometry
 from shapely_geojson import Feature as BaseFeature
@@ -13,7 +13,7 @@ from sqlalchemy_mixins import (
     SerializeMixin,
     ModelNotFoundError,
 )
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 
 from app import db
 
@@ -141,17 +141,82 @@ class Collection(BaseModel):
     )
 
     @classmethod
-    def find_accessible(cls, provider_uuid):
-        q = cls.query.filter(or_(cls.is_public, cls.provider_uuid == provider_uuid))
+    def writeable_query(cls, user: InternalUserDTO):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = (
+            cls.session.query(cls.uuid)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
+            .filter(
+                or_(
+                    cls.provider_uuid == provider_uuid,
+                    and_(
+                        ACL.collection_uuid == cls.uuid,
+                        ACL.access == Access.WRITE.value,
+                    ),
+                )
+            )
+        )
+        return q
+
+    @classmethod
+    def readable_query(cls, user: InternalUserDTO):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = (
+            cls.session.query(cls.uuid)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
+            .filter(
+                or_(
+                    cls.provider_uuid == provider_uuid,
+                    cls.is_public == True,  # noqa: E712
+                    and_(
+                        ACL.collection_uuid == cls.uuid, ACL.access == Access.READ.value
+                    ),
+                )
+            )
+        )
+        return q
+
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
+    @classmethod
+    def find_readable(cls, user: InternalUserDTO):
+        readable_sq = cls.readable_query(user).subquery()
+        q = cls.query.filter(cls.uuid.in_(readable_sq))
         res = q.all()
 
         return res
 
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
-    def find_accessible_or_fail(cls, provider_uuid, collection_uuid):
-        q = cls.query.filter(cls.uuid == collection_uuid).filter(
-            or_(cls.is_public, cls.provider_uuid == provider_uuid)
-        )
+    def find_readable_or_fail(cls, user: InternalUserDTO, collection_uuid):
+        readable_sq = cls.readable_query(user).subquery()
+        q = cls.query.filter(cls.uuid == collection_uuid)
+        q = q.filter(cls.uuid.in_(readable_sq))
+        res = q.first()
+
+        if res is None:
+            raise sqlalchemy_mixins.ModelNotFoundError
+        return res
+
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
+    @classmethod
+    def find_writeable_or_fail(cls, user: InternalUserDTO, collection_uuid):
+        writeable_sq = cls.writeable_query(user).subquery()
+        q = cls.query.filter(cls.uuid == collection_uuid)
+        q = q.filter(cls.uuid.in_(writeable_sq))
         res = q.first()
 
         if res is None:
@@ -203,10 +268,11 @@ class Item(BaseModel):
         (
             collections.is_public=true
             OR collections.provider_uuid = :provider_uuid
+            OR ((acls.collection_uuid = collections.uuid OR acls.item_uuid = items.uuid) AND acls.access = 'read')
         )"""
 
         if filters.get("collection_uuid"):
-            where += " AND collection_uuid = :collection_uuid"
+            where += " AND items.collection_uuid = :collection_uuid"
 
         if filters.get("collection_name"):
             where += " AND collections.name = :collection_name"
@@ -316,7 +382,7 @@ class Item(BaseModel):
             where += " AND ("
 
             for i, collection_uuid in enumerate(filters["collection_uuids"]):
-                where += "collection_uuid = :collection_uuid_" + str(i)
+                where += "items.collection_uuid = :collection_uuid_" + str(i)
 
                 if i < (len(filters["collection_uuids"]) - 1):
                     where += " OR "
@@ -328,24 +394,11 @@ class Item(BaseModel):
         return where, exec_dict
 
     @classmethod
-    def find_by_collection_name(cls, provider_uuid, collection_name, filters):
-        filters["provider_uuid"] = provider_uuid
-        filters["collection_name"] = collection_name
-        where, exec_dict = cls.create_where(filters)
-        result = (
-            cls.query.join(Item.collection)
-            .filter(db.text(where))
-            .params(exec_dict)
-            .limit(filters["limit"])
-            .offset(filters["offset"])
-            .all()
-        )
-        return result
-
-    @classmethod
-    def find_by_collection_name_with_simplify(
-        cls, provider_uuid, collection_name, filters, transforms
+    def find_readable_by_collection_name(
+        cls, user: InternalUserDTO, collection_name, filters, transforms
     ):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         filters["collection_name"] = collection_name
         where, exec_dict = cls.create_where(filters)
@@ -353,9 +406,7 @@ class Item(BaseModel):
             cls.session()
             .query(
                 cls.uuid,
-                func.ST_Simplify(cls.geometry, transforms["simplify"], False).label(
-                    "geometry"
-                ),
+                cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
                 cls.collection_uuid,
                 cls.created_at,
@@ -363,6 +414,13 @@ class Item(BaseModel):
                 cls.revision,
             )
             .join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -377,30 +435,23 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_by_collection_uuid(cls, provider_uuid, collection_uuid, filters):
-        filters["provider_uuid"] = provider_uuid
-        filters["collection_uuid"] = collection_uuid
-        where, exec_dict = cls.create_where(filters)
-        result = (
-            cls.query.join(Item.collection)
-            .filter(db.text(where))
-            .params(exec_dict)
-            .limit(filters["limit"])
-            .offset(filters["offset"])
-            .all()
+    def simplified_geometry(cls, simplify):
+        return (
+            cls.geometry
+            if simplify == 0.0
+            else func.ST_Simplify(cls.geometry, simplify, True).label("geometry")
         )
-        return result
 
     @classmethod
-    def get_with_simplify(cls, provider_uuid, filters, transforms):
+    def find_readable(cls, user: InternalUserDTO, filters, transforms):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         where, exec_dict = cls.create_where(filters)
         result = (
             cls.session.query(
                 cls.uuid,
-                func.ST_Simplify(cls.geometry, transforms["simplify"], True).label(
-                    "geometry"
-                ),
+                cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
                 cls.collection_uuid,
                 cls.created_at,
@@ -408,6 +459,13 @@ class Item(BaseModel):
                 cls.revision,
             )
             .join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -422,18 +480,18 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_by_collection_uuid_with_simplify(
-        cls, provider_uuid, collection_uuid, filters, transforms
+    def find_readable_by_collection_uuid(
+        cls, user: InternalUserDTO, collection_uuid, filters, transforms={}
     ):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
         filters["collection_uuid"] = collection_uuid
         where, exec_dict = cls.create_where(filters)
         result = (
             cls.session.query(
                 cls.uuid,
-                func.ST_Simplify(cls.geometry, transforms["simplify"], True).label(
-                    "geometry"
-                ),
+                cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
                 cls.collection_uuid,
                 cls.created_at,
@@ -441,6 +499,13 @@ class Item(BaseModel):
                 cls.revision,
             )
             .join(Item.collection)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
             .filter(db.text(where))
             .params(exec_dict)
             .limit(filters["limit"])
@@ -455,8 +520,18 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def find_accessible_or_fail(cls, provider_uuid, item_uuid, collection_uuid=None):
-        q = cls.query.filter(cls.uuid == item_uuid)
+    def find_readable_or_fail(
+        cls, user: InternalUserDTO, item_uuid, collection_uuid=None
+    ):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = cls.query.outerjoin(
+            ACL,
+            or_(
+                ACL.granted_provider_uuid == provider_uuid,
+                ACL.granted_user_uuid == user_uuid,
+            ),
+        ).filter(cls.uuid == item_uuid)
         if collection_uuid is not None:
             q = q.filter(cls.collection_uuid == collection_uuid)
 
@@ -464,6 +539,13 @@ class Item(BaseModel):
             or_(
                 Item.collection.has(is_public=True),
                 Item.collection.has(provider_uuid=provider_uuid),
+                and_(
+                    or_(
+                        ACL.collection_uuid == Item.collection_uuid,
+                        ACL.item_uuid == Item.uuid,
+                    ),
+                    ACL.access == Access.READ.value,
+                ),
             )
         )
 
@@ -473,48 +555,74 @@ class Item(BaseModel):
         return res
 
     @classmethod
-    def owned_query(cls, provider_uuid, item_uuid, collection_uuid=None):
-        q = cls.query.filter(cls.uuid == item_uuid).filter(
-            Collection.uuid == cls.collection_uuid,
-            Collection.provider_uuid == provider_uuid,
+    def writeable_query_subquery(cls, user: InternalUserDTO):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = (
+            cls.session.query(cls.uuid)
+            .outerjoin(
+                ACL,
+                or_(
+                    ACL.granted_provider_uuid == provider_uuid,
+                    ACL.granted_user_uuid == user_uuid,
+                ),
+            )
+            .filter(
+                or_(
+                    Collection.provider_uuid == provider_uuid,
+                    and_(
+                        or_(
+                            ACL.collection_uuid == Item.collection_uuid,
+                            ACL.item_uuid == Item.uuid,
+                        ),
+                        ACL.access == Access.WRITE.value,
+                    ),
+                )
+            )
         )
+        return q.subquery()
+
+    @classmethod
+    def writeable_query(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+        writeable_sq = cls.writeable_query_subquery(user)
+        q = cls.query.filter(cls.uuid == item_uuid)
         if collection_uuid is not None:
             q = q.filter(Collection.uuid == collection_uuid)
+        q = q.filter(cls.uuid.in_(writeable_sq))
         return q
 
     @classmethod
-    def delete_owned(cls, provider_uuid, item_uuid, collection_uuid=None):
-        cls.owned_query(provider_uuid, item_uuid, collection_uuid).delete(
-            synchronize_session=False
-        )
+    def delete_writeable(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+        q = cls.writeable_query(user, item_uuid, collection_uuid)
+        q.delete(synchronize_session=False)
         cls.session().commit()
         cls.session().expire_all()
 
+    # TODO: Perhaps use JOIN instead of SUBQUERY
     @classmethod
-    def find_owned_or_fail(cls, provider_uuid, item_uuid, collection_uuid=None):
-        res = cls.owned_query(provider_uuid, item_uuid, collection_uuid).first()
+    def find_writeable_or_fail(
+        cls, user: InternalUserDTO, item_uuid, collection_uuid=None
+    ):
+        q = cls.writeable_query(user, item_uuid, collection_uuid)
+        res = q.first()
         if res is None:
             raise sqlalchemy_mixins.ModelNotFoundError
         return res
 
     @classmethod
-    def find_owned(cls, provider_uuid, item_uuids=None):
-        q = cls.query.filter(
-            Collection.uuid == cls.collection_uuid,
-            Collection.provider_uuid == provider_uuid,
-        )
+    def find_writeable(cls, user: InternalUserDTO, item_uuids=None):
+        writeable_sq = cls.writeable_query_subquery(user)
+        q = cls.query.filter(cls.uuid.in_(writeable_sq))
         if item_uuids is not None:
             q = q.filter(cls.uuid.in_(item_uuids))
-
         res = q.all()
         return res
 
     @classmethod
-    def delete_by_collection_uuid(cls, provider_uuid, collection_uuid):
-        q = cls.query.filter(Collection.uuid == collection_uuid).filter(
-            Collection.uuid == cls.collection_uuid,
-            Collection.provider_uuid == provider_uuid,
-        )
+    def delete_by_collection_uuid(cls, user: InternalUserDTO, collection_uuid):
+        owned_sq = cls.writeable_query_subquery(user)
+        q = cls.query.filter(Collection.uuid == collection_uuid)
+        q = q.filter(cls.uuid.in_(owned_sq))
         q.delete(synchronize_session=False)
         cls.session().commit()
         cls.session().expire_all()
@@ -532,6 +640,102 @@ class Item(BaseModel):
                 "dest_collection_uuid": dest_collection_uuid,
             },
         )
+
+
+class ACL(BaseModel):
+    __tablename__ = "acls"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "granted_provider_uuid",
+            "granted_user_uuid",
+            "collection_uuid",
+            "item_uuid",
+            "access",
+        ),
+        db.CheckConstraint(
+            "((granted_provider_uuid is not null)::integer + (granted_user_uuid is not null)::integer) = 1",
+            name="check_granted",
+        ),
+        db.CheckConstraint(
+            "((item_uuid is not null)::integer + (collection_uuid is not null)::integer) = 1",
+            name="check_granted_object",
+        ),
+    )
+    uuid = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+
+    provider_uuid = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("providers.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+
+    granted_provider_uuid = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("providers.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    granted_user_uuid = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("users.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    collection_uuid = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("collections.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    item_uuid = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("items.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+
+    access = db.Column(db.Enum("read", "write", name="permission"), nullable=False)
+
+    @classmethod
+    def accessable_query(cls, user: InternalUserDTO):
+        user_uuid = user.uuid
+        provider_uuid = user.provider_uuid
+        q = cls.session.query(cls.uuid).filter(
+            or_(
+                cls.provider_uuid == provider_uuid,
+                cls.granted_provider_uuid == provider_uuid,
+                cls.granted_user_uuid == user_uuid,
+            )
+        )
+        return q
+
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
+    @classmethod
+    def find_accessable(cls, user: InternalUserDTO):
+        readable_sq = cls.accessable_query(user).subquery()
+        q = cls.query.filter(cls.uuid.in_(readable_sq))
+        res = q.all()
+
+        return res
+
+    # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
+    @classmethod
+    def find_accessable_or_fail(cls, user: InternalUserDTO, acl_uuid):
+        readable_sq = cls.accessable_query(user).subquery()
+        q = cls.query.filter(cls.uuid.in_(readable_sq))
+        q = q.filter(cls.uuid == acl_uuid)
+        res = q.first()
+        if res is None:
+            raise sqlalchemy_mixins.ModelNotFoundError
+
+        return res
 
 
 BDTO = TypeVar("BDTO", bound=BaseModelDTO)

@@ -1,3 +1,6 @@
+from conftest import UUID_ZERO
+
+
 def user_attributes():
     return {"email": "apitester@fpx.se", "password": "testing"}
 
@@ -42,9 +45,14 @@ def test_get_user(client, user):
     assert "test-user" in str(res.data)
 
 
+def test_get_non_existing_user(client, user):
+    res = client.get("/users/{}".format(UUID_ZERO))
+    assert res.status_code == 404
+
+
 def test_update_user(client, user):
     res = client.post(
-        "/sessions", json={"email": "test-user@test.se", "password": "testing"}
+        "/sessions", json={"email": "test-user1@test.se", "password": "testing"}
     )
     assert res.status_code == 401
     assert "" in str(res.data)
@@ -54,10 +62,15 @@ def test_update_user(client, user):
     assert "" in str(res.data)
 
     res = client.post(
-        "/sessions", json={"email": "test-user@test.se", "password": "testing"}
+        "/sessions", json={"email": "test-user1@test.se", "password": "testing"}
     )
     assert res.status_code == 201
     assert "token" in str(res.data)
+
+
+def test_update_non_existing_user(client, user):
+    res = client.put("/users/{}".format(UUID_ZERO), json=user_attributes())
+    assert res.status_code == 404
 
 
 def test_del_user(client, user):

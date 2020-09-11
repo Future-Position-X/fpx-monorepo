@@ -1,37 +1,37 @@
 from typing import List
 from uuid import UUID, uuid4
 
-from app.dto import ItemDTO
+from app.dto import ItemDTO, InternalUserDTO
 from app.models import Item, to_models, Collection, to_model
 
 
-def get_items(provider_uuid: UUID, filters, transforms) -> List[ItemDTO]:
-    items = Item.get_with_simplify(provider_uuid, filters, transforms)
+def get_items(user: InternalUserDTO, filters, transforms) -> List[ItemDTO]:
+    items = Item.find_readable(user, filters, transforms)
     return to_models(items, ItemDTO)
 
 
 def get_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, filters, transforms
+    user: InternalUserDTO, collection_uuid: UUID, filters, transforms
 ) -> List[ItemDTO]:
-    items = Item.find_by_collection_uuid_with_simplify(
-        provider_uuid, collection_uuid, filters, transforms
+    items = Item.find_readable_by_collection_uuid(
+        user, collection_uuid, filters, transforms
     )
     return to_models(items, ItemDTO)
 
 
 def get_collection_items_by_name(
-    provider_uuid: UUID, collection_name: UUID, filters, transforms
+    user: InternalUserDTO, collection_name: UUID, filters, transforms
 ) -> List[ItemDTO]:
-    items = Item.find_by_collection_name_with_simplify(
-        provider_uuid, collection_name, filters, transforms
+    items = Item.find_readable_by_collection_name(
+        user, collection_name, filters, transforms
     )
     return to_models(items, ItemDTO)
 
 
 def create_collection_item(
-    provider_uuid: UUID, collection_uuid: UUID, item: ItemDTO
+    user: InternalUserDTO, collection_uuid: UUID, item: ItemDTO
 ) -> ItemDTO:
-    coll = Collection.first_or_fail(uuid=collection_uuid, provider_uuid=provider_uuid)
+    coll = Collection.find_writeable_or_fail(user, collection_uuid)
     item.collection_uuid = coll.uuid
     item = Item(**item.to_dict())
     item.save()
@@ -40,23 +40,21 @@ def create_collection_item(
 
 
 def replace_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]
+    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO]
 ) -> List[ItemDTO]:
-    return create_collection_items(provider_uuid, collection_uuid, items, replace=True)
+    return create_collection_items(user, collection_uuid, items, replace=True)
 
 
 def add_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO]
+    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO]
 ) -> List[ItemDTO]:
-    return create_collection_items(provider_uuid, collection_uuid, items, replace=False)
+    return create_collection_items(user, collection_uuid, items, replace=False)
 
 
 def create_collection_items(
-    provider_uuid: UUID, collection_uuid: UUID, items: List[ItemDTO], replace=False
+    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO], replace=False
 ) -> List[ItemDTO]:
-    collection = Collection.first_or_fail(
-        uuid=collection_uuid, provider_uuid=provider_uuid
-    )
+    collection = Collection.find_writeable_or_fail(user, collection_uuid)
 
     if replace:
         Item.where(collection_uuid=collection.uuid).delete()
@@ -67,34 +65,34 @@ def create_collection_items(
     return to_models(items, ItemDTO)
 
 
-def delete_collection_items(provider_uuid: UUID, collection_uuid: UUID) -> None:
-    Item.delete_by_collection_uuid(provider_uuid, collection_uuid)
+def delete_collection_items(user: InternalUserDTO, collection_uuid: UUID) -> None:
+    Item.delete_by_collection_uuid(user, collection_uuid)
 
 
 def get_collection_item(
-    provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID
 ) -> ItemDTO:
-    item = Item.find_accessible_or_fail(provider_uuid, item_uuid, collection_uuid)
+    item = Item.find_readable_or_fail(user, item_uuid, collection_uuid)
     return to_model(item, ItemDTO)
 
 
-def get_item(provider_uuid: UUID, item_uuid: UUID) -> ItemDTO:
-    item = Item.find_accessible_or_fail(provider_uuid, item_uuid)
+def get_item(user: InternalUserDTO, item_uuid: UUID) -> ItemDTO:
+    item = Item.find_readable_or_fail(user, item_uuid)
     return to_model(item, ItemDTO)
 
 
 def delete_collection_item(
-    provider_uuid: UUID, collection_uuid: UUID, item_uuid: UUID
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID
 ) -> None:
-    Item.delete_owned(provider_uuid, item_uuid, collection_uuid)
+    Item.delete_writeable(user, item_uuid, collection_uuid)
 
 
-def delete_item(provider_uuid: UUID, item_uuid: UUID) -> None:
-    Item.delete_owned(provider_uuid, item_uuid)
+def delete_item(user: InternalUserDTO, item_uuid: UUID) -> None:
+    Item.delete_writeable(user, item_uuid)
 
 
 def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemDTO]:
-    items = Item.find_owned(provider_uuid, [item.uuid for item in items_update])
+    items = Item.find_writeable(provider_uuid, [item.uuid for item in items_update])
 
     for item in items:
         item_new = [
@@ -110,8 +108,21 @@ def update_items(provider_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemD
     return to_models(items, ItemDTO)
 
 
-def update_item(provider_uuid: UUID, item_uuid: UUID, item_update) -> ItemDTO:
-    item = Item.find_accessible_or_fail(provider_uuid, item_uuid)
+def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
+    item = Item.find_writeable_or_fail(user, item_uuid)
+
+    item.properties = item_update.properties
+    item.geometry = item_update.geometry
+
+    item.save()
+    item.session.commit()
+    return to_model(item, ItemDTO)
+
+
+def update_collection_item(
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID, item_update
+) -> ItemDTO:
+    item = Item.find_writeable_or_fail(user, item_uuid, collection_uuid)
 
     item.properties = item_update.properties
     item.geometry = item_update.geometry

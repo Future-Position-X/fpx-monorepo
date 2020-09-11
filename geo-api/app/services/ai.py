@@ -34,10 +34,10 @@ def generate_paths_from_points(
     filters,
 ):
     global env
-    starting_points = ItemDB.find_by_collection_uuid(
+    starting_points = ItemDB.find_readable_by_collection_uuid(
         provider_uuid, points_collection_uuid, filters
     )
-    obstacles = ItemDB.find_by_collection_uuid(
+    obstacles = ItemDB.find_readable_by_collection_uuid(
         provider_uuid, obstacles_collection_uuid, filters
     )
 
@@ -68,7 +68,7 @@ def get_sequence_for_sensor(provider_uuid, uuid, start_date, end_date):
     pre_start_date = datetime.strptime(start_date, "%Y-%m-%d") - timedelta(
         hours=168, minutes=0
     )
-    sensor_item = ItemDB.find_accessible_or_fail(provider_uuid, uuid)
+    sensor_item = ItemDB.find_readable_or_fail(provider_uuid, uuid)
     sid = sensor_item.properties["Cid"]
     df, _ = SensorData.get_data(pre_start_date, end_date)
     end_datetime = pd.to_datetime(df.index.values[-1])

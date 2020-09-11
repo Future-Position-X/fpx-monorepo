@@ -31,4 +31,4 @@ class Session(Resource):
             response = {"token": token}
             return response, 201
         except ValueError:
-            return "", 401
+            return None, 401

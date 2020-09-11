@@ -1,10 +1,23 @@
 from app import app
 from flask_jwt_extended import get_raw_jwt, get_jwt_identity
 from uuid import UUID
+from app.dto import InternalUserDTO
 
 
 def handle_model_not_found_error(e):
     return {"error": "not found"}, 404
+
+
+def handle_permission_error(e):
+    return {"error": "no permission"}, 403
+
+
+def handle_value_error(e):
+    return {"error": "value error"}, 400
+
+
+def handle_validation_error(e):
+    return {"error": "validation error"}, 422
 
 
 def response(status_code, payload=None):
@@ -21,3 +34,12 @@ def get_provider_uuid_from_request():
 
 def get_user_uuid_from_request():
     return get_jwt_identity()
+
+
+def get_user_from_request() -> InternalUserDTO:
+    return InternalUserDTO(
+        **{
+            "uuid": get_user_uuid_from_request(),
+            "provider_uuid": get_provider_uuid_from_request(),
+        }
+    )
