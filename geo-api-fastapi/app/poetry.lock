@@ -357,6 +357,25 @@ SQLAlchemy = ">=0.8"
 
 [[package]]
 category = "main"
+description = "Pydantic data models for the GeoJSON spec"
+name = "geojson-pydantic"
+optional = false
+python-versions = ">=3.6"
+version = "0.2.1"
+
+[package.dependencies]
+pydantic = "*"
+
+[package.extras]
+dev = ["pre-commit", "pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov"]
+
+[package.source]
+reference = "5999e1fb53f377a88503d6d352cdc467fb15166a"
+type = "git"
+url = "https://github.com/developmentseed/geojson-pydantic.git"
+[[package]]
+category = "main"
 description = "WSGI HTTP Server for UNIX"
 name = "gunicorn"
 optional = false
@@ -1052,7 +1071,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "d46cb69c6ca458e89df56151fa359e838c546e654ad075084bb1a028e37fdb37"
+content-hash = "75b59e47f400b96ad26480ed5b3167e039139a82bf7a008c4c8604b390d26c86"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -1255,6 +1274,7 @@ geoalchemy2 = [
     {file = "GeoAlchemy2-0.8.4-py2.py3-none-any.whl", hash = "sha256:3b83654db15ed807a7bdb2e7dd1c787a47cfc3e4fb92a0558685001fbb7342da"},
     {file = "GeoAlchemy2-0.8.4.tar.gz", hash = "sha256:d9336f17df3e7a10f94d1ea2488dcfb97a8bc23fe7f5edea425ddab553534b0a"},
 ]
+geojson-pydantic = []
 gunicorn = [
     {file = "gunicorn-20.0.4-py2.py3-none-any.whl", hash = "sha256:cd4a810dd51bf497552cf3f863b575dabd73d6ad6a91075b65936b151cbf4f9c"},
     {file = "gunicorn-20.0.4.tar.gz", hash = "sha256:1904bb2b8a43658807108d59c3f3d56c2b6121a701161de0ddf9ad140073c626"},

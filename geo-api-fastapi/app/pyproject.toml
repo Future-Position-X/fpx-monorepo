@@ -26,6 +26,7 @@ GeoAlchemy2 = "^0.8.4"
 sqlalchemy_mixins = "^1.2.1"
 Shapely = "^1.7.0"
 shapely-geojson = "^0.0.1"
+geojson-pydantic = { git = "https://github.com/developmentseed/geojson-pydantic.git", rev = "5999e1fb53f377a88503d6d352cdc467fb15166a"}
 pytest = "^5.4.1"
 python-jose = {extras = ["cryptography"], version = "^3.1.0"}
 

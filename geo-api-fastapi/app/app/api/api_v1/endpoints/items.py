@@ -1,20 +1,38 @@
-from typing import Any, List
-
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Any, List, Union
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Header
+from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
 
 router = APIRouter()
+from geojson_pydantic.features import FeatureCollection, Feature
 
 
-@router.get("/", response_model=List[schemas.Item])
+@router.get("/", response_model=Union[List[schemas.Item], FeatureCollection], responses={
+    200: {
+        "description": "Items requested",
+        "content": {
+            "application/json": {
+                    "example": {"id": "bar", "value": "The bar tenders"}
+                },
+            "application/geojson": {
+                "example": {"id": "bar", "value": "The bar tenders"},
+                "schema": {
+                    "$ref": "#/components/schemas/FeatureCollection"
+                }
+            }
+        }
+    }
+})
 def read_items(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
+    accept: str = Header(None),
 ) -> Any:
     """
     Retrieve items.
@@ -25,7 +43,17 @@ def read_items(
         items = crud.item.get_multi_by_owner(
             db=db, owner_id=current_user.id, skip=skip, limit=limit
         )
-    return items
+    logging.warn(type(accept))
+    if accept == "application/geojson":
+        features = [
+            Feature(geometry=to_shape(item.geometry), properties=item.properties, id=str(item.uuid))
+            for item in items
+            if item.geometry is not None
+        ]
+        logging.warn("YOLO")
+        return FeatureCollection(features=features)
+    else:
+        return items
 
 
 @router.post("/", response_model=schemas.Item)
