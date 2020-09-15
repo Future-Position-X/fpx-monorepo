@@ -9,6 +9,8 @@ services:
       - POSTGRES_DB=development
       - POSTGRES_USER=master
       - POSTGRES_PASSWORD=master
+    ports:
+      - "5432:5432"
 
   queue:
     image: rabbitmq:3
@@ -45,6 +47,9 @@ services:
         INSTALL_DEV: ${INSTALL_DEV-false}
     ports:
       - "80:80"
+    volumes:
+    - ./app:/app
+    command: /start-reload.sh
 
   celeryworker:
     image: '${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}'
