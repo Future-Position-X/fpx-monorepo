@@ -1,15 +1,17 @@
 from typing import Any, List, Union
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
+from app.services import item
 from app.api import deps
 
 router = APIRouter()
 from geojson_pydantic.features import FeatureCollection, Feature
 
+extra_args = {}
 
 @router.get("/", response_model=Union[List[schemas.Item], FeatureCollection], responses={
     200: {
@@ -28,21 +30,18 @@ from geojson_pydantic.features import FeatureCollection, Feature
     }
 })
 def read_items(
+    request: Request,
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
     accept: str = Header(None),
 ) -> Any:
     """
     Retrieve items.
     """
-    if crud.user.is_superuser(current_user):
-        items = crud.item.get_multi(db, skip=skip, limit=limit)
-    else:
-        items = crud.item.get_multi_by_owner(
-            db=db, owner_id=current_user.id, skip=skip, limit=limit
-        )
+    logging.warn(request.query_params)
+    #filters = get_filters_from_request()
+    #transforms = get_transforms_from_request()
+    items = item.get_items(current_user)
     logging.warn(type(accept))
     if accept == "application/geojson":
         features = [

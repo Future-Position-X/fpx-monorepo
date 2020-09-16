@@ -5,8 +5,9 @@ import bcrypt
 from sqlalchemy.exc import IntegrityError
 
 from app.dto import ProviderDTO, UserDTO
-from app.models import User, to_models, to_model
+from app.models import User
 from app.services.provider import create_provider
+from app.models.base_model import to_models, to_model
 
 
 def get_users() -> List[UserDTO]:

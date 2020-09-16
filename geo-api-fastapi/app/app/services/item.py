@@ -2,7 +2,8 @@ from typing import List
 from uuid import UUID, uuid4
 
 from app.dto import ItemDTO, InternalUserDTO
-from app.models import Item, to_models, Collection, to_model
+from app.models import Item, Collection
+from app.models.base_model import to_models, to_model
 
 
 def get_items(user: InternalUserDTO, filters, transforms) -> List[ItemDTO]:

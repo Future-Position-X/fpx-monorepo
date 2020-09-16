@@ -2,7 +2,8 @@ from typing import List
 from uuid import UUID
 
 from app.dto import ProviderDTO
-from app.models import Provider, to_models, to_model
+from app.models import Provider
+from app.models.base_model import to_models, to_model
 
 
 def get_providers() -> List[ProviderDTO]:
