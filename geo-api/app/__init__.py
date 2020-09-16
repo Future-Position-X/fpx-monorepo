@@ -37,7 +37,10 @@ def create_app(config_name=None):
         contact_email="magnus.engstrom@fpx.se",
     )
     db.init_app(app)
+
+    # This does not migrate or update the DB, you need to run $flask db upgrade
     migrate.init_app(app, db)
+
     jwt.init_app(app)
 
     from app.models import BaseModel
