@@ -1,6 +1,7 @@
-from typing import Any, List, Union
+from enum import Enum
+from typing import Any, List, Union, Optional
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, Query
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import Session
 
@@ -11,7 +12,19 @@ from app.api import deps
 router = APIRouter()
 from geojson_pydantic.features import FeatureCollection, Feature
 
-extra_args = {}
+
+def filter_parameters(offset: Optional[int] = Query(0),
+                      limit: Optional[int] = Query(20),
+                      property_filter: Optional[str] = Query(None),
+                      valid: Optional[bool] = Query(False),
+                      ):
+    return {"offset": offset,
+            "limit": limit,
+            "property_filter": property_filter,
+            "valid": valid,
+            "spatial_filter": None,
+            "collection_uuids": None,
+            }
 
 @router.get("/", response_model=Union[List[schemas.Item], FeatureCollection], responses={
     200: {
@@ -29,8 +42,8 @@ extra_args = {}
         }
     }
 })
-def read_items(
-    request: Request,
+async def read_items(
+    filter_parameters: dict = Depends(filter_parameters),
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     accept: str = Header(None),
@@ -38,18 +51,17 @@ def read_items(
     """
     Retrieve items.
     """
-    logging.warn(request.query_params)
-    #filters = get_filters_from_request()
-    #transforms = get_transforms_from_request()
-    items = item.get_items(current_user)
-    logging.warn(type(accept))
+
+    transforms_parameters = {
+        "simplify": 0.0
+    }
+    items = item.get_items(current_user, filter_parameters, transforms_parameters)
     if accept == "application/geojson":
         features = [
             Feature(geometry=to_shape(item.geometry), properties=item.properties, id=str(item.uuid))
             for item in items
             if item.geometry is not None
         ]
-        logging.warn("YOLO")
         return FeatureCollection(features=features)
     else:
         return items
