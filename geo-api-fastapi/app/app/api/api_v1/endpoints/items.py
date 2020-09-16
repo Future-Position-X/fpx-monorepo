@@ -45,7 +45,7 @@ def filter_parameters(offset: Optional[int] = Query(0),
 async def read_items(
     filter_parameters: dict = Depends(filter_parameters),
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_user_or_guest),
     accept: str = Header(None),
 ) -> Any:
     """
