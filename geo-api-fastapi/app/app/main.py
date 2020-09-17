@@ -25,19 +25,6 @@ if settings.BACKEND_CORS_ORIGINS:
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title="Custom title",
-        version="2.5.0",
-        description="This is a very custom OpenAPI schema",
-        routes=app.routes,
-    )
-    #openapi_schema["components"]["schemas"] = FeatureCollection.schema()
-    openapi_schema["components"]["schemas"].update(schema([FeatureCollection, Feature], ref_prefix="#/components/schemas/")["definitions"])
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
-#app.openapi = custom_openapi
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

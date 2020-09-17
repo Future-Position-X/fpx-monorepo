@@ -29,6 +29,8 @@ shapely-geojson = "^0.0.1"
 geojson-pydantic = { git = "https://github.com/developmentseed/geojson-pydantic.git", rev = "5999e1fb53f377a88503d6d352cdc467fb15166a"}
 pytest = "^5.4.1"
 python-jose = {extras = ["cryptography"], version = "^3.1.0"}
+Pillow = "^7.1.2"
+python-magic = "^0.4.18"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.770"
