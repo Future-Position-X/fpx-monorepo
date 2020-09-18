@@ -423,6 +423,16 @@ class Item(BaseModel):
         return res
 
     @classmethod
+    def find_writeable_by_collection_uuid(cls, user: InternalUserDTO,  collection_uuid, item_uuids=None):
+        writeable_sq = cls.writeable_query_subquery(user)
+        q = cls.query.filter(Collection.uuid == collection_uuid)
+        q = q.filter(cls.uuid.in_(writeable_sq))
+        if item_uuids is not None:
+            q = q.filter(cls.uuid.in_(item_uuids))
+        res = q.all()
+        return res
+
+    @classmethod
     def delete_by_collection_uuid(cls, user: InternalUserDTO, collection_uuid):
         owned_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(Collection.uuid == collection_uuid)

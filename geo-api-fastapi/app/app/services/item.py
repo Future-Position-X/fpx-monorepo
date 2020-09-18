@@ -109,6 +109,21 @@ def update_items(user: InternalUserDTO, items_update: List[ItemDTO]) -> List[Ite
     Item.session.commit()
     return to_models(items, ItemDTO)
 
+def update_collection_items(user: InternalUserDTO, collection_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemDTO]:
+    items = Item.find_writeable_by_collection_uuid(user, collection_uuid, [item.uuid for item in items_update])
+
+    for item in items:
+        item_new = [
+            item_new
+            for item_new in items_update
+            if str(item_new.uuid) == str(item.uuid)
+        ][0]
+        item.properties = item_new.properties
+        item.geometry = item_new.geometry
+        item.save()
+
+    Item.session.commit()
+    return to_models(items, ItemDTO)
 
 def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
     item = Item.find_writeable_or_fail(user, item_uuid)

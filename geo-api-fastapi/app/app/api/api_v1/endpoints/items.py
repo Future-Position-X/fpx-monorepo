@@ -7,14 +7,15 @@ from app.dto import ItemDTO
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, Query
 from geoalchemy2.shape import to_shape, from_shape
 from geojson_pydantic.geometries import Geometry
-from lib.visualizer.renderer import render_feature_collection
+from lib.visualizer.renderer import render_feature_collection, render_feature
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas, services
 from app.api import deps
 
 from shapely.geometry import Point, shape
-from starlette.responses import StreamingResponse
+from starlette.responses import StreamingResponse, Response
+from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 router = APIRouter()
 from geojson_pydantic.features import FeatureCollection, Feature
@@ -191,23 +192,19 @@ def get_items(
             return StreamingResponse(data, media_type="image/png")
 
 
-@router.put("/items", response_model=Union[List[schemas.Item], FeatureCollection], status_code=201, responses={
-    201: {
+@router.put("/items", status_code=204, responses={
+    204: {
         "description": "Update items",
         "content": {
             "application/json": {},
-            "application/geojson": {
-                "schema": {
-                    "$ref": "#/components/schemas/FeatureCollection"
-                }
-            },
+            "application/geojson": {},
         }
     }
 })
 def update_items(
         items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
 ):
@@ -218,25 +215,15 @@ def update_items(
     else:
         items_updates = [item.to_dto() for item in items_in]
 
-    items = services.update_items(current_user, items_updates)
-
-    if accept == "application/geojson":
-        features = map_item_dtos_to_features(items)
-        feature_collection = FeatureCollection(features=features)
-        return feature_collection
-    else:
-        return [schemas.Item.from_dto(item) for item in items]
-
+    services.item.update_items(current_user, items_updates)
+    return Response(status_code=HTTP_204_NO_CONTENT)
 
 @router.get("/collections/{collection_uuid}/items", response_model=Union[List[schemas.Item], FeatureCollection], responses={
     200: {
         "description": "Collection items requested",
         "content": {
-            "application/json": {
-                "example": {"id": "bar", "value": "The bar tenders"}
-            },
+            "application/json": {},
             "application/geojson": {
-                "example": {"id": "bar", "value": "The bar tenders"},
                 "schema": {
                     "$ref": "#/components/schemas/FeatureCollection"
                 }
@@ -274,36 +261,367 @@ def get_collection_items(
             return StreamingResponse(data, media_type="image/png")
 
 
-@router.post("/collections/{collection_uuid}/items", response_model=schemas.Item, status_code=201, responses={
+@router.post("/collections/{collection_uuid}/items", response_model=Union[schemas.Item, Feature], status_code=201, responses={
     201: {
         "description": "Create collection item",
     }
 })
 def create_collection_item(
         collection_uuid: UUID,
-        item_in: schemas.ItemCreate,
+        item_in: Union[schemas.ItemCreate, Feature],
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        current_user: models.User = Depends(deps.get_current_user),
+        accept: str = Header(None),
+        content_type: str = Header(None),
 ):
-    item_create = item_in.to_dto()
-    item = services.create_collection_item(current_user, collection_uuid, item_create)
-    return schemas.Item.from_dto(item)
+    item_create = None
+    # TODO: Should check content_type
+    if type(item_in) == Feature:
+        item_create = map_feature_to_item_dto(item_in)
+    else:
+        item_create = item_in.to_dto()
+
+    item = services.item.create_collection_item(current_user, collection_uuid, item_create)
+    if accept == "application/geojson":
+        feature = map_item_dto_to_feature(item)
+        return feature
+    else:
+        return schemas.Item.from_dto(item)
 
 
-@router.put("/collections/{collection_uuid}/items", response_model=schemas.ItemUpdate, status_code=201, responses={
+@router.put("/collections/{collection_uuid}/items", status_code=204, responses={
     201: {
-        "description": "Update collection items",
+        "description": "Update items",
+        "content": {
+            "application/json": {},
+            "application/geojson": {},
+        }
     }
 })
 def update_collection_items(
         collection_uuid: UUID,
-        item_in: schemas.ItemCreate,
+        items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        accept: str = Header(None),
+        content_type: str = Header(None),
+):
+    items_updates = None
+    # TODO: Should check content_type
+    if type(items_in) == FeatureCollection:
+        items_updates = map_features_to_item_dtos(items_in.features)
+    else:
+        items_updates = [item.to_dto() for item in items_in]
+
+    services.item.update_collection_items(current_user, collection_uuid, items_updates)
+    return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+@router.post("/collections/{collection_uuid}/items/replace", response_model=Union[List[schemas.Item], FeatureCollection], status_code=201, responses={
+    201: {
+        "description": "Replace all items in collection",
+        "content": {
+            "application/json": {},
+            "application/geojson": {
+                "schema": {
+                    "$ref": "#/components/schemas/FeatureCollection"
+                }
+            },
+        }
+    }
+})
+def replace_collection_items(
+        collection_uuid: UUID,
+        items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        accept: str = Header(None),
+        content_type: str = Header(None),
+):
+    items = None
+    # TODO: Should check content_type
+    if type(items_in) == FeatureCollection:
+        items = map_features_to_item_dtos(items_in.features)
+    else:
+        items = [item.to_dto() for item in items_in]
+
+    items = services.item.replace_collection_items(current_user, collection_uuid, items)
+
+    if accept == "application/geojson":
+        features = map_item_dtos_to_features(items)
+        feature_collection = FeatureCollection(features=features)
+        return feature_collection
+    else:
+        return [schemas.Item.from_dto(item) for item in items]
+
+
+@router.post("/collections/{collection_uuid}/items/bulk", response_model=Union[List[schemas.Item], FeatureCollection], status_code=201, responses={
+    201: {
+        "description": "Create items in collection",
+        "content": {
+            "application/json": {},
+            "application/geojson": {
+                "schema": {
+                    "$ref": "#/components/schemas/FeatureCollection"
+                }
+            },
+        }
+    }
+})
+def create_collection_items(
+        collection_uuid: UUID,
+        items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        accept: str = Header(None),
+        content_type: str = Header(None),
+):
+    items = None
+    # TODO: Should check content_type
+    if type(items_in) == FeatureCollection:
+        items = map_features_to_item_dtos(items_in.features)
+    else:
+        items = [item.to_dto() for item in items_in]
+
+    items = services.item.add_collection_items(current_user, collection_uuid, items)
+
+    if accept == "application/geojson":
+        features = map_item_dtos_to_features(items)
+        feature_collection = FeatureCollection(features=features)
+        return feature_collection
+    else:
+        return [schemas.Item.from_dto(item) for item in items]
+
+
+@router.delete("/collections/{collection_uuid}/items", status_code=204, responses={
+    204: {
+        "description": "Delete items in collection",
+        "content": {
+            "application/json": {},
+            "application/geojson": {},
+        }
+    }
+})
+def delete_collection_items(
+        collection_uuid: UUID,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+):
+    services.item.delete_collection_items(current_user, collection_uuid)
+    return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+
+@router.get("/collections/{collection_uuid}/items/{item_uuid}", response_model=Union[schemas.Item, Feature], status_code=200, responses={
+    200: {
+        "description": "Get item in collection",
+        "content": {
+            "application/json": {},
+            "application/geojson": {
+                "schema": {
+                    "$ref": "#/components/schemas/Feature"
+                }
+            },
+            "image/png": {}
+        }
+    }
+})
+def get_collection_item(
+        collection_uuid: UUID,
+        item_uuid,
+        visualizer_params: dict = Depends(visualizer_parameters),
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user_or_guest),
+        accept: str = Header(None),
 ):
-    item_create = item_in.to_dto()
-    item = services.create_collection_item(current_user, collection_uuid, item_create)
-    return schemas.Item.from_dto(item)
+    item = services.item.get_collection_item(current_user, collection_uuid, item_uuid)
+
+    if accept == None or accept == "application/json":
+        return schemas.Item.from_dto(item)
+    else:
+        feature = map_item_dto_to_feature(item)
+        if accept == "application/geojson":
+            return feature
+        elif accept == "image/png":
+            data = render_feature(
+                feature.dict(), visualizer_params["width"], visualizer_params["height"],
+                visualizer_params["map_id"]
+            )
+            return StreamingResponse(data, media_type="image/png")
+
+
+@router.delete("/collections/{collection_uuid}/items/{item_uuid}", status_code=204, responses={
+    204: {
+        "description": "Delete item in collection",
+        "content": {
+            "application/json": {},
+            "application/geojson": {},
+        }
+    }
+})
+def delete_collection_item(
+        collection_uuid: UUID,
+        item_uuid: UUID,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+):
+    services.item.delete_collection_item(current_user, collection_uuid, item_uuid)
+    return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+@router.put("/collections/{collection_uuid}/items/{item_uuid}", status_code=204, responses={
+    204: {
+        "description": "Update collection item",
+        "content": {
+            "application/json": {},
+            "application/geojson": {},
+        }
+    }
+})
+def update_collection_item(
+        collection_uuid: UUID,
+        item_uuid: UUID,
+        item_in: Union[schemas.ItemUpdate, Feature],
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        accept: str = Header(None),
+        content_type: str = Header(None),
+):
+    item_update = None
+    # TODO: Should check content_type
+    if type(item_in) == Feature:
+        item_update = map_feature_to_item_dto(item_in)
+    else:
+        item_update = item_in.to_dto()
+
+    services.item.update_collection_item(current_user, collection_uuid, item_uuid, item_update)
+    return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+@router.get("/collections/by_name/{collection_name}/items", response_model=Union[List[schemas.Item], FeatureCollection], responses={
+    200: {
+        "description": "Collection items by collection name",
+        "content": {
+            "application/json": {},
+            "application/geojson": {
+                "schema": {
+                    "$ref": "#/components/schemas/FeatureCollection"
+                }
+            },
+            "image/png": {},
+        }
+    }
+})
+def get_collection_items_by_name(
+        collection_name: str,
+        filter_params: dict = Depends(filter_parameters),
+        transforms_params: dict = Depends(transforms_parameters),
+        visualizer_params: dict = Depends(visualizer_parameters),
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        accept: str = Header(None),
+) -> Any:
+    """
+    Retrieve items.
+    """
+
+    items = services.item.get_collection_items_by_name(current_user, collection_name, filter_params, transforms_params)
+    if accept == None or accept == "application/json":
+        return [schemas.Item.from_dto(item) for item in items]
+    else:
+        features = map_item_dtos_to_features(items)
+        feature_collection = FeatureCollection(features=features)
+        if accept == "application/geojson":
+            return feature_collection
+        elif accept == "image/png":
+            data = render_feature_collection(
+                feature_collection.dict(), visualizer_params["width"], visualizer_params["height"],
+                visualizer_params["map_id"]
+            )
+            return StreamingResponse(data, media_type="image/png")
+
+
+@router.get("/items/{item_uuid}", response_model=Union[schemas.Item, Feature], status_code=200, responses={
+    200: {
+        "description": "Get item",
+        "content": {
+            "application/json": {},
+            "application/geojson": {
+                "schema": {
+                    "$ref": "#/components/schemas/Feature"
+                }
+            },
+            "image/png": {}
+        }
+    }
+})
+def get_item(
+        item_uuid,
+        visualizer_params: dict = Depends(visualizer_parameters),
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        accept: str = Header(None),
+):
+    item = services.item.get_item(current_user, item_uuid)
+
+    if accept == None or accept == "application/json":
+        return schemas.Item.from_dto(item)
+    else:
+        feature = map_item_dto_to_feature(item)
+        if accept == "application/geojson":
+            return feature
+        elif accept == "image/png":
+            data = render_feature(
+                feature.dict(), visualizer_params["width"], visualizer_params["height"],
+                visualizer_params["map_id"]
+            )
+            return StreamingResponse(data, media_type="image/png")
+
+
+@router.delete("/items/{item_uuid}", status_code=204, responses={
+    204: {
+        "description": "Delete item",
+        "content": {
+            "application/json": {},
+            "application/geojson": {},
+        }
+    }
+})
+def delete_item(
+        item_uuid: UUID,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+):
+    services.item.delete_item(current_user, item_uuid)
+    return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+@router.put("/items/{item_uuid}", status_code=204, responses={
+    204: {
+        "description": "Update item",
+        "content": {
+            "application/json": {},
+            "application/geojson": {},
+        }
+    }
+})
+def update_item(
+        item_uuid: UUID,
+        item_in: Union[schemas.ItemUpdate, Feature],
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        accept: str = Header(None),
+        content_type: str = Header(None),
+):
+    item_update = None
+    # TODO: Should check content_type
+    if type(item_in) == Feature:
+        item_update = map_feature_to_item_dto(item_in)
+    else:
+        item_update = item_in.to_dto()
+
+    services.item.update_item(current_user, item_uuid, item_update)
+    return Response(status_code=HTTP_204_NO_CONTENT)
 
 
 # @router.post("/", response_model=schemas.Item)
