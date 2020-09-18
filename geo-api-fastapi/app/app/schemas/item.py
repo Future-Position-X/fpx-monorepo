@@ -13,14 +13,13 @@ import logging
 
 # Shared properties
 class ItemBase(BaseModel):
-    geometry: dict
+    geometry: Optional[dict]
     properties: dict
 
     @validator('geometry', pre=True)
     def validate_geometry(cls, v):
-        logging.error("WTF")
-        logging.error(type(v))
-
+        if v is None:
+            return None
         if type(v) is dict:
             return v
         if type(v) is WKBElement:
