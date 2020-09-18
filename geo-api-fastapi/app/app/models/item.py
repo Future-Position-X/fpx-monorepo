@@ -207,7 +207,7 @@ class Item(BaseModel):
         filters["collection_name"] = collection_name
         where, exec_dict = cls.create_where(filters)
         result = (
-            cls.session()
+            cls.session
             .query(
                 cls.uuid,
                 cls.simplified_geometry(transforms.get("simplify", 0.0)),
