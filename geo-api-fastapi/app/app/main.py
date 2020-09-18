@@ -1,13 +1,21 @@
+from functools import lru_cache
+
 from fastapi import FastAPI
 from geojson_pydantic.features import FeatureCollection, Feature
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api_v1.api import api_router
-from app.core.config import settings
+from app.core import config
 from fastapi.openapi.utils import get_openapi
 
 from pydantic.schema import schema
 
+@lru_cache()
+def get_settings():
+    return config.settings
+
+
+settings = get_settings()
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"

@@ -30,7 +30,7 @@ class ItemBase(BaseModel):
         elif hasattr(v, "__geo_interface__"):
             return v.__geo_interface__
         else:
-            raise ValueError('geometry is not WKBElement, it is a ' + str(type(v)))
+            raise ValueError('can not transform geometry to dict from type ' + str(type(v)))
 
     class Config:
         arbitrary_types_allowed = False

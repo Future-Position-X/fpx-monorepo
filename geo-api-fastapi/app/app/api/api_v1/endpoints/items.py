@@ -177,7 +177,7 @@ def get_items(
     """
 
     items = services.item.get_items(current_user, filter_params, transforms_params)
-    if accept == None or accept == "application/json":
+    if accept in ["*/*", "application/json", None]:
         return [schemas.Item.from_dto(item) for item in items]
     else:
         features = map_item_dtos_to_features(items)
