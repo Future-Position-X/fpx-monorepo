@@ -438,8 +438,8 @@ class Item(BaseModel):
         q = cls.query.filter(Collection.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(owned_sq))
         q.delete(synchronize_session=False)
-        cls.session().commit()
-        cls.session().expire_all()
+        cls.session.commit()
+        cls.session.expire_all()
 
     @classmethod
     def copy_items(cls, src_collection_uuid, dest_collection_uuid):
