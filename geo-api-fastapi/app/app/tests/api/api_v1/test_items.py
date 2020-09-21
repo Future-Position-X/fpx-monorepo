@@ -28,13 +28,13 @@ def test_get_collection_item_json(client, item):
     }.items() <= item_hash.items()
 
 
-# def test_get_collection_item_json_404(client, item):
-#     res = client.get(
-#         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{uuid.uuid4()}',
-#         headers={"accept": "application/json"},
-#     )
-#     assert res.status_code == 404
-#     assert "not found" in str(res.content.lower())
+def test_get_collection_item_json_404(client, item):
+    res = client.get(
+        f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{uuid.uuid4()}',
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 404
+    assert "not found" in str(res.content.lower())
 
 def test_get_collection_item_geojson(client, item):
     res = client.get(
@@ -61,32 +61,32 @@ def test_get_collection_item_png(client, item):
     assert mime == "image/png"
 
 
-# def test_delete_collection_item(client, item):
-#     res = client.delete(
-#         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}',
-#         headers={"accept": "application/json"}
-#     )
-#     assert res.status_code == 204
+def test_delete_collection_item(client, item):
+    res = client.delete(
+        f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}',
+        headers={"accept": "application/json"}
+    )
+    assert res.status_code == 204
 
-#     res = client.get(
-#         f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"}
-#     )
-#     assert res.status_code == 404
-#     assert "not found" in str(res.data)
+    res = client.get(
+        f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"}
+    )
+    assert res.status_code == 404
+    assert "Not found" in str(res.content)
 
 
-# def test_delete_collection_items(client, item):
-#     res = client.delete(
-#         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items',
-#         headers={"accept": "application/json"},
-#     )
-#     assert res.status_code == 204
+def test_delete_collection_items(client, item):
+    res = client.delete(
+        f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items',
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 204
 
-#     res = client.get(
-#         f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"}
-#     )
-#     assert res.status_code == 404
-#     assert "not found" in str(res.data)
+    res = client.get(
+        f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"}
+    )
+    assert res.status_code == 404
+    assert "Not found" in str(res.content)
 
 
 def test_get_item_json(client, item):
@@ -104,12 +104,12 @@ def test_get_item_json(client, item):
     }.items() <= item_hash.items()
 
 
-# def test_get_item_json_404(client, item):
-#     res = client.get(
-#         f'{settings.API_V1_STR}/items/{uuid.uuid4()}', headers={"accept": "application/json"}
-#     )
-#     assert res.status_code == 404
-#     assert "not found" in str(res.data)
+def test_get_item_json_404(client, item):
+    res = client.get(
+        f'{settings.API_V1_STR}/items/{uuid.uuid4()}', headers={"accept": "application/json"}
+    )
+    assert res.status_code == 404
+    assert "Not found" in str(res.content)
 
 
 def test_get_item_geojson(client, item):

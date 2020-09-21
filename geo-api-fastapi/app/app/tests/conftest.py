@@ -1,9 +1,9 @@
 from typing import Dict, Generator
 import bcrypt
 import pytest
-from app.models import BaseModel
+from app.models import BaseModel, Item
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker, scoped_session
 
 from app.core.config import settings
 from app.main import app
@@ -11,8 +11,17 @@ from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 from sqlalchemy_utils import database_exists, create_database
 from app.db.session import SessionLocal, engine
-from sqlalchemy import event
+from sqlalchemy import event, create_engine
+from app.api.deps import get_db
 
+db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True, echo=True, echo_pool=True)
+test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)()
+
+def override_get_db():
+    BaseModel.set_session(test_db_session)
+    return test_db_session
+
+app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="session")
 def db() -> Generator:
@@ -22,9 +31,8 @@ def db() -> Generator:
     engine.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
     BaseModel.metadata.drop_all(bind=engine)
     BaseModel.metadata.create_all(bind=engine)
-    _db = SessionLocal()
-    BaseModel.set_session(_db)
-    yield _db
+    BaseModel.set_session(test_db_session)
+    yield test_db_session
 
 
 # @pytest.fixture(scope="module")
@@ -364,40 +372,8 @@ def anon_client(
 
 
 @pytest.fixture(scope="function", autouse=True)
-def session(db, request):
-    """
-    Returns function-scoped session.
-    """
-    # conn = engine.connect()
-    # txn = conn.begin()
-    #
-    # options = dict(bind=conn, binds={})
-    # sess = _db.create_scoped_session(options=options)
-
-    sess = db
-
-    from app.models import BaseModel
-
-    BaseModel.set_session(sess)
-
-    # establish  a SAVEPOINT just before beginning the test
-    # (http://docs.sqlalchemy.org/en/latest/orm/session_transaction.html#using-savepoint)
-    sess.begin_nested()
-
-    @event.listens_for(sess, "after_transaction_end")
-    def restart_savepoint(sess2, trans):
-        # Detecting whether this is indeed the nested transaction of the test
-        if trans.nested and not trans._parent.nested:
-            # The test should have normally called session.commit(),
-            # but to be safe we explicitly expire the session
-            sess2.expire_all()
-            sess.begin_nested()
-
-    #_db.session = sess
-    yield sess
-
-    # Cleanup
-    #sess.remove()
-    # This instruction rollsback any commit that were executed in the tests.
-    #txn.rollback()
-    #conn.close()
+def session(request):
+    test_db_session.begin_nested()
+    yield test_db_session
+    test_db_session.rollback()
+    test_db_session.close()
