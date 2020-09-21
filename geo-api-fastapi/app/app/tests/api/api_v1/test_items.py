@@ -51,16 +51,14 @@ def test_get_collection_item_geojson(client, item):
     }.items() <= item_hash.items()
 
 
-# def test_get_collection_item_png(client, item):
-#     res = client.get(
-#         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}?map_id=transparent',
-#         headers={"accept": "image/png"}
-#     )
-#     assert res.status_code == 200
-#     import io
-    
-#     mime = magic.from_buffer(io.BytesIO(res.content), mime=True)
-#     assert mime == "image/png"
+def test_get_collection_item_png(client, item):
+    res = client.get(
+        f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}?map_id=transparent',
+        headers={"accept": "image/png"}
+    )
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.data, mime=True)
+    assert mime == "image/png"
 
 
 # def test_delete_collection_item(client, item):
