@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 
-db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True, echo=True, echo_pool=True)
+db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
 test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)()
 
 def override_get_db():
@@ -337,7 +337,7 @@ def client2(
     provider_uuid = str(provider2["uuid"])
     token = create_access_token(user2["uuid"])
     with TestClient(app) as client:
-        client.headers["HTTP_AUTHORIZATION"] = "Bearer " + token
+        client.headers["AUTHORIZATION"] = "Bearer " + token
         client.headers["HTTP_CONTENT_TYPE"] = "application/json"
         client.headers["HTTP_ACCEPT"] = "application/json"
         return client

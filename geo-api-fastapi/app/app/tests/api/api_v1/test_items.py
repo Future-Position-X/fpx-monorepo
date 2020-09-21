@@ -127,14 +127,14 @@ def test_get_item_geojson(client, item):
     }.items() <= item_hash.items()
 
 
-# def test_get_item_png(client, item):
-#     res = client.get(
-#         f'{settings.API_V1_STR}/items/{item["uuid"]}?map_id=transparent',
-#         headers={"accept": "image/png"}
-#     )
-#     assert res.status_code == 200
-#     mime = magic.from_buffer(res.data, mime=True)
-#     assert mime == "image/png"
+def test_get_item_png(client, item):
+    res = client.get(
+        f'{settings.API_V1_STR}/items/{item["uuid"]}?map_id=transparent',
+        headers={"accept": "image/png"}
+    )
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.content, mime=True)
+    assert mime == "image/png"
 
 
 def test_get_items(client, collection):
@@ -157,46 +157,47 @@ def test_get_items(client, collection):
     assert "test-item-empty1" not in str(res.content)
 
 
-# def test_get_shared_items(client, user2, client2, collection_private):
-#     res = client2.get(
-#         f'{settings.API_V1_STR}/collections/{collection_private["uuid"]}/items',
-#         headers={"accept": "application/json"},
-#     )
-#     assert res.status_code == 200
-#     items_array = res.json()
-#     assert len(items_array) == 0
+def test_get_shared_items(client, user2, client2, collection_private):
+    res = client2.get(
+        f'{settings.API_V1_STR}/collections/{collection_private["uuid"]}/items',
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    items_array = res.json()
+    assert len(items_array) == 0
 
-#     res = client.post(
-#         f'{settings.API_V1_STR}/acls',
-#         json={
-#             "granted_provider_uuid": str(user2["provider_uuid"]),
-#             "collection_uuid": str(collection_private["uuid"]),
-#             "access": "read",
-#         },
-#         headers={"accept": "application/json"},
-#     )
-#     assert res.status_code == 201
-#     acl = res.json()
+    res = client.post(
+        f'{settings.API_V1_STR}/acls',
+        json={
+            "granted_provider_uuid": str(user2["provider_uuid"]),
+            "collection_uuid": str(collection_private["uuid"]),
+            "access": "read",
+        },
+        headers={"accept": "application/json"},
+    )
 
-#     res = client2.get(
-#         f'{settings.API_V1_STR}/collections/{collection_private["uuid"]}/items',
-#         headers={"accept": "application/json"},
-#     )
-#     assert res.status_code == 200
-#     assert "test-item-private1" in str(res.content)
+    assert res.status_code == 201
+    acl = res.json()
 
-#     res = client.delete(
-#         f'{settings.API_V1_STR}/acls/{acl["uuid"]}', headers={"accept": "application/json"}
-#     )
-#     assert res.status_code == 204
+    res = client2.get(
+        f'{settings.API_V1_STR}/collections/{collection_private["uuid"]}/items',
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    assert "test-item-private1" in str(res.content)
 
-#     res = client2.get(
-#         f'{settings.API_V1_STR}/collections/{collection_private["uuid"]}/items',
-#         headers={"accept": "application/json"},
-#     )
-#     assert res.status_code == 200
-#     items_array = res.json()
-#     assert len(items_array) == 0
+    res = client.delete(
+        f'{settings.API_V1_STR}/acls/{acl["uuid"]}', headers={"accept": "application/json"}
+    )
+    assert res.status_code == 204
+
+    res = client2.get(
+        f'{settings.API_V1_STR}/collections/{collection_private["uuid"]}/items',
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
+    items_array = res.json()
+    assert len(items_array) == 0
 
 
 def test_get_items_geojson(client, collection):
@@ -211,14 +212,14 @@ def test_get_items_geojson(client, collection):
     assert "test-item-empty1" not in str(res.content)
 
 
-# def test_get_items_png(client, collection):
-#     res = client.get(
-#         f'{settings.API_V1_STR}/collections/{collection["uuid"]}/items?map_id=transparent',
-#         headers={"accept": "image/png"},
-#     )
-#     assert res.status_code == 200
-#     mime = magic.from_buffer(res.content, mime=True)
-#     assert mime == "image/png"
+def test_get_items_png(client, collection):
+    res = client.get(
+        f'{settings.API_V1_STR}/collections/{collection["uuid"]}/items?map_id=transparent',
+        headers={"accept": "image/png"},
+    )
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.content, mime=True)
+    assert mime == "image/png"
 
 
 def test_get_items_by_name(client, collection):
@@ -241,14 +242,14 @@ def test_get_items_by_name_geojson(client, collection):
     assert "test-item1" in str(res.content)
 
 
-# def test_get_items_by_name_png(client, collection):
-#     res = client.get(
-#         f'{settings.API_V1_STR}/collections/by_name/{collection["name"]}/items?map_id=transparent',
-#         headers={"accept": "image/png"},
-#     )
-#     assert res.status_code == 200
-#     mime = magic.from_buffer(res.content, mime=True)
-#     assert mime == "image/png"
+def test_get_items_by_name_png(client, collection):
+    res = client.get(
+        f'{settings.API_V1_STR}/collections/by_name/{collection["name"]}/items?map_id=transparent',
+        headers={"accept": "image/png"},
+    )
+    assert res.status_code == 200
+    mime = magic.from_buffer(res.content, mime=True)
+    assert mime == "image/png"
 
 
 def test_read_item(
