@@ -399,8 +399,8 @@ class Item(BaseModel):
     def delete_writeable(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
         q = cls.writeable_query(user, item_uuid, collection_uuid)
         q.delete(synchronize_session=False)
-        cls.session().commit()
-        cls.session().expire_all()
+        cls.session.commit()
+        cls.session.expire_all()
 
     # TODO: Perhaps use JOIN instead of SUBQUERY
     @classmethod

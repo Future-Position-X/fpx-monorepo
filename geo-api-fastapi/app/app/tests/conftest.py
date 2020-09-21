@@ -300,7 +300,7 @@ def client(
     provider_uuid = str(provider["uuid"])
     token = create_access_token(user["uuid"])
     with TestClient(app) as client:
-        client.headers["HTTP_AUTHORIZATION"] = "Bearer " + token
+        client.headers["AUTHORIZATION"] = "Bearer " + token
         client.headers["HTTP_CONTENT_TYPE"] = "application/json"
         client.headers["HTTP_ACCEPT"] = "application/json"
         return client
