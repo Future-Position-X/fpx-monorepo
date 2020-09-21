@@ -57,7 +57,7 @@ def test_get_collection_item_png(client, item):
         headers={"accept": "image/png"}
     )
     assert res.status_code == 200
-    mime = magic.from_buffer(res.data, mime=True)
+    mime = magic.from_buffer(res.content, mime=True)
     assert mime == "image/png"
 
 
