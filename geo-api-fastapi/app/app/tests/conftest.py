@@ -1,18 +1,16 @@
-from typing import Dict, Generator
+from typing import Generator
+
 import bcrypt
 import pytest
-from app.models import BaseModel, Item
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session, sessionmaker, scoped_session
-
-from app.core.config import settings
-from app.main import app
-from app.tests.utils.user import authentication_token_from_email
-from app.tests.utils.utils import get_superuser_token_headers
-from sqlalchemy_utils import database_exists, create_database
-from app.db.session import SessionLocal, engine
-from sqlalchemy import event, create_engine
 from app.api.deps import get_db
+from app.core.config import settings
+from app.db.session import engine
+from app.main import app
+from app.models import BaseModel
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils import database_exists, create_database
 
 db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True, echo=True, echo_pool=True)
 test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)()
