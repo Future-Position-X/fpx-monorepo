@@ -60,10 +60,19 @@ def delete_collection(
 
 
 @router.post("/collections/{src_collection_uuid}/copy", status_code=201)
-@router.post("/collections/{src_collection_uuid}/copy/{dst_collection_uuid}", status_code=201)
-def create_collection(
+def copy_to_new_collection(
     src_collection_uuid: UUID,
-    dst_collection_uuid: Optional[UUID],
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_user),
+) -> schemas.Collection:
+    collection = schemas.Collection.from_dto(services.collection.copy_collection_from(current_user, src_collection_uuid, None))
+    return collection
+
+
+@router.post("/collections/{src_collection_uuid}/copy/{dst_collection_uuid}", status_code=201)
+def copy_to_collection(
+    src_collection_uuid: UUID,
+    dst_collection_uuid: UUID,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_user),
 ) -> schemas.Collection:

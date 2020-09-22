@@ -443,7 +443,7 @@ class Item(BaseModel):
 
     @classmethod
     def copy_items(cls, src_collection_uuid, dest_collection_uuid):
-        cls.session().execute(
+        cls.session.execute(
             """
             INSERT INTO items (collection_uuid, geometry, properties)
                 SELECT :dest_collection_uuid, geometry, properties

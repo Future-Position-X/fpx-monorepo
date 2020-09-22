@@ -246,7 +246,8 @@ def get_collection_items(
     """
 
     items = services.item.get_collection_items(current_user, collection_uuid, filter_params, transforms_params)
-    if accept == None or accept == "application/json":
+    
+    if accept in [None, "*/*", "application/json"]:
         return [schemas.Item.from_dto(item) for item in items]
     else:
         features = map_item_dtos_to_features(items)
