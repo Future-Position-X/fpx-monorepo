@@ -9,15 +9,15 @@ from pydantic import BaseModel
 class CollectionBase(BaseModel):
     name: str
     is_public: bool
-
-
-class CollectionCreate(CollectionBase):
     def to_dto(self) -> CollectionDTO:
         return CollectionDTO(**{
             "name": self.name,
             "is_public": self.is_public,
         })
 
+
+class CollectionCreate(CollectionBase):
+    pass
 
 class CollectionUpdate(CollectionBase):
     pass

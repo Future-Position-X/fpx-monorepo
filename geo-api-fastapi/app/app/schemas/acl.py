@@ -13,8 +13,6 @@ class ACLBase(BaseModel):
     item_uuid: Optional[UUID]
     access: str = None
 
-
-class ACLCreate(ACLBase):
     def to_dto(self) -> ACLDTO:
         return ACLDTO(**{
             "granted_provider_uuid": self.granted_provider_uuid,
@@ -24,6 +22,9 @@ class ACLCreate(ACLBase):
             "access": self.access,
         })
 
+
+class ACLCreate(ACLBase):
+    pass
 
 class ACLUpdate(ACLBase):
     pass
