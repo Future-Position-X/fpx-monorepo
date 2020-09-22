@@ -33,19 +33,9 @@ def get_collection(
         collection_uuid: UUID,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user_or_guest),
-) -> List[schemas.Collection]:
+) -> schemas.Collection:
     collection = services.collection.get_collection_by_uuid(current_user, collection_uuid)
     return schemas.Collection.from_dto(collection)
-
-
-@router.delete("/collections/{collection_uuid}", status_code=204)
-def delete_collection(
-        collection_uuid: UUID,
-        db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
-) -> None:
-    services.collection.delete_collection_by_uuid(current_user, collection_uuid)
-    return None
 
 
 @router.put("/collections/{collection_uuid}", status_code=204)
@@ -56,6 +46,16 @@ def update_collection(
         current_user: models.User = Depends(deps.get_current_user),
 ) -> None:
     services.collection.update_collection_by_uuid(current_user, collection_uuid, collection_in.to_dto())
+    return None
+
+
+@router.delete("/collections/{collection_uuid}", status_code=204)
+def delete_collection(
+        collection_uuid: UUID,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+) -> None:
+    services.collection.delete_collection_by_uuid(current_user, collection_uuid)
     return None
 
 

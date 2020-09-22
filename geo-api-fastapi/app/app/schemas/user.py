@@ -1,14 +1,14 @@
+from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
+from app.dto import UserDTO
 from pydantic import BaseModel, EmailStr
 
 
 # Shared properties
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
-    full_name: Optional[str] = None
 
 
 # Properties to receive via API on creation
@@ -16,14 +16,30 @@ class UserCreate(UserBase):
     email: EmailStr
     password: str
 
+    def to_dto(self) -> UserDTO:
+        return UserDTO(**{
+            "email": self.email,
+            "password": self.password,
+        })
+
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
     password: Optional[str] = None
 
+    def to_dto(self) -> UserDTO:
+        return UserDTO(**{
+            "email": self.email,
+            "password": self.password,
+        })
+
 
 class UserInDBBase(UserBase):
-    id: Optional[int] = None
+    uuid: UUID
+    provider_uuid: UUID
+    created_at: datetime
+    updated_at: datetime
+    revision: int
 
     class Config:
         orm_mode = True
@@ -31,9 +47,18 @@ class UserInDBBase(UserBase):
 
 # Additional properties to return via API
 class User(UserInDBBase):
-    pass
+    @classmethod
+    def from_dto(cls, dto: UserDTO):
+        return cls(
+            uuid=dto.uuid,
+            provider_uuid=dto.provider_uuid,
+            email=dto.email,
+            created_at=dto.created_at,
+            updated_at=dto.updated_at,
+            revision=dto.revision
+        )
 
 
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
-    hashed_password: str
+    password: str

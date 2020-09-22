@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 from enum import Enum
 from geoalchemy2 import WKTElement
@@ -23,6 +24,10 @@ class BaseDTO:
 
 
 class BaseModelDTO(BaseDTO):
+    uuid: UUID
+    created_at: datetime
+    updated_at: datetime
+    revision: int
     __slots__ = ["uuid", "created_at", "updated_at", "revision"]
 
 
@@ -45,11 +50,17 @@ class ItemDTO(BaseModelDTO):
 
 
 class ProviderDTO(BaseModelDTO):
+    name: str
+
     def __init__(self, **kwargs):
         super().__init__(kwargs, ["name"])
 
 
 class UserDTO(BaseModelDTO):
+    provider_uuid: UUID
+    email: str
+    password: str
+
     def __init__(self, **kwargs):
         super().__init__(kwargs, ["provider_uuid", "email", "password"])
 
