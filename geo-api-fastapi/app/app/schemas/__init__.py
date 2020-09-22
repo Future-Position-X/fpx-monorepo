@@ -3,3 +3,4 @@ from .acl import ACL, ACLCreate, ACLUpdate, ACLInDB
 from .msg import Msg
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate
+from .collection import Collection, CollectionCreate, CollectionInDB, CollectionUpdate

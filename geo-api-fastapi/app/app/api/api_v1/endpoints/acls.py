@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/acls")
 def get_acls(
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        current_user: models.User = Depends(deps.get_current_user),
 ) -> List[schemas.ACL]:
     acls = services.acl.get_all_readable_acls(current_user)
     return [schemas.ACL.from_dto(acl) for acl in acls]
@@ -40,7 +40,7 @@ def create_acl(
 def get_acl(
         acl_uuid: UUID,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        current_user: models.User = Depends(deps.get_current_user),
 ) -> List[schemas.ACL]:
     acl = services.acl.get_acl_by_uuid(current_user, acl_uuid)
     return schemas.ACL.from_dto(acl)
@@ -50,7 +50,7 @@ def get_acl(
 def delete_acl(
         acl_uuid: UUID,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user_or_guest),
+        current_user: models.User = Depends(deps.get_current_user),
 ) -> None:
     services.acl.delete_acl_by_uuid(current_user, acl_uuid)
     return None

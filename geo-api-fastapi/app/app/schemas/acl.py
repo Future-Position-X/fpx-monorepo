@@ -15,7 +15,7 @@ class ACLBase(BaseModel):
 
 
 class ACLCreate(ACLBase):
-    def to_dto(self):
+    def to_dto(self) -> ACLDTO:
         return ACLDTO(**{
             "granted_provider_uuid": self.granted_provider_uuid,
             "granted_user_uuid": self.granted_user_uuid,
@@ -43,7 +43,7 @@ class ACLInDBBase(ACLBase):
 
 class ACL(ACLInDBBase):
     @classmethod
-    def from_dto(cls, dto):
+    def from_dto(cls, dto: ACLDTO):
         return cls(
             uuid=dto.uuid,
             provider_uuid=dto.provider_uuid,
