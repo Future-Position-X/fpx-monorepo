@@ -32,6 +32,15 @@ def create_user(
     return user
 
 
+@router.get("/users/uuid")
+def get_current_user_uuid(
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+) -> schemas.User:
+    user = services.user.get_user(current_user.uuid)
+    return schemas.User.from_dto(user)
+
+
 @router.get("/users/{user_uuid}")
 def get_user(
         user_uuid: UUID,
@@ -61,6 +70,7 @@ def delete_user(
 ) -> None:
     services.user.delete_user(current_user.provider_uuid, user_uuid)
     return None
+
 
 # @router.get("/", response_model=List[schemas.User])
 # def read_users(
