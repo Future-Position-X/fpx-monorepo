@@ -1,10 +1,11 @@
 from typing import Dict
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
 
-
+@pytest.mark.skip
 def test_celery_worker_test(
     client: TestClient, superuser_token_headers: Dict[str, str]
 ) -> None:

@@ -44,6 +44,15 @@ class UserInDBBase(UserBase):
     class Config:
         orm_mode = True
 
+    def to_dto(self) -> UserDTO:
+        return UserDTO(**{
+            "uuid": self.uuid,
+            "email": self.email,
+            "provider_uuid": self.provider_uuid,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "revision": self.revision,
+        })
 
 # Additional properties to return via API
 class User(UserInDBBase):

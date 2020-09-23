@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Dict
 
 import bcrypt
 import pytest
@@ -9,8 +9,11 @@ from app.main import app
 from app.models import BaseModel
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy_utils import database_exists, create_database
+
+from app.tests.utils.user import authentication_token_from_email
+from app.tests.utils.utils import get_superuser_token_headers
 
 db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
 test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)()
@@ -39,16 +42,17 @@ def db() -> Generator:
 #         yield c
 #
 #
-# @pytest.fixture(scope="module")
-# def superuser_token_headers(client: TestClient) -> Dict[str, str]:
-#     return get_superuser_token_headers(client)
-#
-#
-# @pytest.fixture(scope="module")
-# def normal_user_token_headers(client: TestClient, db: Session) -> Dict[str, str]:
-#     return authentication_token_from_email(
-#         client=client, email=settings.EMAIL_TEST_USER, db=db
-#     )
+
+@pytest.fixture(scope="module")
+def superuser_token_headers(client: TestClient) -> Dict[str, str]:
+    return get_superuser_token_headers(client)
+
+
+@pytest.fixture(scope="module")
+def normal_user_token_headers(client: TestClient, db: Session) -> Dict[str, str]:
+    return authentication_token_from_email(
+        client=client, email=settings.EMAIL_TEST_USER, db=db
+    )
 
 
 
