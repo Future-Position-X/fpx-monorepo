@@ -5,8 +5,8 @@ from sqlalchemy_mixins import ModelNotFoundError
 
 from app.dto import CollectionDTO, InternalUserDTO
 from app.models import Collection
-from app.services.item import copy_items_by_collection_uuid
 from app.models.base_model import to_models, to_model
+from app.services.item import copy_items_by_collection_uuid
 
 
 def get_all_accessable_collections(user: InternalUserDTO) -> List[CollectionDTO]:

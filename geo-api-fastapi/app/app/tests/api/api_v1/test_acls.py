@@ -1,5 +1,3 @@
-import json
-
 from app.main import settings
 from app.tests.conftest import UUID_ZERO
 

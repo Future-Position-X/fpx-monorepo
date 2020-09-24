@@ -5,6 +5,7 @@ from app.dto import InternalUserDTO, ACLDTO
 from app.models import ACL, Collection, Item, Provider, User
 from app.models.base_model import to_models, to_model
 
+
 def get_all_readable_acls(user: InternalUserDTO) -> List[ACLDTO]:
     acls = ACL.find_accessable(user)
     return to_models(acls, ACLDTO)

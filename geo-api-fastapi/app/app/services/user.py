@@ -8,8 +8,8 @@ from app.core.security import verify_password
 from app.dto import ProviderDTO, UserDTO
 from app.errors import UnauthorizedError
 from app.models import User
-from app.services.provider import create_provider
 from app.models.base_model import to_models, to_model
+from app.services.provider import create_provider
 
 
 def get_users() -> List[UserDTO]:
