@@ -1,8 +1,10 @@
+import pytest
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud, services
 from app.core.security import verify_password
+from app.errors import UnauthorizedError
 from app.schemas.user import UserCreate, UserUpdate
 from app.tests.utils.utils import random_email, random_lower_string
 
@@ -21,7 +23,7 @@ def test_authenticate_user(db: Session) -> None:
     password = random_lower_string()
     user_in = UserCreate(email=email, password=password)
     user = services.user.create_user(user_in.to_dto())
-    authenticated_user = crud.user.authenticate(db, email=email, password=password)
+    authenticated_user = services.user.authenticate(email=email, password=password)
     assert authenticated_user
     assert user.email == authenticated_user.email
 
@@ -29,8 +31,9 @@ def test_authenticate_user(db: Session) -> None:
 def test_not_authenticate_user(db: Session) -> None:
     email = random_email()
     password = random_lower_string()
-    user = crud.user.authenticate(db, email=email, password=password)
-    assert user is None
+    with pytest.raises(UnauthorizedError):
+        user = services.user.authenticate(email=email, password=password)
+        assert user is None
 
 
 def test_get_user(db: Session) -> None:

@@ -82,9 +82,11 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
 
+    CELERY_RABBITMQ_URI: str
+
     TEST_USER1_EMAIL = "test-user1@test.se"
-    TEST_USER2_EMAIL = "test-user2@test.se"
     TEST_USER1_PASSWORD = "test"
+    TEST_USER2_EMAIL = "test-user2@test.se"
     TEST_USER2_PASSWORD = "test"
 
     class Config:

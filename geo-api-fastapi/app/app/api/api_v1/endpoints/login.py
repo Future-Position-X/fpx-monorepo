@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import models, schemas, services
 from app.api import deps
 from app.core import security
 from app.core.config import settings
@@ -26,14 +26,12 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.user.authenticate(
-        db, email=form_data.username, password=form_data.password
+    user = services.user.authenticate(
+        email=form_data.username, password=form_data.password
     )
 
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(
@@ -56,7 +54,7 @@ def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
     """
     Password Recovery
     """
-    user = crud.user.get_by_email(db, email=email)
+    user = services.user.get_user_by_email(email)
 
     if not user:
         raise HTTPException(
@@ -82,16 +80,13 @@ def reset_password(
     email = verify_password_reset_token(token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = crud.user.get_by_email(db, email=email)
+    user = services.user.get_user_by_email(email)
     if not user:
         raise HTTPException(
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user")
     hashed_password = get_password_hash(new_password)
-    user.hashed_password = hashed_password
-    db.add(user)
-    db.commit()
+    user.password = hashed_password
+    services.update_user(user.provider_uuid, user.uuid, user)
     return {"msg": "Password updated successfully"}

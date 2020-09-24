@@ -1,11 +1,9 @@
-from typing import List, Optional
-from uuid import UUID
-
-from app import schemas, models, services
-from app.api import deps
-from app.schemas import Token
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from app import schemas, services
+from app.api import deps
+from app.schemas import Token
 
 router = APIRouter()
 

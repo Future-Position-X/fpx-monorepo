@@ -1,21 +1,18 @@
-from enum import Enum
 from typing import Any, List, Union, Optional
-import logging
+from typing import Any, List, Union, Optional
 from uuid import UUID
 
-from app.dto import ItemDTO
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, Query
-from geoalchemy2.shape import to_shape, from_shape
-from geojson_pydantic.geometries import Geometry
-from lib.visualizer.renderer import render_feature_collection, render_feature
-from sqlalchemy.orm import Session
-
-from app import crud, models, schemas, services
-from app.api import deps
-
+from fastapi import APIRouter, Depends, Header, Query
+from geoalchemy2.shape import to_shape
 from shapely.geometry import Point, shape
+from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse, Response
-from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT
+from starlette.status import HTTP_204_NO_CONTENT
+
+from app import models, schemas, services
+from app.api import deps
+from app.dto import ItemDTO
+from lib.visualizer.renderer import render_feature_collection, render_feature
 
 router = APIRouter()
 from geojson_pydantic.features import FeatureCollection, Feature
@@ -246,7 +243,7 @@ def get_collection_items(
     """
 
     items = services.item.get_collection_items(current_user, collection_uuid, filter_params, transforms_params)
-    
+
     if accept in [None, "*/*", "application/json"]:
         return [schemas.Item.from_dto(item) for item in items]
     else:
@@ -623,74 +620,3 @@ def update_item(
 
     services.item.update_item(current_user, item_uuid, item_update)
     return Response(status_code=HTTP_204_NO_CONTENT)
-
-
-# @router.post("/", response_model=schemas.Item)
-# def create_item(
-#     *,
-#     db: Session = Depends(deps.get_db),
-#     item_in: schemas.ItemCreate,
-#     current_user: models.User = Depends(deps.get_current_active_user),
-# ) -> Any:
-#     """
-#     Create new item.
-#     """
-#     item = crud.item.create_with_owner(db=db, obj_in=item_in, owner_id=current_user.id)
-#     return item
-#
-#
-# @router.put("/{id}", response_model=schemas.Item)
-# def update_item(
-#     *,
-#     db: Session = Depends(deps.get_db),
-#     id: int,
-#     item_in: schemas.ItemUpdate,
-#     current_user: models.User = Depends(deps.get_current_active_user),
-# ) -> Any:
-#     """
-#     Update an item.
-#     """
-#     item = crud.item.get(db=db, id=id)
-#     if not item:
-#         raise HTTPException(status_code=404, detail="Item not found")
-#     if not crud.user.is_superuser(current_user) and (item.owner_id != current_user.id):
-#         raise HTTPException(status_code=400, detail="Not enough permissions")
-#     item = crud.item.update(db=db, db_obj=item, obj_in=item_in)
-#     return item
-#
-#
-# @router.get("/{id}", response_model=schemas.Item)
-# def read_item(
-#     *,
-#     db: Session = Depends(deps.get_db),
-#     id: int,
-#     current_user: models.User = Depends(deps.get_current_active_user),
-# ) -> Any:
-#     """
-#     Get item by ID.
-#     """
-#     item = crud.item.get(db=db, id=id)
-#     if not item:
-#         raise HTTPException(status_code=404, detail="Item not found")
-#     if not crud.user.is_superuser(current_user) and (item.owner_id != current_user.id):
-#         raise HTTPException(status_code=400, detail="Not enough permissions")
-#     return item
-#
-#
-# @router.delete("/{id}", response_model=schemas.Item)
-# def delete_item(
-#     *,
-#     db: Session = Depends(deps.get_db),
-#     id: int,
-#     current_user: models.User = Depends(deps.get_current_active_user),
-# ) -> Any:
-#     """
-#     Delete an item.
-#     """
-#     item = crud.item.get(db=db, id=id)
-#     if not item:
-#         raise HTTPException(status_code=404, detail="Item not found")
-#     if not crud.user.is_superuser(current_user) and (item.owner_id != current_user.id):
-#         raise HTTPException(status_code=400, detail="Not enough permissions")
-#     item = crud.item.remove(db=db, id=id)
-#     return item

@@ -44,6 +44,11 @@ class FPXActiveRecordMixin(ActiveRecordMixin, SmartQueryMixin):
     __abstract__ = True
 
     @classmethod
+    def first(cls, **kwargs):
+        result = cls.where(**kwargs).first()
+        return result
+
+    @classmethod
     def first_or_fail(cls, **kwargs):
         result = cls.where(**kwargs).first()
         if result:
