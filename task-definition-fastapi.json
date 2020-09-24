@@ -40,10 +40,6 @@
           "valueFrom": "JWT_SECRET",
           "name": "JWT_SECRET"
         },
-        {
-          "valueFrom": "MAPBOX_TOKEN",
-          "name": "MAPBOX_TOKEN"
-        },
 	{"valueFrom":"/geo-api-fastapi/CELERY_RABBITMQ_URI","name":"CELERY_RABBITMQ_URI"},
 {"valueFrom":"/geo-api-fastapi/EMAILS_FROM_EMAIL","name":"EMAILS_FROM_EMAIL"},
 {"valueFrom":"/geo-api-fastapi/FIRST_SUPERUSER","name":"FIRST_SUPERUSER"},
