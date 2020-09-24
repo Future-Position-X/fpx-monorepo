@@ -10,6 +10,7 @@ on:
     paths:
       - 'geo-api-fastapi/**'
       - '.github/**'
+      - 'task-definition-fastapi.json'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
