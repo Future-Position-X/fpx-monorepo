@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from app.dto import ACLDTO, CollectionDTO
 from pydantic import BaseModel
+
+from app.dto import CollectionDTO
 
 
 class CollectionBase(BaseModel):

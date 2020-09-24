@@ -1,9 +1,10 @@
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
-
+from sqlalchemy.orm import relationship
 
 from app.models import BaseModel
-import sqlalchemy as sa
-from sqlalchemy.orm import relationship
+
+
 class Provider(BaseModel):
     __tablename__ = "providers"
 

@@ -1,14 +1,15 @@
-from sqlalchemy.dialects.postgresql import UUID
-
-import sqlalchemy_mixins
-
-from app.models import BaseModel
-from sqlalchemy import or_, and_
-from sqlalchemy.orm import relationship
-import sqlalchemy as sa
 import uuid
+
+import sqlalchemy as sa
+import sqlalchemy_mixins
+from sqlalchemy import or_, and_
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
 from app.dto import InternalUserDTO, Access
+from app.models import BaseModel
 from app.models.acl import ACL
+
 
 class Collection(BaseModel):
     __tablename__ = "collections"

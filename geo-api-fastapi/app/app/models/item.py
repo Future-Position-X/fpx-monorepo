@@ -1,32 +1,16 @@
-# from typing import TYPE_CHECKING
-#
-# from sqlalchemy import Column, ForeignKey, Integer, String
-# from sqlalchemy.orm import relationship
-#
-# from app.db.base_class import Base
-#
-# if TYPE_CHECKING:
-#     from .user import User  # noqa: F401
-#
-#
-# class Item(Base):
-#     id = Column(Integer, primary_key=True, index=True)
-#     title = Column(String, index=True)
-#     description = Column(String, index=True)
-#     owner_id = Column(Integer, ForeignKey("user.id"))
-#     owner = relationship("User", back_populates="items")
-
+import sqlalchemy as sa
 import sqlalchemy_mixins
 from geoalchemy2 import Geometry
+from sqlalchemy import func, or_, and_
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID
-from app.models import BaseModel
-from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import relationship
-import sqlalchemy as sa
+
 from app.dto import ItemDTO, InternalUserDTO, Access
+from app.models import BaseModel
 from app.models.acl import ACL
 from app.models.collection import Collection
+
 
 class Item(BaseModel):
     __tablename__ = "items"

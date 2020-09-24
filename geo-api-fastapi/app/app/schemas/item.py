@@ -1,14 +1,14 @@
+import logging
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from app.dto import ItemDTO
-from geoalchemy2 import WKTElement, WKBElement
-from geojson_pydantic.geometries import Geometry
-from pydantic import BaseModel, validator
-from shapely.geometry import mapping, Polygon, shape
+from geoalchemy2 import WKBElement
 from geoalchemy2.shape import to_shape
-import logging
+from pydantic import BaseModel, validator
+from shapely.geometry import mapping, shape
+
+from app.dto import ItemDTO
 
 
 # Shared properties

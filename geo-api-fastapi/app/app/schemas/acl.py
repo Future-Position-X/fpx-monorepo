@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from app.dto import ACLDTO
 from pydantic import BaseModel
+
+from app.dto import ACLDTO
 
 
 class ACLBase(BaseModel):

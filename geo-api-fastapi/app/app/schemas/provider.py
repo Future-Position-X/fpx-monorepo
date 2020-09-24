@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from app.dto import ACLDTO, CollectionDTO, ProviderDTO
 from pydantic import BaseModel
+
+from app.dto import ProviderDTO
 
 
 class ProviderBase(BaseModel):

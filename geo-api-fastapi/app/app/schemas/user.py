@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from app.dto import UserDTO
 from pydantic import BaseModel, EmailStr
+
+from app.dto import UserDTO
 
 
 # Shared properties

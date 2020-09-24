@@ -1,11 +1,9 @@
 from typing import Any, List, Union, Optional
-from typing import Any, List, Union, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query
 from geoalchemy2.shape import to_shape
 from shapely.geometry import Point, shape
-from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse, Response
 from starlette.status import HTTP_204_NO_CONTENT
 
@@ -165,7 +163,7 @@ def get_items(
         filter_params: dict = Depends(filter_parameters),
         transforms_params: dict = Depends(transforms_parameters),
         visualizer_params: dict = Depends(visualizer_parameters),
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user_or_guest),
         accept: str = Header(None),
 ) -> Any:
@@ -200,7 +198,7 @@ def get_items(
 })
 def update_items(
         items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
@@ -234,7 +232,7 @@ def get_collection_items(
         filter_params: dict = Depends(filter_parameters),
         transforms_params: dict = Depends(transforms_parameters),
         visualizer_params: dict = Depends(visualizer_parameters),
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user_or_guest),
         accept: str = Header(None),
 ) -> Any:
@@ -267,7 +265,7 @@ def get_collection_items(
 def create_collection_item(
         collection_uuid: UUID,
         item_in: Union[schemas.ItemCreate, Feature],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
@@ -299,7 +297,7 @@ def create_collection_item(
 def update_collection_items(
         collection_uuid: UUID,
         items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
@@ -331,7 +329,7 @@ def update_collection_items(
 def replace_collection_items(
         collection_uuid: UUID,
         items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
@@ -369,7 +367,7 @@ def replace_collection_items(
 def create_collection_items(
         collection_uuid: UUID,
         items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
@@ -402,7 +400,7 @@ def create_collection_items(
 })
 def delete_collection_items(
         collection_uuid: UUID,
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
 ):
     services.item.delete_collection_items(current_user, collection_uuid)
@@ -428,7 +426,7 @@ def get_collection_item(
         collection_uuid: UUID,
         item_uuid,
         visualizer_params: dict = Depends(visualizer_parameters),
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user_or_guest),
         accept: str = Header(None),
 ):
@@ -460,7 +458,7 @@ def get_collection_item(
 def delete_collection_item(
         collection_uuid: UUID,
         item_uuid: UUID,
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
 ):
     services.item.delete_collection_item(current_user, collection_uuid, item_uuid)
@@ -480,7 +478,7 @@ def update_collection_item(
         collection_uuid: UUID,
         item_uuid: UUID,
         item_in: Union[schemas.ItemUpdate, Feature],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),
@@ -515,7 +513,7 @@ def get_collection_items_by_name(
         filter_params: dict = Depends(filter_parameters),
         transforms_params: dict = Depends(transforms_parameters),
         visualizer_params: dict = Depends(visualizer_parameters),
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user_or_guest),
         accept: str = Header(None),
 ) -> Any:
@@ -556,7 +554,7 @@ def get_collection_items_by_name(
 def get_item(
         item_uuid,
         visualizer_params: dict = Depends(visualizer_parameters),
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user_or_guest),
         accept: str = Header(None),
 ):
@@ -587,7 +585,7 @@ def get_item(
 })
 def delete_item(
         item_uuid: UUID,
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
 ):
     services.item.delete_item(current_user, item_uuid)
@@ -606,7 +604,7 @@ def delete_item(
 def update_item(
         item_uuid: UUID,
         item_in: Union[schemas.ItemUpdate, Feature],
-        db: Session = Depends(deps.get_db),
+
         current_user: models.User = Depends(deps.get_current_user),
         accept: str = Header(None),
         content_type: str = Header(None),

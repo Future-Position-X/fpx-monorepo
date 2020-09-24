@@ -1,11 +1,12 @@
-from sqlalchemy.dialects.postgresql import UUID
-import sqlalchemy_mixins
-
-from app.models import BaseModel
-from sqlalchemy import or_
-import sqlalchemy as sa
 import uuid
+
+import sqlalchemy as sa
+import sqlalchemy_mixins
+from sqlalchemy import or_
+from sqlalchemy.dialects.postgresql import UUID
+
 from app.dto import InternalUserDTO
+from app.models import BaseModel
 
 
 class ACL(BaseModel):

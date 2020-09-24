@@ -1,9 +1,6 @@
-import uuid
 from typing import List, Type, TypeVar
-from app.dto import BaseModelDTO, ItemDTO, InternalUserDTO, Access
-import sqlalchemy_mixins
-from shapely_geojson import Feature as BaseFeature
-
+import sqlalchemy as sa
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_mixins import (
     ActiveRecordMixin,
     SmartQueryMixin,
@@ -11,33 +8,10 @@ from sqlalchemy_mixins import (
     SerializeMixin,
     ModelNotFoundError,
 )
-from sqlalchemy import func, or_, and_
-import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+
+from app.dto import BaseModelDTO
+
 Base = declarative_base()
-
-class Feature(BaseFeature):
-    def __init__(self, geometry, properties=None, id=None):
-        self.geometry = geometry
-        self.properties = properties
-        self.id = id
-
-    @property
-    def __geo_interface__(self):
-        if self.id is not None:
-            return {
-                "id": self.id,
-                "type": "Feature",
-                "geometry": self.geometry.__geo_interface__,
-                "properties": self.properties,
-            }
-        else:
-            return {
-                "type": "Feature",
-                "geometry": self.geometry.__geo_interface__,
-                "properties": self.properties,
-            }
 
 
 class FPXActiveRecordMixin(ActiveRecordMixin, SmartQueryMixin):

@@ -2,7 +2,7 @@ import pytest
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from app import crud, services
+from app import services
 from app.core.security import verify_password
 from app.errors import UnauthorizedError
 from app.schemas.user import UserCreate, UserUpdate
