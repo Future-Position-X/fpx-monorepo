@@ -71,3 +71,15 @@ class User(UserInDBBase):
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     password: str
+    @classmethod
+
+    def from_dto(cls, dto: UserDTO):
+        return cls(
+            uuid=dto.uuid,
+            provider_uuid=dto.provider_uuid,
+            email=dto.email,
+            password=dto.password,
+            created_at=dto.created_at,
+            updated_at=dto.updated_at,
+            revision=dto.revision
+        )

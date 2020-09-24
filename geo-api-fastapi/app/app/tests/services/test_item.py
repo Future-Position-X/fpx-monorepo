@@ -7,7 +7,8 @@ from sqlalchemy_mixins import ModelNotFoundError
 from app import services
 from app.dto import InternalUserDTO
 from app.schemas.item import ItemCreate, ItemUpdate, Item
-from app.tests.utils.user import create_random_user, create_random_collection, create_random_item
+from app.tests.utils.item import create_random_collection, create_random_item
+from app.tests.utils.user import create_random_user
 from app.tests.utils.utils import random_lower_string
 
 
