@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.models import BaseModel
+from app.models.base_model import BaseModel
 
 
 class Provider(BaseModel):

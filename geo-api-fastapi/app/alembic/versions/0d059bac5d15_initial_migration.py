@@ -8,15 +8,15 @@ Create Date: 2020-06-08 14:52:02.878497
 import os
 
 import bcrypt
-from alembic import op
-import sqlalchemy as sa
 import geoalchemy2
+import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
-from app.models import BaseModel, User, Provider
 from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 from app.core.security import create_access_token
+from app.models import BaseModel, User, Provider
 
 revision = "0d059bac5d15"
 down_revision = None

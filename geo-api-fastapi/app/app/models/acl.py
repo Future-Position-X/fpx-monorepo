@@ -6,7 +6,7 @@ from sqlalchemy import or_
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.dto import InternalUserDTO
-from app.models import BaseModel
+from app.models.base_model import BaseModel
 
 
 class ACL(BaseModel):

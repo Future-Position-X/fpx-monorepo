@@ -1,3 +1,4 @@
+import logging
 from typing import Generator, Optional
 
 from fastapi import Depends, HTTPException, status
@@ -11,8 +12,6 @@ from app.core import security
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.models.base_model import BaseModel
-import logging
-
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token", auto_error=False

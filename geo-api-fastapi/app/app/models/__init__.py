@@ -1,4 +1,3 @@
-from .base_model import BaseModel
 from .acl import ACL
 from .collection import Collection
 from .item import Item

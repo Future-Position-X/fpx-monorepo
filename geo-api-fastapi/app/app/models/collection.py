@@ -7,8 +7,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.dto import InternalUserDTO, Access
-from app.models import BaseModel
 from app.models.acl import ACL
+from app.models.base_model import BaseModel
 
 
 class Collection(BaseModel):

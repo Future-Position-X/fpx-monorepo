@@ -1,8 +1,10 @@
-import math
-import requests
 import io
+import math
 import os
+
+import requests
 from PIL import Image
+
 from .geo_types import Coords, Size
 
 

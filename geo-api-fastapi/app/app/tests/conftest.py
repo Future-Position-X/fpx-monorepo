@@ -2,16 +2,16 @@ from typing import Generator, Dict
 
 import bcrypt
 import pytest
-from app.api.deps import get_db
-from app.core.config import settings
-from app.db.session import engine
-from app.main import app
-from app.models import BaseModel
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy_utils import database_exists, create_database
 
+from app.api.deps import get_db
+from app.core.config import settings
+from app.db.session import engine
+from app.main import app
+from app.models.base_model import BaseModel
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 

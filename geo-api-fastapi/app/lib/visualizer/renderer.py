@@ -1,6 +1,8 @@
-import math
 import io
+import math
+
 from PIL import Image, ImageDraw, ImagePath
+
 from .geo_types import Coords, Bounds, Size
 from .stitcher import stitch_mapbox_images
 

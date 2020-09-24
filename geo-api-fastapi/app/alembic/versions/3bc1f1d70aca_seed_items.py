@@ -5,12 +5,14 @@ Revises: 302c23c2932d
 Create Date: 2020-06-22 14:15:39.211348
 
 """
-from alembic import op
-from sqlalchemy.orm.session import Session
-from app.models import BaseModel, Provider, Collection, Item
-from shapely.geometry import shape
-import os
 import json
+import os
+
+from alembic import op
+from shapely.geometry import shape
+from sqlalchemy.orm.session import Session
+
+from app.models import BaseModel, Provider, Collection, Item
 
 # revision identifiers, used by Alembic.
 revision = "3bc1f1d70aca"

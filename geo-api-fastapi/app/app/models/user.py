@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
-from app.models import BaseModel
+from app.models.base_model import BaseModel
 
 
 class User(BaseModel):

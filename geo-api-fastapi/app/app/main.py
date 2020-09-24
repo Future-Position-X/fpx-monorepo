@@ -2,18 +2,14 @@ from functools import lru_cache
 
 import sqlalchemy_mixins
 from fastapi import FastAPI
-from geojson_pydantic.features import FeatureCollection, Feature
-from pydantic import ValidationError
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from app.api.api_v1.api import api_router
 from app.core import config
-from fastapi.openapi.utils import get_openapi
-
-from pydantic.schema import schema
-from starlette.requests import Request
-from starlette.responses import JSONResponse
 from app.errors import UnauthorizedError
+
 
 @lru_cache()
 def get_settings():
