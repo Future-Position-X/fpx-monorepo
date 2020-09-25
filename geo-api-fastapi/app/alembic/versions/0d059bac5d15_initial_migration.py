@@ -16,7 +16,8 @@ from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 from app.core.security import create_access_token
-from app.models import BaseModel, User, Provider
+from app.models.base_model import BaseModel
+from app.models import User, Provider
 
 revision = "0d059bac5d15"
 down_revision = None

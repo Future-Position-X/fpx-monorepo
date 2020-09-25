@@ -12,7 +12,8 @@ from alembic import op
 from shapely.geometry import shape
 from sqlalchemy.orm.session import Session
 
-from app.models import BaseModel, Provider, Collection, Item
+from app.models.base_model import BaseModel
+from app.models import Provider, Collection, Item
 
 # revision identifiers, used by Alembic.
 revision = "3bc1f1d70aca"
