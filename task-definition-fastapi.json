@@ -57,6 +57,8 @@
 {"valueFrom":"/geo-api-fastapi/SMTP_PORT","name":"SMTP_PORT"},
 {"valueFrom":"/geo-api-fastapi/SMTP_TLS","name":"SMTP_TLS"},
 {"valueFrom":"/geo-api-fastapi/SMTP_USER","name":"SMTP_USER"},
+{"valueFrom":"/geo-api-fastapi/SERVER_NAME","name":"SERVER_NAME"},
+{"valueFrom":"/geo-api-fastapi/SERVER_HOST","name":"SERVER_HOST"},
 {"valueFrom":"/geo-api-fastapi/STACK_NAME","name":"STACK_NAME"}
       ],
       "dockerSecurityOptions": null,

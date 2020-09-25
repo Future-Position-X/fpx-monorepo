@@ -41,6 +41,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: task-definition-fastapi.json
-        service: geo-api-service-fastapi
+        service: geo-api-fastapi-service
         cluster: fpx
         wait-for-service-stability: true
