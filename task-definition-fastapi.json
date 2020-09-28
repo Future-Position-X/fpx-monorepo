@@ -33,33 +33,85 @@
       "workingDirectory": null,
       "secrets": [
         {
-          "valueFrom": "DATABASE_URL",
-          "name": "DATABASE_URL"
+          "valueFrom": "/geo-api-fastapi/CELERY_RABBITMQ_URI",
+          "name": "CELERY_RABBITMQ_URI"
         },
         {
-          "valueFrom": "JWT_SECRET",
-          "name": "JWT_SECRET"
+          "valueFrom": "/geo-api-fastapi/EMAILS_FROM_EMAIL",
+          "name": "EMAILS_FROM_EMAIL"
         },
-	{"valueFrom":"/geo-api-fastapi/CELERY_RABBITMQ_URI","name":"CELERY_RABBITMQ_URI"},
-{"valueFrom":"/geo-api-fastapi/EMAILS_FROM_EMAIL","name":"EMAILS_FROM_EMAIL"},
-{"valueFrom":"/geo-api-fastapi/FIRST_SUPERUSER","name":"FIRST_SUPERUSER"},
-{"valueFrom":"/geo-api-fastapi/FIRST_SUPERUSER_PASSWORD","name":"FIRST_SUPERUSER_PASSWORD"},
-{"valueFrom":"/geo-api-fastapi/MAPBOX_TOKEN","name":"MAPBOX_TOKEN"},
-{"valueFrom":"/geo-api-fastapi/POSTGRES_DB","name":"POSTGRES_DB"},
-{"valueFrom":"/geo-api-fastapi/POSTGRES_PASSWORD","name":"POSTGRES_PASSWORD"},
-{"valueFrom":"/geo-api-fastapi/POSTGRES_SERVER","name":"POSTGRES_SERVER"},
-{"valueFrom":"/geo-api-fastapi/POSTGRES_USER","name":"POSTGRES_USER"},
-{"valueFrom":"/geo-api-fastapi/PROJECT_NAME","name":"PROJECT_NAME"},
-{"valueFrom":"/geo-api-fastapi/SECRET_KEY","name":"SECRET_KEY"},
-{"valueFrom":"/geo-api-fastapi/SENTRY_DSN","name":"SENTRY_DSN"},
-{"valueFrom":"/geo-api-fastapi/SMTP_HOST","name":"SMTP_HOST"},
-{"valueFrom":"/geo-api-fastapi/SMTP_PASSWORD","name":"SMTP_PASSWORD"},
-{"valueFrom":"/geo-api-fastapi/SMTP_PORT","name":"SMTP_PORT"},
-{"valueFrom":"/geo-api-fastapi/SMTP_TLS","name":"SMTP_TLS"},
-{"valueFrom":"/geo-api-fastapi/SMTP_USER","name":"SMTP_USER"},
-{"valueFrom":"/geo-api-fastapi/SERVER_NAME","name":"SERVER_NAME"},
-{"valueFrom":"/geo-api-fastapi/SERVER_HOST","name":"SERVER_HOST"},
-{"valueFrom":"/geo-api-fastapi/STACK_NAME","name":"STACK_NAME"}
+        {
+          "valueFrom": "/geo-api-fastapi/FIRST_SUPERUSER",
+          "name": "FIRST_SUPERUSER"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/FIRST_SUPERUSER_PASSWORD",
+          "name": "FIRST_SUPERUSER_PASSWORD"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/MAPBOX_TOKEN",
+          "name": "MAPBOX_TOKEN"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/POSTGRES_DB",
+          "name": "POSTGRES_DB"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/POSTGRES_PASSWORD",
+          "name": "POSTGRES_PASSWORD"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/POSTGRES_SERVER",
+          "name": "POSTGRES_SERVER"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/POSTGRES_USER",
+          "name": "POSTGRES_USER"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/PROJECT_NAME",
+          "name": "PROJECT_NAME"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SECRET_KEY",
+          "name": "SECRET_KEY"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SENTRY_DSN",
+          "name": "SENTRY_DSN"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SMTP_HOST",
+          "name": "SMTP_HOST"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SMTP_PASSWORD",
+          "name": "SMTP_PASSWORD"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SMTP_PORT",
+          "name": "SMTP_PORT"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SMTP_TLS",
+          "name": "SMTP_TLS"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SMTP_USER",
+          "name": "SMTP_USER"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SERVER_NAME",
+          "name": "SERVER_NAME"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/SERVER_HOST",
+          "name": "SERVER_HOST"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/STACK_NAME",
+          "name": "STACK_NAME"
+        }
       ],
       "dockerSecurityOptions": null,
       "memory": null,
