@@ -6,7 +6,7 @@ name: Deploy geo-api-fastapi
 # events but only for the master branch
 on:
   push:
-    branches: [ feature/geo-api-fastapi/initial ]
+    branches: [ master ]
     paths:
       - 'geo-api-fastapi/**'
       - '.github/**'
