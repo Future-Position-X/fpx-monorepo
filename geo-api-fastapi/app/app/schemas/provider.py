@@ -10,13 +10,12 @@ class ProviderBase(BaseModel):
     name: str
 
     def to_dto(self) -> ProviderDTO:
-        return ProviderDTO(**{
-            "name": self.name,
-        })
+        return ProviderDTO(**{"name": self.name})
 
 
 class ProviderCreate(ProviderBase):
     pass
+
 
 class ProviderUpdate(ProviderBase):
     pass
@@ -41,7 +40,7 @@ class Provider(ProviderInDBBase):
             name=dto.name,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
-            revision=dto.revision
+            revision=dto.revision,
         )
 
 

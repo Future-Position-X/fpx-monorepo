@@ -24,35 +24,25 @@ app = FastAPI(
 
 
 @app.exception_handler(sqlalchemy_mixins.ModelNotFoundError)
-async def unicorn_exception_handler(request: Request, exc: sqlalchemy_mixins.ModelNotFoundError):
-    return JSONResponse(
-        status_code=404,
-        content={"message": f"Not found"},
-    )
+async def model_not_found_exception_handler(
+    request: Request, exc: sqlalchemy_mixins.ModelNotFoundError
+):
+    return JSONResponse(status_code=404, content={"message": "Not found"})
 
 
 @app.exception_handler(PermissionError)
-async def unicorn_exception_handler(request: Request, exc: PermissionError):
-    return JSONResponse(
-        status_code=403,
-        content={"message": f"Permission error"},
-    )
+async def permission_exception_handler(request: Request, exc: PermissionError):
+    return JSONResponse(status_code=403, content={"message": "Permission error"})
 
 
 @app.exception_handler(UnauthorizedError)
-async def unicorn_exception_handler(request: Request, exc: UnauthorizedError):
-    return JSONResponse(
-        status_code=401,
-        content={"message": f"Unauthorized error"},
-    )
+async def unauthorized_exception_handler(request: Request, exc: UnauthorizedError):
+    return JSONResponse(status_code=401, content={"message": "Unauthorized error"})
 
 
 @app.exception_handler(ValueError)
-async def unicorn_exception_handler(request: Request, exc: ValueError):
-    return JSONResponse(
-        status_code=400,
-        content={"message": f"Value error"},
-    )
+async def value_exception_handler(request: Request, exc: ValueError):
+    return JSONResponse(status_code=400, content={"message": "Value error"})
 
 
 # @app.exception_handler(ValidationError)

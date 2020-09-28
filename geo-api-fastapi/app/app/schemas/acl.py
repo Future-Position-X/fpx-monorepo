@@ -15,17 +15,20 @@ class ACLBase(BaseModel):
     access: str = None
 
     def to_dto(self) -> ACLDTO:
-        return ACLDTO(**{
-            "granted_provider_uuid": self.granted_provider_uuid,
-            "granted_user_uuid": self.granted_user_uuid,
-            "collection_uuid": self.collection_uuid,
-            "item_uuid": self.item_uuid,
-            "access": self.access,
-        })
+        return ACLDTO(
+            **{
+                "granted_provider_uuid": self.granted_provider_uuid,
+                "granted_user_uuid": self.granted_user_uuid,
+                "collection_uuid": self.collection_uuid,
+                "item_uuid": self.item_uuid,
+                "access": self.access,
+            }
+        )
 
 
 class ACLCreate(ACLBase):
     pass
+
 
 class ACLUpdate(ACLBase):
     pass
@@ -56,7 +59,7 @@ class ACL(ACLInDBBase):
             access=dto.access,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
-            revision=dto.revision
+            revision=dto.revision,
         )
 
 

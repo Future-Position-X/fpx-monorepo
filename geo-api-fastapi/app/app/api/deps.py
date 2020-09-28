@@ -49,10 +49,14 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+
 def get_current_user_or_guest(
     current_user: Optional[models.User] = Depends(get_current_user),
 ) -> Optional[models.User]:
     if current_user:
         return current_user
     else:
-        return models.User(uuid="00000000-0000-0000-0000-000000000000", provider_uuid="00000000-0000-0000-0000-000000000000")
+        return models.User(
+            uuid="00000000-0000-0000-0000-000000000000",
+            provider_uuid="00000000-0000-0000-0000-000000000000",
+        )

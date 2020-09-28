@@ -9,15 +9,14 @@ from app.dto import CollectionDTO
 class CollectionBase(BaseModel):
     name: str
     is_public: bool
+
     def to_dto(self) -> CollectionDTO:
-        return CollectionDTO(**{
-            "name": self.name,
-            "is_public": self.is_public,
-        })
+        return CollectionDTO(**{"name": self.name, "is_public": self.is_public})
 
 
 class CollectionCreate(CollectionBase):
     pass
+
 
 class CollectionUpdate(CollectionBase):
     pass
@@ -45,7 +44,7 @@ class Collection(CollectionInDBBase):
             is_public=dto.is_public,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
-            revision=dto.revision
+            revision=dto.revision,
         )
 
 

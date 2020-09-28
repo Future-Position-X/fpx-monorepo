@@ -35,10 +35,11 @@ def test_get_collection_item_json_404(client, item):
     assert res.status_code == 404
     assert "not found" in str(res.content.lower())
 
+
 def test_get_collection_item_geojson(client, item):
     res = client.get(
         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}',
-        headers={"accept": "application/geojson"}
+        headers={"accept": "application/geojson"},
     )
     assert res.status_code == 200
     item_hash = res.json()
@@ -53,7 +54,7 @@ def test_get_collection_item_geojson(client, item):
 def test_get_collection_item_png(client, item):
     res = client.get(
         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}?map_id=transparent',
-        headers={"accept": "image/png"}
+        headers={"accept": "image/png"},
     )
     assert res.status_code == 200
     mime = magic.from_buffer(res.content, mime=True)
@@ -63,12 +64,13 @@ def test_get_collection_item_png(client, item):
 def test_delete_collection_item(client, item):
     res = client.delete(
         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}',
-        headers={"accept": "application/json"}
+        headers={"accept": "application/json"},
     )
     assert res.status_code == 204
 
     res = client.get(
-        f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"}
+        f'{settings.API_V1_STR}/items/{item["uuid"]}',
+        headers={"accept": "application/json"},
     )
     assert res.status_code == 404
     assert "Not found" in str(res.content)
@@ -82,7 +84,8 @@ def test_delete_collection_items(client, item):
     assert res.status_code == 204
 
     res = client.get(
-        f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"}
+        f'{settings.API_V1_STR}/items/{item["uuid"]}',
+        headers={"accept": "application/json"},
     )
     assert res.status_code == 404
     assert "Not found" in str(res.content)
@@ -90,7 +93,8 @@ def test_delete_collection_items(client, item):
 
 def test_get_item_json(client, item):
     res = client.get(
-        f'{settings.API_V1_STR}/items/{item["uuid"]}', headers={"accept": "application/json"},
+        f'{settings.API_V1_STR}/items/{item["uuid"]}',
+        headers={"accept": "application/json"},
     )
     assert res.status_code == 200
     item_hash = res.json()
@@ -105,7 +109,8 @@ def test_get_item_json(client, item):
 
 def test_get_item_json_404(client, item):
     res = client.get(
-        f'{settings.API_V1_STR}/items/{uuid.uuid4()}', headers={"accept": "application/json"}
+        f"{settings.API_V1_STR}/items/{uuid.uuid4()}",
+        headers={"accept": "application/json"},
     )
     assert res.status_code == 404
     assert "Not found" in str(res.content)
@@ -114,7 +119,7 @@ def test_get_item_json_404(client, item):
 def test_get_item_geojson(client, item):
     res = client.get(
         f'{settings.API_V1_STR}/items/{item["uuid"]}',
-        headers={"accept": "application/geojson"}
+        headers={"accept": "application/geojson"},
     )
     assert res.status_code == 200
     item_hash = res.json()
@@ -129,7 +134,7 @@ def test_get_item_geojson(client, item):
 def test_get_item_png(client, item):
     res = client.get(
         f'{settings.API_V1_STR}/items/{item["uuid"]}?map_id=transparent',
-        headers={"accept": "image/png"}
+        headers={"accept": "image/png"},
     )
     assert res.status_code == 200
     mime = magic.from_buffer(res.content, mime=True)
@@ -166,7 +171,7 @@ def test_get_shared_items(client, user2, client2, collection_private):
     assert len(items_array) == 0
 
     res = client.post(
-        f'{settings.API_V1_STR}/acls',
+        f"{settings.API_V1_STR}/acls",
         json={
             "granted_provider_uuid": str(user2["provider_uuid"]),
             "collection_uuid": str(collection_private["uuid"]),
@@ -186,7 +191,8 @@ def test_get_shared_items(client, user2, client2, collection_private):
     assert "test-item-private1" in str(res.content)
 
     res = client.delete(
-        f'{settings.API_V1_STR}/acls/{acl["uuid"]}', headers={"accept": "application/json"}
+        f'{settings.API_V1_STR}/acls/{acl["uuid"]}',
+        headers={"accept": "application/json"},
     )
     assert res.status_code == 204
 
@@ -251,12 +257,8 @@ def test_get_items_by_name_png(client, collection):
     assert mime == "image/png"
 
 
-def test_read_item(
-    client: TestClient, db: Session
-) -> None:
-    response = client.get(
-        f"{settings.API_V1_STR}/items",
-    )
+def test_read_item(client: TestClient, db: Session) -> None:
+    response = client.get(f"{settings.API_V1_STR}/items")
     assert response.status_code == 200
     content = response.json()
     assert content is not None
