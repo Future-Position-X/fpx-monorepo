@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 from typing import List
 from uuid import UUID
@@ -6,11 +8,10 @@ import sqlalchemy as sa
 import sqlalchemy_mixins
 from sqlalchemy import and_, or_
 from sqlalchemy.dialects import postgresql as pg
-from sqlalchemy.orm import Query, RelationshipProperty, relationship
+from sqlalchemy.orm import Query, relationship
 
 from app.dto import Access, InternalUserDTO
-from app.models import Item
-from app.models.acl import ACL
+from app.models import ACL
 from app.models.base_model import BaseModel
 
 
@@ -27,7 +28,7 @@ class Collection(BaseModel):
     name = sa.Column(sa.Text())
     is_public = sa.Column(sa.Boolean, default=False)
 
-    items: RelationshipProperty[Item] = relationship("Item", lazy=True)
+    items = relationship("Item", lazy=True)
 
     provider_uuid = sa.Column(
         pg.UUID(as_uuid=True),

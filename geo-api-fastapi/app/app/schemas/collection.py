@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Type
 from uuid import UUID
 
 from pydantic import BaseModel

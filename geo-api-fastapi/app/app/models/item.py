@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
@@ -6,12 +8,12 @@ import sqlalchemy_mixins
 from geoalchemy2 import Geometry
 from sqlalchemy import Column, and_, func, or_
 from sqlalchemy.dialects import postgresql as pg
-from sqlalchemy.orm import Query, RelationshipProperty, relationship
+from sqlalchemy.orm import Query, relationship
 
 from app.dto import Access, InternalUserDTO, ItemDTO
+from app.models import Collection
 from app.models.acl import ACL
 from app.models.base_model import BaseModel
-from app.models.collection import Collection
 
 
 class Item(BaseModel):
@@ -34,7 +36,7 @@ class Item(BaseModel):
         nullable=False,
     )
 
-    collection: RelationshipProperty[Collection] = relationship("Collection")
+    collection = relationship("Collection")
 
     @staticmethod
     def append_property_filter_to_where_clause(
