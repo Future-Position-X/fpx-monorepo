@@ -37,6 +37,8 @@ services:
     ports:
     - published: 80
       target: 80
+    volumes:
+    - ./app:/app
   celeryworker:
     build:
       args:

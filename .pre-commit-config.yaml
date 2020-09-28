@@ -7,6 +7,7 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
+# geo-api
 -   repo: https://github.com/psf/black
     rev: 19.3b0
     hooks:
@@ -18,6 +19,19 @@ repos:
     -   id: flake8
         args: ["--config=geo-api/.flake8", "--ignore=E203,W503"]
         files: ^geo-api/
+# fastapi
+-   repo: https://github.com/psf/black
+    rev: 19.3b0
+    hooks:
+    -   id: black
+        files: ^geo-api-fastapi/
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+    -   id: flake8
+        args: ["--config=geo-api-fastapi/.flake8", "--ignore=E203,W503"]
+        files: ^geo-api-fastapi/
+# editor
 -   repo: local
     hooks:
     -   id: gia-editor
