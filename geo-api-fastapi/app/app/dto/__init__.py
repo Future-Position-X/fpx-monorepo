@@ -1,22 +1,23 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any, List, Optional
 from uuid import UUID
 
 from geoalchemy2 import WKTElement
 
 
 class BaseDTO:
-    __slots__ = []
+    __slots__: List[str] = []
 
-    def __init__(self, kwargs, slots):
+    def __init__(self, kwargs: Any, slots: List[str]):
         self.add_slots(slots)
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def add_slots(self, slots):
+    def add_slots(self, slots: List[str]) -> None:
         self.__slots__ = self.__slots__ + slots
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         attrs = {}
         for att in self.__slots__:
             if hasattr(self, att):
@@ -37,7 +38,7 @@ class CollectionDTO(BaseModelDTO):
     name: str
     is_public: bool
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(kwargs, ["provider_uuid", "name", "is_public"])
 
 
@@ -46,14 +47,14 @@ class ItemDTO(BaseModelDTO):
     geometry: WKTElement
     properties: dict
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(kwargs, ["collection_uuid", "geometry", "properties"])
 
 
 class ProviderDTO(BaseModelDTO):
     name: str
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(kwargs, ["name"])
 
 
@@ -62,19 +63,19 @@ class UserDTO(BaseModelDTO):
     email: str
     password: str
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(kwargs, ["provider_uuid", "email", "password"])
 
 
 class ACLDTO(BaseModelDTO):
-    provider_uuid: UUID = None
-    granted_provider_uuid: UUID = None
-    granted_user_uuid: UUID = None
-    collection_uuid: UUID = None
-    item_uuid: UUID = None
-    access: str = None
+    provider_uuid: UUID
+    granted_provider_uuid: Optional[UUID] = None
+    granted_user_uuid: Optional[UUID] = None
+    collection_uuid: Optional[UUID] = None
+    item_uuid: Optional[UUID] = None
+    access: str
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(
             kwargs,
             [
@@ -89,7 +90,7 @@ class ACLDTO(BaseModelDTO):
 
 
 class NoValue(Enum):
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s.%s>" % (self.__class__.__name__, self.name)
 
 
@@ -102,5 +103,5 @@ class InternalUserDTO(BaseDTO):
     uuid: UUID
     provider_uuid: UUID
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(kwargs, ["uuid", "provider_uuid"])

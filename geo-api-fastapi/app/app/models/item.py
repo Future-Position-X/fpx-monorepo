@@ -1,9 +1,12 @@
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
+
 import sqlalchemy as sa
 import sqlalchemy_mixins
 from geoalchemy2 import Geometry
-from sqlalchemy import and_, func, or_
-from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, and_, func, or_
+from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.orm import Query, RelationshipProperty, relationship
 
 from app.dto import Access, InternalUserDTO, ItemDTO
 from app.models.acl import ACL
@@ -15,26 +18,29 @@ class Item(BaseModel):
     __tablename__ = "items"
 
     uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         primary_key=True,
         server_default=sa.text("gen_random_uuid()"),
         unique=True,
         nullable=False,
     )
     geometry = sa.Column(Geometry(geometry_type="GEOMETRY"))
-    properties = sa.Column(JSONB)
+    properties = sa.Column(pg.JSONB)
 
     collection_uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         sa.ForeignKey("collections.uuid"),
         index=True,
         nullable=False,
     )
 
-    collection = relationship("Collection")
+    collection: RelationshipProperty[Collection] = relationship("Collection")
 
-    def append_property_filter_to_where_clause(where_clause, filter, execute_dict):
-        params = filter.split(",")
+    @staticmethod
+    def append_property_filter_to_where_clause(
+        where_clause: str, property_filter: str, execute_dict: dict
+    ) -> str:
+        params = property_filter.split(",")
 
         for i, p in enumerate(params):
             tokens = p.split("=")
@@ -50,7 +56,8 @@ class Item(BaseModel):
 
         return where_clause
 
-    def create_where(filters):
+    @staticmethod
+    def create_where(filters: dict) -> Tuple[str, Dict[str, Optional[Any]]]:
         where = """
         (
             collections.is_public=true
@@ -182,8 +189,12 @@ class Item(BaseModel):
 
     @classmethod
     def find_readable_by_collection_name(
-        cls, user: InternalUserDTO, collection_name, filters, transforms
-    ):
+        cls,
+        user: InternalUserDTO,
+        collection_name: str,
+        filters: dict,
+        transforms: dict,
+    ) -> List[ItemDTO]:
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
@@ -221,7 +232,7 @@ class Item(BaseModel):
         return result
 
     @classmethod
-    def simplified_geometry(cls, simplify):
+    def simplified_geometry(cls, simplify: float) -> Column:
         return (
             cls.geometry
             if simplify == 0.0
@@ -229,7 +240,9 @@ class Item(BaseModel):
         )
 
     @classmethod
-    def find_readable(cls, user: InternalUserDTO, filters, transforms):
+    def find_readable(
+        cls, user: InternalUserDTO, filters: dict, transforms: dict
+    ) -> List[ItemDTO]:
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
@@ -267,8 +280,12 @@ class Item(BaseModel):
 
     @classmethod
     def find_readable_by_collection_uuid(
-        cls, user: InternalUserDTO, collection_uuid, filters, transforms={}
-    ):
+        cls,
+        user: InternalUserDTO,
+        collection_uuid: UUID,
+        filters: dict,
+        transforms: dict = {},
+    ) -> List[ItemDTO]:
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         filters["provider_uuid"] = provider_uuid
@@ -307,8 +324,11 @@ class Item(BaseModel):
 
     @classmethod
     def find_readable_or_fail(
-        cls, user: InternalUserDTO, item_uuid, collection_uuid=None
-    ):
+        cls,
+        user: InternalUserDTO,
+        item_uuid: UUID,
+        collection_uuid: Optional[UUID] = None,
+    ) -> Item:
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = cls.query.outerjoin(
@@ -341,7 +361,7 @@ class Item(BaseModel):
         return res
 
     @classmethod
-    def writeable_query_subquery(cls, user: InternalUserDTO):
+    def writeable_query_subquery(cls, user: InternalUserDTO) -> Query:
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = (
@@ -369,7 +389,12 @@ class Item(BaseModel):
         return q.subquery()
 
     @classmethod
-    def writeable_query(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+    def writeable_query(
+        cls,
+        user: InternalUserDTO,
+        item_uuid: UUID,
+        collection_uuid: Optional[UUID] = None,
+    ) -> Query:
         writeable_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(cls.uuid == item_uuid)
         if collection_uuid is not None:
@@ -378,7 +403,12 @@ class Item(BaseModel):
         return q
 
     @classmethod
-    def delete_writeable(cls, user: InternalUserDTO, item_uuid, collection_uuid=None):
+    def delete_writeable(
+        cls,
+        user: InternalUserDTO,
+        item_uuid: UUID,
+        collection_uuid: Optional[UUID] = None,
+    ) -> None:
         q = cls.writeable_query(user, item_uuid, collection_uuid)
         q.delete(synchronize_session=False)
         cls.session.commit()
@@ -387,8 +417,11 @@ class Item(BaseModel):
     # TODO: Perhaps use JOIN instead of SUBQUERY
     @classmethod
     def find_writeable_or_fail(
-        cls, user: InternalUserDTO, item_uuid, collection_uuid=None
-    ):
+        cls,
+        user: InternalUserDTO,
+        item_uuid: UUID,
+        collection_uuid: Optional[UUID] = None,
+    ) -> Item:
         q = cls.writeable_query(user, item_uuid, collection_uuid)
         res = q.first()
         if res is None:
@@ -396,7 +429,9 @@ class Item(BaseModel):
         return res
 
     @classmethod
-    def find_writeable(cls, user: InternalUserDTO, item_uuids=None):
+    def find_writeable(
+        cls, user: InternalUserDTO, item_uuids: Optional[List[UUID]] = None
+    ) -> List[Item]:
         writeable_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(cls.uuid.in_(writeable_sq))
         if item_uuids is not None:
@@ -406,8 +441,11 @@ class Item(BaseModel):
 
     @classmethod
     def find_writeable_by_collection_uuid(
-        cls, user: InternalUserDTO, collection_uuid, item_uuids=None
-    ):
+        cls,
+        user: InternalUserDTO,
+        collection_uuid: UUID,
+        item_uuids: Optional[List[UUID]] = None,
+    ) -> List[Item]:
         writeable_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(Collection.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(writeable_sq))
@@ -417,7 +455,9 @@ class Item(BaseModel):
         return res
 
     @classmethod
-    def delete_by_collection_uuid(cls, user: InternalUserDTO, collection_uuid):
+    def delete_by_collection_uuid(
+        cls, user: InternalUserDTO, collection_uuid: UUID
+    ) -> None:
         owned_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(Collection.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(owned_sq))
@@ -426,7 +466,7 @@ class Item(BaseModel):
         cls.session.expire_all()
 
     @classmethod
-    def copy_items(cls, src_collection_uuid, dest_collection_uuid):
+    def copy_items(cls, src_collection_uuid: UUID, dest_collection_uuid: UUID) -> None:
         cls.session.execute(
             """
             INSERT INTO items (collection_uuid, geometry, properties)

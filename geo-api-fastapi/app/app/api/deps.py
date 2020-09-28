@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Generator, Optional
 
 from fastapi import Depends, HTTPException, status
@@ -44,10 +45,11 @@ def get_current_user(
             )
         else:
             return None
+    assert token_data.sub is not None
     user = services.user.get_user(token_data.sub)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return schemas.User.from_dto(user)
 
 
 def get_current_user_or_guest(

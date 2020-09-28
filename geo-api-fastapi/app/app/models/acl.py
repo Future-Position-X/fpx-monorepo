@@ -1,9 +1,12 @@
 import uuid
+from typing import List
+from uuid import UUID
 
 import sqlalchemy as sa
 import sqlalchemy_mixins
 from sqlalchemy import or_
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.orm import Query
 
 from app.dto import InternalUserDTO
 from app.models.base_model import BaseModel
@@ -29,7 +32,7 @@ class ACL(BaseModel):
         ),
     )
     uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
         unique=True,
@@ -37,32 +40,32 @@ class ACL(BaseModel):
     )
 
     provider_uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         sa.ForeignKey("providers.uuid", ondelete="CASCADE"),
         index=True,
         nullable=False,
     )
 
     granted_provider_uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         sa.ForeignKey("providers.uuid", ondelete="CASCADE"),
         index=True,
         nullable=True,
     )
     granted_user_uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         sa.ForeignKey("users.uuid", ondelete="CASCADE"),
         index=True,
         nullable=True,
     )
     collection_uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         sa.ForeignKey("collections.uuid", ondelete="CASCADE"),
         index=True,
         nullable=True,
     )
     item_uuid = sa.Column(
-        UUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         sa.ForeignKey("items.uuid", ondelete="CASCADE"),
         index=True,
         nullable=True,
@@ -71,7 +74,7 @@ class ACL(BaseModel):
     access = sa.Column(sa.Enum("read", "write", name="permission"), nullable=False)
 
     @classmethod
-    def accessable_query(cls, user: InternalUserDTO):
+    def accessable_query(cls, user: InternalUserDTO) -> Query:
         user_uuid = user.uuid
         provider_uuid = user.provider_uuid
         q = cls.session.query(cls.uuid).filter(
@@ -85,7 +88,7 @@ class ACL(BaseModel):
 
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
-    def find_accessable(cls, user: InternalUserDTO):
+    def find_accessable(cls, user: InternalUserDTO) -> List[ACL]:
         readable_sq = cls.accessable_query(user).subquery()
         q = cls.query.filter(cls.uuid.in_(readable_sq))
         res = q.all()
@@ -94,7 +97,7 @@ class ACL(BaseModel):
 
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
-    def find_accessable_or_fail(cls, user: InternalUserDTO, acl_uuid):
+    def find_accessable_or_fail(cls, user: InternalUserDTO, acl_uuid: UUID) -> ACL:
         readable_sq = cls.accessable_query(user).subquery()
         q = cls.query.filter(cls.uuid.in_(readable_sq))
         q = q.filter(cls.uuid == acl_uuid)

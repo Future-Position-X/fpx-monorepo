@@ -24,12 +24,12 @@ def create_user(user: UserDTO) -> UserDTO:
     try:
         provider = create_provider(ProviderDTO(name=user.email))
         user.provider_uuid = provider.uuid
-        user = User.create(**user.to_dict())
+        new_user = User.create(**user.to_dict())
     except IntegrityError:
         User.session.rollback()
         raise ValueError
-    user.session.commit()
-    return to_model(user, UserDTO)
+    new_user.session.commit()
+    return to_model(new_user, UserDTO)
 
 
 def get_user(user_uuid: UUID) -> UserDTO:
@@ -41,7 +41,7 @@ def get_user_by_email(email: str) -> UserDTO:
 
 
 def update_user(provider_uuid: UUID, user_uuid: UUID, user_update: UserDTO) -> UserDTO:
-    user = User.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
+    user: User = User.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
     user.password = bcrypt.hashpw(
         user_update.password.encode("utf-8"), bcrypt.gensalt()
     ).decode("utf-8")
@@ -51,13 +51,13 @@ def update_user(provider_uuid: UUID, user_uuid: UUID, user_update: UserDTO) -> U
 
 
 def delete_user(provider_uuid: UUID, user_uuid: UUID) -> None:
-    user = User.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
+    user: User = User.first_or_fail(provider_uuid=provider_uuid, uuid=user_uuid)
     user.delete()
     user.session.commit()
 
 
 def authenticate(email: str, password: str) -> Optional[UserDTO]:
-    user = User.first(email=email)
+    user: User = User.first(email=email)
     if not user or not verify_password(password, user.password):
         raise UnauthorizedError
     return to_model(user, UserDTO)

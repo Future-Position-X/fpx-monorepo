@@ -8,11 +8,12 @@ from starlette.responses import JSONResponse
 
 from app.api.api_v1.api import api_router
 from app.core import config
+from app.core.config import Settings
 from app.errors import UnauthorizedError
 
 
 @lru_cache()
-def get_settings():
+def get_settings() -> Settings:
     return config.settings
 
 
@@ -26,22 +27,26 @@ app = FastAPI(
 @app.exception_handler(sqlalchemy_mixins.ModelNotFoundError)
 async def model_not_found_exception_handler(
     request: Request, exc: sqlalchemy_mixins.ModelNotFoundError
-):
+) -> JSONResponse:
     return JSONResponse(status_code=404, content={"message": "Not found"})
 
 
 @app.exception_handler(PermissionError)
-async def permission_exception_handler(request: Request, exc: PermissionError):
+async def permission_exception_handler(
+    request: Request, exc: PermissionError
+) -> JSONResponse:
     return JSONResponse(status_code=403, content={"message": "Permission error"})
 
 
 @app.exception_handler(UnauthorizedError)
-async def unauthorized_exception_handler(request: Request, exc: UnauthorizedError):
+async def unauthorized_exception_handler(
+    request: Request, exc: UnauthorizedError
+) -> JSONResponse:
     return JSONResponse(status_code=401, content={"message": "Unauthorized error"})
 
 
 @app.exception_handler(ValueError)
-async def value_exception_handler(request: Request, exc: ValueError):
+async def value_exception_handler(request: Request, exc: ValueError) -> JSONResponse:
     return JSONResponse(status_code=400, content={"message": "Value error"})
 
 

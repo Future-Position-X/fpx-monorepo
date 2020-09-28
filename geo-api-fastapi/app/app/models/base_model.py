@@ -1,4 +1,4 @@
-from typing import List, Type, TypeVar
+from typing import Any, List, Type, TypeVar
 
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
@@ -10,21 +10,22 @@ from sqlalchemy_mixins import (
     SmartQueryMixin,
 )
 
-from app.dto import BaseModelDTO
+from app.dto import BaseModelDTO, ItemDTO
 
 Base = declarative_base()
+T = TypeVar("T")
 
 
 class FPXActiveRecordMixin(ActiveRecordMixin, SmartQueryMixin):
     __abstract__ = True
 
     @classmethod
-    def first(cls, **kwargs):
+    def first(cls, **kwargs: Any) -> T:
         result = cls.where(**kwargs).first()
         return result
 
     @classmethod
-    def first_or_fail(cls, **kwargs):
+    def first_or_fail(cls, **kwargs: Any) -> T:
         result = cls.where(**kwargs).first()
         if result:
             return result
@@ -45,7 +46,7 @@ class FPXTimestampsMixin:
 
 
 @sa.event.listens_for(FPXTimestampsMixin, "before_update", propagate=True)
-def _receive_before_update(mapper, connection, target):
+def _receive_before_update(mapper: Any, connection: Any, target: Any) -> None:
     """Listen for updates and update `updated_at` column."""
     target.updated_at = target.__datetime_callback__()
 

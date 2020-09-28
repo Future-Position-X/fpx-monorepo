@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy_mixins import ModelNotFoundError
@@ -49,7 +49,9 @@ def update_collection_by_uuid(
 
 
 def copy_collection_from(
-    user: InternalUserDTO, src_collection_uuid: UUID, dst_collection_uuid: UUID
+    user: InternalUserDTO,
+    src_collection_uuid: UUID,
+    dst_collection_uuid: Optional[UUID],
 ) -> CollectionDTO:
     try:
         src_collection = Collection.find_readable_or_fail(user, src_collection_uuid)
@@ -57,13 +59,13 @@ def copy_collection_from(
         raise PermissionError()
 
     if dst_collection_uuid is None:
-        dst_collection = {
+        dst_collection_dict = {
             "provider_uuid": user.provider_uuid,
-            "name": src_collection.name + "_copy",
+            "name": f"{src_collection.name}_copy",
             "is_public": False,
         }
 
-        dst_collection = Collection.create(**dst_collection)
+        dst_collection = Collection.create(**dst_collection_dict)
         dst_collection_uuid = dst_collection.uuid
 
     copy_items_by_collection_uuid(src_collection_uuid, dst_collection_uuid)

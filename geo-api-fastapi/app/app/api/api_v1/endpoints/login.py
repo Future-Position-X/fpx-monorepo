@@ -88,5 +88,5 @@ def reset_password(
         )
     hashed_password = get_password_hash(new_password)
     user.password = hashed_password
-    services.update_user(user.provider_uuid, user.uuid, user)
+    services.user.update_user(user.provider_uuid, user.uuid, user)
     return {"msg": "Password updated successfully"}

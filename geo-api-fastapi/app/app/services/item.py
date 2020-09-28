@@ -6,34 +6,34 @@ from app.models import Collection, Item
 from app.models.base_model import to_model, to_models
 
 
-def get_items(user: InternalUserDTO, filters, transforms) -> List[ItemDTO]:
+def get_items(user: InternalUserDTO, filters: dict, transforms: dict) -> List[ItemDTO]:
     items = Item.find_readable(user, filters, transforms)
-    return to_models(items, ItemDTO)
+    return items
 
 
 def get_collection_items(
-    user: InternalUserDTO, collection_uuid: UUID, filters, transforms
+    user: InternalUserDTO, collection_uuid: UUID, filters: dict, transforms: dict
 ) -> List[ItemDTO]:
     items = Item.find_readable_by_collection_uuid(
         user, collection_uuid, filters, transforms
     )
-    return to_models(items, ItemDTO)
+    return items
 
 
 def get_collection_items_by_name(
-    user: InternalUserDTO, collection_name: UUID, filters, transforms
+    user: InternalUserDTO, collection_name: str, filters: dict, transforms: dict
 ) -> List[ItemDTO]:
     items = Item.find_readable_by_collection_name(
         user, collection_name, filters, transforms
     )
-    return to_models(items, ItemDTO)
+    return items
 
 
 def create_collection_item(
     user: InternalUserDTO, collection_uuid: UUID, item: ItemDTO
 ) -> ItemDTO:
     coll = Collection.find_writeable_or_fail(user, collection_uuid)
-    item.collection_uuid = coll.uuid
+    item.collection_uuid = coll.uuid  # type: ignore
     item = Item(**item.to_dict())
     item.save()
     item.session.commit()
@@ -53,17 +53,22 @@ def add_collection_items(
 
 
 def create_collection_items(
-    user: InternalUserDTO, collection_uuid: UUID, items: List[ItemDTO], replace=False
+    user: InternalUserDTO,
+    collection_uuid: UUID,
+    items: List[ItemDTO],
+    replace: bool = False,
 ) -> List[ItemDTO]:
     collection = Collection.find_writeable_or_fail(user, collection_uuid)
 
     if replace:
         Item.where(collection_uuid=collection.uuid).delete()
-    items = [Item(**{**item.to_dict(), **{"uuid": uuid4()}}) for item in items]
+    new_items: List[Item] = [
+        Item(**{**item.to_dict(), **{"uuid": uuid4()}}) for item in items
+    ]
     Item.session.bulk_save_objects(items)
     Item.session.commit()
 
-    return to_models(items, ItemDTO)
+    return to_models(new_items, ItemDTO)
 
 
 def delete_collection_items(user: InternalUserDTO, collection_uuid: UUID) -> None:
@@ -130,7 +135,9 @@ def update_collection_items(
     return to_models(items, ItemDTO)
 
 
-def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
+def update_item(
+    user: InternalUserDTO, item_uuid: UUID, item_update: ItemDTO
+) -> ItemDTO:
     item = Item.find_writeable_or_fail(user, item_uuid)
 
     item.properties = item_update.properties
@@ -142,7 +149,7 @@ def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
 
 
 def update_collection_item(
-    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID, item_update
+    user: InternalUserDTO, collection_uuid: UUID, item_uuid: UUID, item_update: ItemDTO
 ) -> ItemDTO:
     item = Item.find_writeable_or_fail(user, item_uuid, collection_uuid)
 
@@ -154,5 +161,7 @@ def update_collection_item(
     return to_model(item, ItemDTO)
 
 
-def copy_items_by_collection_uuid(src_collection_uuid, dest_collection_uuid):
+def copy_items_by_collection_uuid(
+    src_collection_uuid: UUID, dest_collection_uuid: UUID
+) -> None:
     Item.copy_items(src_collection_uuid, dest_collection_uuid)

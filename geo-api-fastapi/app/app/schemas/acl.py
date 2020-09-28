@@ -12,7 +12,7 @@ class ACLBase(BaseModel):
     granted_user_uuid: Optional[UUID]
     collection_uuid: Optional[UUID]
     item_uuid: Optional[UUID]
-    access: str = None
+    access: str
 
     def to_dto(self) -> ACLDTO:
         return ACLDTO(
@@ -48,7 +48,7 @@ class ACLInDBBase(ACLBase):
 
 class ACL(ACLInDBBase):
     @classmethod
-    def from_dto(cls, dto: ACLDTO):
+    def from_dto(cls, dto: ACLDTO) -> ACL:
         return cls(
             uuid=dto.uuid,
             provider_uuid=dto.provider_uuid,

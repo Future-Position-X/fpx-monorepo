@@ -36,7 +36,7 @@ def create_acl(
 @router.get("/acls/{acl_uuid}")
 def get_acl(
     acl_uuid: UUID, current_user: models.User = Depends(deps.get_current_user)
-) -> List[schemas.ACL]:
+) -> schemas.ACL:
     acl = services.acl.get_acl_by_uuid(current_user, acl_uuid)
     return schemas.ACL.from_dto(acl)
 

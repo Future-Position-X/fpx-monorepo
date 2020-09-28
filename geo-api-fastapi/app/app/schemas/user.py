@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Type
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -55,7 +55,7 @@ class UserInDBBase(UserBase):
 # Additional properties to return via API
 class User(UserInDBBase):
     @classmethod
-    def from_dto(cls, dto: UserDTO):
+    def from_dto(cls, dto: UserDTO) -> User:
         return cls(
             uuid=dto.uuid,
             provider_uuid=dto.provider_uuid,
@@ -71,7 +71,7 @@ class UserInDB(UserInDBBase):
     password: str
 
     @classmethod
-    def from_dto(cls, dto: UserDTO):
+    def from_dto(cls, dto: UserDTO) -> UserInDB:
         return cls(
             uuid=dto.uuid,
             provider_uuid=dto.provider_uuid,

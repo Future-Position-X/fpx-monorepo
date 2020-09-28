@@ -6,7 +6,7 @@ from app.models import User
 
 
 def create_session(email: str, password: str) -> str:
-    user = User.first_or_fail(email=email)
+    user: User = User.first_or_fail(email=email)
 
     try:
         if verify_password(password, user.password):

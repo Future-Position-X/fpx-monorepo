@@ -16,7 +16,9 @@ from lib.visualizer.renderer import render_feature, render_feature_collection
 router = APIRouter()
 
 
-def collection_uuid_filter(collection_uuids: Optional[str] = Query(None)):
+def collection_uuid_filter(
+    collection_uuids: Optional[str] = Query(None),
+) -> Optional[List[str]]:
     if not collection_uuids:
         return None
 
@@ -24,7 +26,7 @@ def collection_uuid_filter(collection_uuids: Optional[str] = Query(None)):
     return collection_uuids_arr if len(collection_uuids_arr) > 0 else None
 
 
-def transforms_parameters(simplify: Optional[float] = Query(0.0)):
+def transforms_parameters(simplify: Optional[float] = Query(0.0)) -> dict:
     return {"simplify": simplify}
 
 
@@ -57,7 +59,7 @@ def spatial_filter_parameters(
     spatial_filter_point_y: Optional[float] = Query(
         None, alias="spatial_filter.point.y"
     ),
-):
+) -> Optional[dict]:
     if not spatial_filter:
         return None
     else:
@@ -108,7 +110,7 @@ def visualizer_parameters(
     width: Optional[int] = Query(1280),
     height: Optional[int] = Query(1280),
     map_id: Optional[str] = Query("dark-v10"),
-):
+) -> dict:
     return {"width": width, "height": height, "map_id": map_id}
 
 
@@ -119,7 +121,7 @@ def filter_parameters(
     valid: Optional[bool] = Query(False),
     spatial_filter: Optional[dict] = Depends(spatial_filter_parameters),
     collection_uuids: Optional[list] = Depends(collection_uuid_filter),
-):
+) -> dict:
     return {
         "offset": offset,
         "limit": limit,
@@ -131,7 +133,7 @@ def filter_parameters(
 
 
 # TODO: Figure out where to put this method
-def map_item_dto_to_feature(item: ItemDTO) -> Feature:
+def map_item_dto_to_feature(item: ItemDTO) -> Optional[Feature]:
     feature = None
     if item.geometry is not None:
         feature = Feature(
@@ -229,10 +231,10 @@ def update_items(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Response:
     items_updates = None
     # TODO: Should check content_type
-    if type(items_in) == FeatureCollection:
+    if isinstance(items_in, FeatureCollection):
         items_updates = map_features_to_item_dtos(items_in.features)
     else:
         items_updates = [item.to_dto() for item in items_in]
@@ -302,10 +304,10 @@ def create_collection_item(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Union[Optional[Feature], schemas.Item]:
     item_create = None
     # TODO: Should check content_type
-    if type(item_in) == Feature:
+    if isinstance(item_in, Feature):
         item_create = map_feature_to_item_dto(item_in)
     else:
         item_create = item_in.to_dto()
@@ -336,10 +338,10 @@ def update_collection_items(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Response:
     items_updates = None
     # TODO: Should check content_type
-    if type(items_in) == FeatureCollection:
+    if isinstance(items_in, FeatureCollection):
         items_updates = map_features_to_item_dtos(items_in.features)
     else:
         items_updates = [item.to_dto() for item in items_in]
@@ -370,10 +372,10 @@ def replace_collection_items(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Union[FeatureCollection, List[schemas.Item]]:
     items = None
     # TODO: Should check content_type
-    if type(items_in) == FeatureCollection:
+    if isinstance(items_in, FeatureCollection):
         items = map_features_to_item_dtos(items_in.features)
     else:
         items = [item.to_dto() for item in items_in]
@@ -410,10 +412,10 @@ def create_collection_items(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Union[FeatureCollection, List[schemas.Item]]:
     items = None
     # TODO: Should check content_type
-    if type(items_in) == FeatureCollection:
+    if isinstance(items_in, FeatureCollection):
         items = map_features_to_item_dtos(items_in.features)
     else:
         items = [item.to_dto() for item in items_in]
@@ -440,7 +442,7 @@ def create_collection_items(
 )
 def delete_collection_items(
     collection_uuid: UUID, current_user: models.User = Depends(deps.get_current_user)
-):
+) -> Response:
     services.item.delete_collection_items(current_user, collection_uuid)
     return Response(status_code=HTTP_204_NO_CONTENT)
 
@@ -464,20 +466,17 @@ def delete_collection_items(
 )
 def get_collection_item(
     collection_uuid: UUID,
-    item_uuid,
+    item_uuid: UUID,
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user_or_guest),
     accept: str = Header(None),
-):
+) -> Union[schemas.Item, Feature, StreamingResponse]:
     item = services.item.get_collection_item(current_user, collection_uuid, item_uuid)
 
-    if accept is None or accept == "application/json":
-        return schemas.Item.from_dto(item)
-    else:
+    if accept in ["application/geojson", "image/png"]:
         feature = map_item_dto_to_feature(item)
-        if accept == "application/geojson":
-            return feature
-        elif accept == "image/png":
+        assert feature is not None
+        if accept == "image/png":
             data = render_feature(
                 feature.dict(),
                 visualizer_params["width"],
@@ -485,6 +484,10 @@ def get_collection_item(
                 visualizer_params["map_id"],
             )
             return StreamingResponse(data, media_type="image/png")
+        else:  # "application/geojson"
+            return feature
+    else:
+        return schemas.Item.from_dto(item)
 
 
 @router.delete(
@@ -501,7 +504,7 @@ def delete_collection_item(
     collection_uuid: UUID,
     item_uuid: UUID,
     current_user: models.User = Depends(deps.get_current_user),
-):
+) -> Response:
     services.item.delete_collection_item(current_user, collection_uuid, item_uuid)
     return Response(status_code=HTTP_204_NO_CONTENT)
 
@@ -523,10 +526,10 @@ def update_collection_item(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Response:
     item_update = None
     # TODO: Should check content_type
-    if type(item_in) == Feature:
+    if isinstance(item_in, Feature):
         item_update = map_feature_to_item_dto(item_in)
     else:
         item_update = item_in.to_dto()
@@ -603,20 +606,17 @@ def get_collection_items_by_name(
     },
 )
 def get_item(
-    item_uuid,
+    item_uuid: UUID,
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user_or_guest),
     accept: str = Header(None),
-):
+) -> Union[Feature, schemas.Item, StreamingResponse]:
     item = services.item.get_item(current_user, item_uuid)
 
-    if accept is None or accept == "application/json":
-        return schemas.Item.from_dto(item)
-    else:
+    if accept in ["application/json", "image/png"]:
         feature = map_item_dto_to_feature(item)
-        if accept == "application/geojson":
-            return feature
-        elif accept == "image/png":
+        assert feature is not None
+        if accept == "image/png":
             data = render_feature(
                 feature.dict(),
                 visualizer_params["width"],
@@ -624,6 +624,10 @@ def get_item(
                 visualizer_params["map_id"],
             )
             return StreamingResponse(data, media_type="image/png")
+        else:  # "application/geojson":
+            return feature
+    else:
+        return schemas.Item.from_dto(item)
 
 
 @router.delete(
@@ -638,7 +642,7 @@ def get_item(
 )
 def delete_item(
     item_uuid: UUID, current_user: models.User = Depends(deps.get_current_user)
-):
+) -> Response:
     services.item.delete_item(current_user, item_uuid)
     return Response(status_code=HTTP_204_NO_CONTENT)
 
@@ -659,10 +663,10 @@ def update_item(
     current_user: models.User = Depends(deps.get_current_user),
     accept: str = Header(None),
     content_type: str = Header(None),
-):
+) -> Response:
     item_update = None
     # TODO: Should check content_type
-    if type(item_in) == Feature:
+    if isinstance(item_in, Feature):
         item_update = map_feature_to_item_dto(item_in)
     else:
         item_update = item_in.to_dto()

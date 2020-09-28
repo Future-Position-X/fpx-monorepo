@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Type
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -34,7 +35,7 @@ class ProviderInDBBase(ProviderBase):
 
 class Provider(ProviderInDBBase):
     @classmethod
-    def from_dto(cls, dto: ProviderDTO):
+    def from_dto(cls, dto: ProviderDTO) -> Provider:
         return cls(
             uuid=dto.uuid,
             name=dto.name,

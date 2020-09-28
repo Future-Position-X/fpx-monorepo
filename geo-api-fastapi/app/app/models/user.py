@@ -15,7 +15,7 @@ class User(BaseModel):
         nullable=False,
     )
     email = sa.Column(sa.Text(), unique=True)
-    password = sa.Column(sa.Text())
+    password = sa.Column(sa.Text(), nullable=False)
 
     provider_uuid = sa.Column(
         UUID(as_uuid=True), sa.ForeignKey("providers.uuid"), index=True, nullable=False

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Type
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -36,7 +37,7 @@ class CollectionInDBBase(CollectionBase):
 
 class Collection(CollectionInDBBase):
     @classmethod
-    def from_dto(cls, dto: CollectionDTO):
+    def from_dto(cls, dto: CollectionDTO) -> Collection:
         return cls(
             uuid=dto.uuid,
             provider_uuid=dto.provider_uuid,

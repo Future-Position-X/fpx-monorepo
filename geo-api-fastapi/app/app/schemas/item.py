@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional, Type
 from uuid import UUID
 
 from geoalchemy2 import WKBElement
@@ -16,8 +16,8 @@ class ItemBase(BaseModel):
     geometry: Optional[dict]
     properties: dict
 
-    @validator('geometry', pre=True)
-    def validate_geometry(cls, v):
+    @validator("geometry", pre=True)
+    def validate_geometry(cls, v: Any) -> Optional[dict]:
         if v is None:
             return None
         if type(v) is dict:
@@ -29,7 +29,9 @@ class ItemBase(BaseModel):
         elif hasattr(v, "__geo_interface__"):
             return v.__geo_interface__
         else:
-            raise ValueError('can not transform geometry to dict from type ' + str(type(v)))
+            raise ValueError(
+                "can not transform geometry to dict from type " + str(type(v))
+            )
 
     class Config:
         arbitrary_types_allowed = False
@@ -37,23 +39,24 @@ class ItemBase(BaseModel):
 
 # Properties to receive on item creation
 class ItemCreate(ItemBase):
-    def to_dto(self):
-        return ItemDTO(**{
-            "geometry": shape(self.geometry).to_wkt(),
-            "properties": self.properties
-        })
+    def to_dto(self) -> ItemDTO:
+        return ItemDTO(
+            **{"geometry": shape(self.geometry).to_wkt(), "properties": self.properties}
+        )
 
 
 # Properties to receive on item update
 class ItemUpdate(ItemBase):
     uuid: UUID
 
-    def to_dto(self):
-        return ItemDTO(**{
-            "uuid": self.uuid,
-            "geometry": shape(self.geometry).to_wkt(),
-            "properties": self.properties
-        })
+    def to_dto(self) -> ItemDTO:
+        return ItemDTO(
+            **{
+                "uuid": self.uuid,
+                "geometry": shape(self.geometry).to_wkt(),
+                "properties": self.properties,
+            }
+        )
 
 
 # Properties shared by models stored in DB
@@ -71,7 +74,7 @@ class ItemInDBBase(ItemBase):
 # Properties to return to client
 class Item(ItemInDBBase):
     @classmethod
-    def from_dto(cls, dto):
+    def from_dto(cls: Type, dto: ItemDTO) -> Item:
         return cls(
             uuid=dto.uuid,
             collection_uuid=dto.collection_uuid,
@@ -79,7 +82,7 @@ class Item(ItemInDBBase):
             properties=dto.properties,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
-            revision=dto.revision
+            revision=dto.revision,
         )
 
 
