@@ -11,20 +11,22 @@ def collection_attributes():
 
 
 def test_collection_creation(client):
-    res = client.post(f'{settings.API_V1_STR}/collections', json=collection_attributes())
+    res = client.post(
+        f"{settings.API_V1_STR}/collections", json=collection_attributes()
+    )
     assert res.status_code == 201
     assert "gg" in str(res.content)
 
 
 def test_api_can_get_all_public_collection(anon_client, collection, collection_private):
-    res = anon_client.get(f'{settings.API_V1_STR}/collections')
+    res = anon_client.get(f"{settings.API_V1_STR}/collections")
     assert res.status_code == 200
     assert collection["name"] in str(res.content)
     assert collection_private["name"] not in str(res.content)
 
 
 def test_api_can_get_private_collection(client, collection, collection_private):
-    res = client.get(f'{settings.API_V1_STR}/collections')
+    res = client.get(f"{settings.API_V1_STR}/collections")
     assert res.status_code == 200
     assert collection["name"] in str(res.content)
     assert collection_private["name"] in str(res.content)
@@ -60,7 +62,9 @@ def test_collection_can_be_copied_to_new_collection(
     assert res.status_code == 201
     collection_hash = res.json()
 
-    result = client.get(f'{settings.API_V1_STR}/collections/{collection_hash["uuid"]}/items')
+    result = client.get(
+        f'{settings.API_V1_STR}/collections/{collection_hash["uuid"]}/items'
+    )
     assert result.status_code == 200
     assert item["properties"]["name"] in str(result.content)
     assert str(item["uuid"]) not in str(result.content)
@@ -78,12 +82,14 @@ def test_collection_can_be_copied_to_other_collection(
 
     assert str(collection_empty["uuid"]) == collection_hash["uuid"]
 
-    result = client.get(f'{settings.API_V1_STR}/collections/{collection_empty["uuid"]}/items')
+    result = client.get(
+        f'{settings.API_V1_STR}/collections/{collection_empty["uuid"]}/items'
+    )
     assert result.status_code == 200
     assert item["properties"]["name"] in str(result.content)
     assert str(item["uuid"]) not in str(result.content)
 
 
 def test_copy_non_existent_collection(client, collection, collection_empty, item):
-    res = client.post(f'{settings.API_V1_STR}/collections/{UUID_ZERO}/copy')
+    res = client.post(f"{settings.API_V1_STR}/collections/{UUID_ZERO}/copy")
     assert res.status_code == 403

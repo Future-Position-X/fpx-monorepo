@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import services
 from app.core.config import settings
-from app.schemas.user import UserCreate, UserUpdate, User
+from app.schemas.user import User, UserCreate, UserUpdate
 from app.tests.utils.utils import random_email, random_lower_string
 
 
@@ -38,12 +38,14 @@ def authentication_token_from_email(
     If the user doesn't exist it is created first.
     """
     password = random_lower_string()
-    user = crud.user.get_by_email(db, email=email)
+    user = services.user.get_user_by_email(email)
     if not user:
-        user_in_create = UserCreate(username=email, email=email, password=password)
-        user = crud.user.create(db, obj_in=user_in_create)
+        user_in_create = UserCreate(email=email, password=password)
+        user = services.user.create_user(user_in_create.to_dto())
     else:
         user_in_update = UserUpdate(password=password)
-        user = crud.user.update(db, db_obj=user, obj_in=user_in_update)
+        user = services.user.update_user(
+            user.provider_uuid, user.uuid, user_in_update.to_dto()
+        )
 
     return user_authentication_headers(client=client, email=email, password=password)

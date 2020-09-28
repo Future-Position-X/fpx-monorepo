@@ -8,7 +8,7 @@ from app.core.security import verify_password
 from app.dto import ProviderDTO, UserDTO
 from app.errors import UnauthorizedError
 from app.models import User
-from app.models.base_model import to_models, to_model
+from app.models.base_model import to_model, to_models
 from app.services.provider import create_provider
 
 

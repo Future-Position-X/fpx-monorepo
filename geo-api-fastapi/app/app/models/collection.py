@@ -2,11 +2,11 @@ import uuid
 
 import sqlalchemy as sa
 import sqlalchemy_mixins
-from sqlalchemy import or_, and_
+from sqlalchemy import and_, or_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.dto import InternalUserDTO, Access
+from app.dto import Access, InternalUserDTO
 from app.models.acl import ACL
 from app.models.base_model import BaseModel
 

@@ -1,9 +1,9 @@
 from typing import List
 from uuid import UUID, uuid4
 
-from app.dto import ItemDTO, InternalUserDTO
-from app.models import Item, Collection
-from app.models.base_model import to_models, to_model
+from app.dto import InternalUserDTO, ItemDTO
+from app.models import Collection, Item
+from app.models.base_model import to_model, to_models
 
 
 def get_items(user: InternalUserDTO, filters, transforms) -> List[ItemDTO]:
@@ -108,8 +108,13 @@ def update_items(user: InternalUserDTO, items_update: List[ItemDTO]) -> List[Ite
     Item.session.commit()
     return to_models(items, ItemDTO)
 
-def update_collection_items(user: InternalUserDTO, collection_uuid: UUID, items_update: List[ItemDTO]) -> List[ItemDTO]:
-    items = Item.find_writeable_by_collection_uuid(user, collection_uuid, [item.uuid for item in items_update])
+
+def update_collection_items(
+    user: InternalUserDTO, collection_uuid: UUID, items_update: List[ItemDTO]
+) -> List[ItemDTO]:
+    items = Item.find_writeable_by_collection_uuid(
+        user, collection_uuid, [item.uuid for item in items_update]
+    )
 
     for item in items:
         item_new = [
@@ -123,6 +128,7 @@ def update_collection_items(user: InternalUserDTO, collection_uuid: UUID, items_
 
     Item.session.commit()
     return to_models(items, ItemDTO)
+
 
 def update_item(user: InternalUserDTO, item_uuid: UUID, item_update) -> ItemDTO:
     item = Item.find_writeable_or_fail(user, item_uuid)

@@ -4,10 +4,10 @@ import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_mixins import (
     ActiveRecordMixin,
-    SmartQueryMixin,
+    ModelNotFoundError,
     ReprMixin,
     SerializeMixin,
-    ModelNotFoundError,
+    SmartQueryMixin,
 )
 
 from app.dto import BaseModelDTO

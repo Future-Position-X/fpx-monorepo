@@ -20,6 +20,12 @@ repos:
         args: ["--config=geo-api/.flake8", "--ignore=E203,W503"]
         files: ^geo-api/
 # fastapi
+repos:
+-   repo: https://github.com/pycqa/isort
+    rev: 5.5.2
+    hooks:
+      - id: isort
+        files: ^geo-api-fastapi
 -   repo: https://github.com/psf/black
     rev: 19.3b0
     hooks:
@@ -29,7 +35,7 @@ repos:
     rev: 3.8.3
     hooks:
     -   id: flake8
-        args: ["--config=geo-api-fastapi/.flake8", "--ignore=E203,W503"]
+        args: ["--config=geo-api-fastapi/app/.flake8", "--ignore=E203,W503"]
         files: ^geo-api-fastapi/
 # editor
 -   repo: local

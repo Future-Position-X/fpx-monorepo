@@ -1,12 +1,11 @@
 import sqlalchemy as sa
 import sqlalchemy_mixins
 from geoalchemy2 import Geometry
-from sqlalchemy import func, or_, and_
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import and_, func, or_
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
-from app.dto import ItemDTO, InternalUserDTO, Access
+from app.dto import Access, InternalUserDTO, ItemDTO
 from app.models.acl import ACL
 from app.models.base_model import BaseModel
 from app.models.collection import Collection
@@ -191,8 +190,7 @@ class Item(BaseModel):
         filters["collection_name"] = collection_name
         where, exec_dict = cls.create_where(filters)
         result = (
-            cls.session
-            .query(
+            cls.session.query(
                 cls.uuid,
                 cls.simplified_geometry(transforms.get("simplify", 0.0)),
                 cls.properties,
@@ -407,7 +405,9 @@ class Item(BaseModel):
         return res
 
     @classmethod
-    def find_writeable_by_collection_uuid(cls, user: InternalUserDTO,  collection_uuid, item_uuids=None):
+    def find_writeable_by_collection_uuid(
+        cls, user: InternalUserDTO, collection_uuid, item_uuids=None
+    ):
         writeable_sq = cls.writeable_query_subquery(user)
         q = cls.query.filter(Collection.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(writeable_sq))

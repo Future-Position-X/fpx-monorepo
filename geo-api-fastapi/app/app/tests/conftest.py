@@ -1,11 +1,11 @@
-from typing import Generator, Dict
+from typing import Dict, Generator
 
 import bcrypt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy_utils import create_database, database_exists
 
 from app.api.deps import get_db
 from app.core.config import settings
@@ -18,11 +18,14 @@ from app.tests.utils.utils import get_superuser_token_headers
 db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
 test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)()
 
+
 def override_get_db():
     BaseModel.set_session(test_db_session)
     return test_db_session
 
+
 app.dependency_overrides[get_db] = override_get_db
+
 
 @pytest.fixture(scope="session")
 def db() -> Generator:
@@ -43,6 +46,7 @@ def db() -> Generator:
 #
 #
 
+
 @pytest.fixture(scope="module")
 def superuser_token_headers(client: TestClient) -> Dict[str, str]:
     return get_superuser_token_headers(client)
@@ -53,7 +57,6 @@ def normal_user_token_headers(client: TestClient, db: Session) -> Dict[str, str]
     return authentication_token_from_email(
         client=client, email=settings.EMAIL_TEST_USER, db=db
     )
-
 
 
 UUID_ZERO = "00000000-0000-0000-0000-000000000000"
@@ -150,9 +153,7 @@ def collection_empty(db, provider, request):
     from app.models import Collection
 
     collection = Collection.create(
-        name="test-collection-empty1",
-        is_public=True,
-        provider_uuid=provider["uuid"],
+        name="test-collection-empty1", is_public=True, provider_uuid=provider["uuid"]
     )
     Collection.session.commit()
     return collection.to_dict()
@@ -163,9 +164,7 @@ def collection_private(db, provider, request):
     from app.models import Collection
 
     collection = Collection.create(
-        name="test-collection-private1",
-        is_public=False,
-        provider_uuid=provider["uuid"],
+        name="test-collection-private1", is_public=False, provider_uuid=provider["uuid"]
     )
     Collection.session.commit()
     return collection.to_dict()
@@ -175,7 +174,9 @@ def collection_private(db, provider, request):
 def obstacles(db, provider, request):
     import json
     import os.path
+
     from shapely.geometry.geo import shape
+
     from app.models import Collection, Item
 
     collection = Collection.create(
@@ -200,7 +201,9 @@ def obstacles(db, provider, request):
 def sensors(db, provider, request):
     import json
     import os.path
+
     from shapely.geometry.geo import shape
+
     from app.models import Collection, Item
 
     collection = Collection.create(
@@ -307,7 +310,6 @@ def client(
 ):
     from app.core.security import create_access_token
 
-    provider_uuid = str(provider["uuid"])
     token = create_access_token(user["uuid"])
     with TestClient(app) as client:
         client.headers["AUTHORIZATION"] = "Bearer " + token
@@ -338,7 +340,6 @@ def client2(
 ):
     from app.core.security import create_access_token
 
-    provider_uuid = str(provider2["uuid"])
     token = create_access_token(user2["uuid"])
     with TestClient(app) as client:
         client.headers["AUTHORIZATION"] = "Bearer " + token

@@ -1,9 +1,9 @@
 from typing import List
 from uuid import UUID
 
-from app.dto import InternalUserDTO, ACLDTO
+from app.dto import ACLDTO, InternalUserDTO
 from app.models import ACL, Collection, Item, Provider, User
-from app.models.base_model import to_models, to_model
+from app.models.base_model import to_model, to_models
 
 
 def get_all_readable_acls(user: InternalUserDTO) -> List[ACLDTO]:

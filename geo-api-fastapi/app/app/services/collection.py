@@ -5,7 +5,7 @@ from sqlalchemy_mixins import ModelNotFoundError
 
 from app.dto import CollectionDTO, InternalUserDTO
 from app.models import Collection
-from app.models.base_model import to_models, to_model
+from app.models.base_model import to_model, to_models
 from app.services.item import copy_items_by_collection_uuid
 
 

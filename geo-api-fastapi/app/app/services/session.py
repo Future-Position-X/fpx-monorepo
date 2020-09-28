@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from app.core.security import verify_password, create_access_token
+from app.core.security import create_access_token, verify_password
 from app.errors import UnauthorizedError
 from app.models import User
 
