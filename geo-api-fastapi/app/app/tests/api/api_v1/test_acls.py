@@ -180,7 +180,7 @@ def test_invalid_acls(client, user2, item_private):
             "item_uuid": str(item_private["uuid"]),
         },
     )
-    assert res.status_code == 400
+    assert res.status_code == 422
 
 
 def test_acl_get_by_uuid_non_existing(client, client2, user2, item_private):
