@@ -613,7 +613,7 @@ def get_item(
 ) -> Union[Feature, schemas.Item, StreamingResponse]:
     item = services.item.get_item(current_user, item_uuid)
 
-    if accept in ["application/json", "image/png"]:
+    if accept in ["application/geojson", "image/png"]:
         feature = map_item_dto_to_feature(item)
         assert feature is not None
         if accept == "image/png":
