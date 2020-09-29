@@ -14,8 +14,6 @@ import geoalchemy2
 from sqlalchemy.dialects import postgresql
 from app.models import BaseModel, User, Provider
 from sqlalchemy.orm.session import Session
-
-# revision identifiers, used by Alembic.
 from app.services.session import create_access_token
 
 revision = "0d059bac5d15"
