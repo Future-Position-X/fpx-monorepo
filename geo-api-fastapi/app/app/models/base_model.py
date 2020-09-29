@@ -10,7 +10,7 @@ from sqlalchemy_mixins import (
     SmartQueryMixin,
 )
 
-from app.dto import BaseModelDTO, ItemDTO
+from app.dto import BaseModelDTO
 
 Base = declarative_base()
 T = TypeVar("T")

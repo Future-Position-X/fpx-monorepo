@@ -10,14 +10,15 @@ import os
 import bcrypt
 import geoalchemy2
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
 
+from alembic import op
+
 # revision identifiers, used by Alembic.
 from app.core.security import create_access_token
+from app.models import Provider, User
 from app.models.base_model import BaseModel
-from app.models import User, Provider
 
 revision = "0d059bac5d15"
 down_revision = None
@@ -162,10 +163,7 @@ def seed_initial_user():
         provider_uuid=provider.uuid,
         password=bcrypt.hashpw(password, bcrypt.gensalt()).decode("utf-8"),
     )
-    print(
-        "Your master user token: "
-        + create_access_token(str(user.uuid))
-    )
+    print("Your master user token: " + create_access_token(str(user.uuid)))
 
 
 def downgrade():

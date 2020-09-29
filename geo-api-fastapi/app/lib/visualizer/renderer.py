@@ -3,7 +3,7 @@ import math
 
 from PIL import Image, ImageDraw, ImagePath
 
-from .geo_types import Coords, Bounds, Size
+from .geo_types import Bounds, Coords, Size
 from .stitcher import stitch_mapbox_images
 
 TILE_SIZE = 256

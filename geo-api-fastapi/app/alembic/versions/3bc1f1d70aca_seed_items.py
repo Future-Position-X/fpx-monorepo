@@ -8,12 +8,12 @@ Create Date: 2020-06-22 14:15:39.211348
 import json
 import os
 
-from alembic import op
 from shapely.geometry import shape
 from sqlalchemy.orm.session import Session
 
+from alembic import op
+from app.models import Collection, Item, Provider
 from app.models.base_model import BaseModel
-from app.models import Provider, Collection, Item
 
 # revision identifiers, used by Alembic.
 revision = "3bc1f1d70aca"

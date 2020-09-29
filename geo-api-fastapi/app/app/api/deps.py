@@ -1,5 +1,4 @@
 import logging
-import uuid
 from typing import Generator, Optional
 
 from fastapi import Depends, HTTPException, status

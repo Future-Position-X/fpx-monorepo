@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from app import models, schemas, services
+from app import schemas, services
 from app.api import deps
 
 router = APIRouter()

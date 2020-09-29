@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base_model import BaseModel
+
+if TYPE_CHECKING:
+    from .collection import Collection  # noqa: F401
 
 
 class Provider(BaseModel):

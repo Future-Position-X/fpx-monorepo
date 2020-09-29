@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import List
+from typing import TYPE_CHECKING, List
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -13,6 +13,9 @@ from sqlalchemy.orm import Query, relationship
 from app.dto import Access, InternalUserDTO
 from app.models import ACL
 from app.models.base_model import BaseModel
+
+if TYPE_CHECKING:
+    from .item import Item  # noqa: F401
 
 
 class Collection(BaseModel):
