@@ -222,8 +222,8 @@ def get_items(
                 visualizer_params["map_id"],
             )
             return StreamingResponse(data, media_type="image/png")
-    else:
-        return [schemas.Item.from_dto(item) for item in items]
+
+    return [schemas.Item.from_dto(item) for item in items]
 
 
 @router.put(
