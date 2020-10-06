@@ -169,7 +169,7 @@ def map_features_to_item_dtos(features: List[Feature]) -> List[ItemDTO]:
     return items
 
 
-def items_content():
+def items_content() -> dict:
     return {
         "application/json": {
             "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Item"}}
@@ -181,7 +181,7 @@ def items_content():
     }
 
 
-def item_content():
+def item_content() -> dict:
     return {
         "application/json": {"schema": {"$ref": "#/components/schemas/Item"}},
         "application/geojson": {"schema": {"$ref": "#/components/schemas/Feature"}},
