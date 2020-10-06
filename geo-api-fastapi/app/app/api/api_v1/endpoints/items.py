@@ -209,9 +209,7 @@ def get_items(
     """
 
     items = services.item.get_items(current_user, filter_params, transforms_params)
-    if accept in [ItemRequestAcceptHeaders.json, ItemRequestAcceptHeaders.any]:
-        return [schemas.Item.from_dto(item) for item in items]
-    else:
+    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
         features = map_item_dtos_to_features(items)
         feature_collection = FeatureCollection(features=features)
         if accept == ItemRequestAcceptHeaders.geojson:
@@ -224,6 +222,8 @@ def get_items(
                 visualizer_params["map_id"],
             )
             return StreamingResponse(data, media_type="image/png")
+    else:
+        return [schemas.Item.from_dto(item) for item in items]
 
 
 @router.put(
