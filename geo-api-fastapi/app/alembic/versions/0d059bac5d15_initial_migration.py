@@ -8,13 +8,17 @@ Create Date: 2020-06-08 14:52:02.878497
 import os
 
 import bcrypt
-from alembic import op
-import sqlalchemy as sa
 import geoalchemy2
+import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-from app.models import BaseModel, User, Provider
 from sqlalchemy.orm.session import Session
-from app.services.session import create_access_token
+
+from alembic import op
+
+# revision identifiers, used by Alembic.
+from app.core.security import create_access_token
+from app.models import Provider, User
+from app.models.base_model import BaseModel
 
 revision = "0d059bac5d15"
 down_revision = None
@@ -149,20 +153,17 @@ def seed_initial_user():
     provider = Provider.create(name="fpx")
     password = None
     try:
-        password = os.environ["USER_PASSWORD"].encode("utf-8")
+        password = os.environ["FIRST_SUPERUSER_PASSWORD"].encode("utf-8")
     except KeyError:
         print("You must set env variable USER_PASSWORD!!!")
         exit()
 
     user = User.create(
-        email=os.environ.get("USER_EMAIL", "info@fpx.se"),
+        email=os.environ.get("FIRST_SUPERUSER", "info@fpx.se"),
         provider_uuid=provider.uuid,
         password=bcrypt.hashpw(password, bcrypt.gensalt()).decode("utf-8"),
     )
-    print(
-        "Your master user token: "
-        + create_access_token(str(user.uuid), str(user.provider_uuid))
-    )
+    print("Your master user token: " + create_access_token(str(user.uuid)))
 
 
 def downgrade():

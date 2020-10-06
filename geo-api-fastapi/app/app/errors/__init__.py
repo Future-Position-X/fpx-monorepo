@@ -1,0 +1,2 @@
+class UnauthorizedError(PermissionError):
+    pass

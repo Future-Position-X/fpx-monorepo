@@ -1,0 +1,9 @@
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+.git
+.gitignore
+venv
+.vscode
+.serverless
+node_modules
+postgis-data

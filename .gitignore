@@ -42,3 +42,4 @@ __pycache__/
 
 #geo-api libs
 !geo-api/lib/
+!geo-api-fastapi/app/lib/
