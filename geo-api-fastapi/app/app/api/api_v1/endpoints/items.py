@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, List, Optional, Union
 from uuid import UUID
 
@@ -168,6 +169,13 @@ def map_features_to_item_dtos(features: List[Feature]) -> List[ItemDTO]:
     return items
 
 
+class ItemRequestAcceptHeaders(Enum):
+    json = "application/json"
+    geojson = "application/geojson"
+    png = "image/png"
+    any = "*/*"
+
+
 @router.get(
     "/items",
     response_model=Union[List[schemas.Item], FeatureCollection],
@@ -176,13 +184,15 @@ def map_features_to_item_dtos(features: List[Feature]) -> List[ItemDTO]:
             "description": "Items requested",
             "content": {
                 "application/json": {
-                    "example": {"id": "bar", "value": "The bar tenders"}
+                    "schema": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Item"},
+                    }
                 },
                 "application/geojson": {
-                    "example": {"id": "bar", "value": "The bar tenders"},
-                    "schema": {"$ref": "#/components/schemas/FeatureCollection"},
+                    "schema": {"$ref": "#/components/schemas/FeatureCollection"}
                 },
-                "image/png": {},
+                "image/png": {"schema": {"type": "string", "format": "binary"}},
             },
         }
     },
@@ -192,21 +202,21 @@ def get_items(
     transforms_params: dict = Depends(transforms_parameters),
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user_or_guest),
-    accept: str = Header(None),
-) -> Any:
+    accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
+) -> Union[List[schemas.Item], FeatureCollection, StreamingResponse]:
     """
     Retrieve items.
     """
 
     items = services.item.get_items(current_user, filter_params, transforms_params)
-    if accept in ["*/*", "application/json", None]:
+    if accept in [ItemRequestAcceptHeaders.json, ItemRequestAcceptHeaders.any]:
         return [schemas.Item.from_dto(item) for item in items]
     else:
         features = map_item_dtos_to_features(items)
         feature_collection = FeatureCollection(features=features)
-        if accept == "application/geojson":
+        if accept == ItemRequestAcceptHeaders.geojson:
             return feature_collection
-        elif accept == "image/png":
+        elif accept == ItemRequestAcceptHeaders.png:
             data = render_feature_collection(
                 feature_collection.dict(),
                 visualizer_params["width"],
