@@ -3,6 +3,7 @@ from typing import Any, List, Optional, Union
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query
+from geoalchemy2 import WKTElement
 from geoalchemy2.shape import to_shape
 from geojson_pydantic.features import Feature, FeatureCollection
 from shapely.geometry import Point, shape
@@ -137,6 +138,8 @@ def filter_parameters(
 def map_item_dto_to_feature(item: ItemDTO) -> Optional[Feature]:
     feature = None
     if item.geometry is not None:
+        if isinstance(item.geometry, str):
+            item.geometry = WKTElement(item.geometry)
         feature = Feature(
             geometry=to_shape(item.geometry),
             properties=item.properties,
@@ -403,6 +406,8 @@ def create_collection_items(
         item_dtos = map_features_to_item_dtos(items_in.features)
     else:
         item_dtos = [item.to_dto() for item in items_in]
+    for item_dto in item_dtos:
+        item_dto.collection_uuid = collection_uuid
 
     items = services.item.add_collection_items(current_user, collection_uuid, item_dtos)
 

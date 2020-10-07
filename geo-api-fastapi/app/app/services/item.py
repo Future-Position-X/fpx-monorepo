@@ -65,7 +65,7 @@ def create_collection_items(
     new_items: List[Item] = [
         Item(**{**item.to_dict(), **{"uuid": uuid4()}}) for item in items
     ]
-    Item.session.bulk_save_objects(items)
+    Item.session.bulk_save_objects(new_items)
     Item.session.commit()
 
     return to_models(new_items, ItemDTO)
