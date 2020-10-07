@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Optional, Type
 from uuid import UUID
 
-from geoalchemy2 import WKBElement
+from geoalchemy2 import WKBElement, WKTElement
 from geoalchemy2.shape import to_shape
 from pydantic import BaseModel, validator
 from shapely.geometry import mapping, shape
@@ -24,6 +24,10 @@ class ItemBase(BaseModel):
             return None
         if type(v) is dict:
             return v
+        if type(v) is str:
+            as_dict = mapping(to_shape(WKTElement(v)))
+            logging.error(type(as_dict))
+            return as_dict
         if type(v) is WKBElement:
             as_dict = mapping(to_shape(v))
             logging.error(type(as_dict))
@@ -42,22 +46,17 @@ class ItemBase(BaseModel):
 # Properties to receive on item creation
 class ItemCreate(ItemBase):
     def to_dto(self) -> ItemDTO:
-        return ItemDTO(
-            **{"geometry": shape(self.geometry).to_wkt(), "properties": self.properties}
-        )
+        geometry = None
+        if self.geometry is not None:
+            geometry = shape(self.geometry).to_wkt()
+        return ItemDTO(**{"geometry": geometry, "properties": self.properties})
 
 
 # Properties to receive on item update
 class ItemUpdate(ItemBase):
-    uuid: UUID
-
     def to_dto(self) -> ItemDTO:
         return ItemDTO(
-            **{
-                "uuid": self.uuid,
-                "geometry": shape(self.geometry).to_wkt(),
-                "properties": self.properties,
-            }
+            **{"geometry": shape(self.geometry).to_wkt(), "properties": self.properties}
         )
 
 

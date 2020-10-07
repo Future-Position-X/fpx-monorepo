@@ -30,11 +30,11 @@ def get_collection_items_by_name(
 
 
 def create_collection_item(
-    user: InternalUserDTO, collection_uuid: UUID, item: ItemDTO
+    user: InternalUserDTO, collection_uuid: UUID, item_dto: ItemDTO
 ) -> ItemDTO:
     coll = Collection.find_writeable_or_fail(user, collection_uuid)
-    item.collection_uuid = coll.uuid  # type: ignore
-    item = Item(**item.to_dict())
+    item_dto.collection_uuid = coll.uuid  # type: ignore
+    item = Item(**item_dto.to_dict())
     item.save()
     item.session.commit()
     return to_model(item, ItemDTO)
@@ -67,8 +67,14 @@ def create_collection_items(
     ]
     Item.session.bulk_save_objects(new_items)
     Item.session.commit()
-
-    return to_models(new_items, ItemDTO)
+    uuids = []
+    for item in new_items:
+        if isinstance(item.uuid, str):
+            uuids.append(UUID(item.uuid))
+        else:
+            uuids.append(item.uuid)
+    fetched_items = Item.find_writeable(user, uuids)
+    return to_models(fetched_items, ItemDTO)
 
 
 def delete_collection_items(user: InternalUserDTO, collection_uuid: UUID) -> None:

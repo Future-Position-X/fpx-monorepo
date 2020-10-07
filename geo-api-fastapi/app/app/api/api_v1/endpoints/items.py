@@ -67,9 +67,9 @@ def spatial_filter_parameters(
     else:
         if spatial_filter == "within-distance":
             if not (
-                spatial_filter_distance_x
-                and spatial_filter_distance_y
-                and spatial_filter_distance_d
+                spatial_filter_distance_x is not None
+                and spatial_filter_distance_y is not None
+                and spatial_filter_distance_d is not None
             ):
                 raise ValueError
             else:
@@ -314,7 +314,7 @@ def get_collection_items(
 )
 def create_collection_item(
     collection_uuid: UUID,
-    item_in: Union[schemas.ItemCreate, Feature],
+    item_in: Union[Feature, schemas.ItemCreate],
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
@@ -325,7 +325,6 @@ def create_collection_item(
         item_create = map_feature_to_item_dto(item_in)
     else:
         item_create = item_in.to_dto()
-
     item = services.item.create_collection_item(
         current_user, collection_uuid, item_create
     )
@@ -378,6 +377,8 @@ def replace_collection_items(
         item_dtos = map_features_to_item_dtos(items_in.features)
     else:
         item_dtos = [item.to_dto() for item in items_in]
+    for item_dto in item_dtos:
+        item_dto.collection_uuid = collection_uuid
 
     items = services.item.replace_collection_items(
         current_user, collection_uuid, item_dtos
@@ -467,7 +468,7 @@ def delete_collection_item(
 def update_collection_item(
     collection_uuid: UUID,
     item_uuid: UUID,
-    item_in: Union[schemas.ItemUpdate, Feature],
+    item_in: Union[Feature, schemas.ItemUpdate],
     current_user: models.User = Depends(deps.get_current_user),
     content_type: str = Header(None),
 ) -> Response:
