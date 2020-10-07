@@ -37,6 +37,15 @@ repos:
     -   id: flake8
         args: ["--config=geo-api-fastapi/app/.flake8", "--ignore=E203,W503"]
         files: ^geo-api-fastapi/
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v0.770'
+    hooks:
+    -   id: mypy
+        args: ["--config-file", "geo-api-fastapi/app/mypy.ini"]
+        additional_dependencies:
+            - 'pydantic==1.6.1'
+            - 'sqlalchemy-stubs'
+        files: ^geo-api-fastapi/
 # editor
 -   repo: local
     hooks:

@@ -147,7 +147,9 @@ def map_item_dto_to_feature(item: ItemDTO) -> Optional[Feature]:
 
 # TODO: Figure out where to put this method
 def map_item_dtos_to_features(items: List[ItemDTO]) -> List[Feature]:
-    features = list(filter(None, [map_item_dto_to_feature(item) for item in items]))
+    features: List[Feature] = list(
+        filter(None, [map_item_dto_to_feature(item) for item in items])
+    )
     return features
 
 
@@ -196,6 +198,46 @@ class ItemRequestAcceptHeaders(Enum):
     any = "*/*"
 
 
+def format_item(
+    item: ItemDTO, accept: ItemRequestAcceptHeaders, visualizer_params: dict
+) -> Union[schemas.Item, Feature, StreamingResponse]:
+    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
+        feature = map_item_dto_to_feature(item)
+        assert feature is not None
+        if accept == ItemRequestAcceptHeaders.geojson:
+            return feature
+        elif accept == ItemRequestAcceptHeaders.png:
+            data = render_feature(
+                feature.dict(),
+                visualizer_params["width"],
+                visualizer_params["height"],
+                visualizer_params["map_id"],
+            )
+            return StreamingResponse(data, media_type="image/png")
+
+    return schemas.Item.from_dto(item)
+
+
+def format_items(
+    items: List[ItemDTO], accept: ItemRequestAcceptHeaders, visualizer_params: dict
+) -> Union[List[schemas.Item], FeatureCollection, StreamingResponse]:
+    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
+        features = map_item_dtos_to_features(items)
+        feature_collection = FeatureCollection(features=features)
+        if accept == ItemRequestAcceptHeaders.geojson:
+            return feature_collection
+        elif accept == ItemRequestAcceptHeaders.png:
+            data = render_feature_collection(
+                feature_collection.dict(),
+                visualizer_params["width"],
+                visualizer_params["height"],
+                visualizer_params["map_id"],
+            )
+            return StreamingResponse(data, media_type="image/png")
+
+    return [schemas.Item.from_dto(item) for item in items]
+
+
 @router.get(
     "/items",
     response_model=Union[List[schemas.Item], FeatureCollection],
@@ -213,21 +255,7 @@ def get_items(
     """
 
     items = services.item.get_items(current_user, filter_params, transforms_params)
-    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
-        features = map_item_dtos_to_features(items)
-        feature_collection = FeatureCollection(features=features)
-        if accept == ItemRequestAcceptHeaders.geojson:
-            return feature_collection
-        elif accept == ItemRequestAcceptHeaders.png:
-            data = render_feature_collection(
-                feature_collection.dict(),
-                visualizer_params["width"],
-                visualizer_params["height"],
-                visualizer_params["map_id"],
-            )
-            return StreamingResponse(data, media_type="image/png")
-
-    return [schemas.Item.from_dto(item) for item in items]
+    return format_items(items, accept, visualizer_params)
 
 
 @router.put("/items", status_code=204, responses={204: {"description": "Update items"}})
@@ -270,20 +298,7 @@ def get_collection_items(
         current_user, collection_uuid, filter_params, transforms_params
     )
 
-    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
-        features = map_item_dtos_to_features(items)
-        feature_collection = FeatureCollection(features=features)
-        if accept == ItemRequestAcceptHeaders.png:
-            data = render_feature_collection(
-                feature_collection.dict(),
-                visualizer_params["width"],
-                visualizer_params["height"],
-                visualizer_params["map_id"],
-            )
-            return StreamingResponse(data, media_type="image/png")
-        else:
-            return feature_collection
-    return [schemas.Item.from_dto(item) for item in items]
+    return format_items(items, accept, visualizer_params)
 
 
 @router.post(
@@ -297,11 +312,11 @@ def get_collection_items(
 def create_collection_item(
     collection_uuid: UUID,
     item_in: Union[schemas.ItemCreate, Feature],
+    visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
     content_type: str = Header(None),
-) -> Union[Optional[Feature], schemas.Item]:
-    item_create = None
+) -> Union[Optional[Feature], schemas.Item, StreamingResponse]:
     # TODO: Should check content_type
     if isinstance(item_in, Feature):
         item_create = map_feature_to_item_dto(item_in)
@@ -311,11 +326,7 @@ def create_collection_item(
     item = services.item.create_collection_item(
         current_user, collection_uuid, item_create
     )
-    if accept == ItemRequestAcceptHeaders.geojson:
-        feature = map_item_dto_to_feature(item)
-        return feature
-    else:
-        return schemas.Item.from_dto(item)
+    return format_item(item, accept, visualizer_params)
 
 
 @router.put(
@@ -329,7 +340,6 @@ def update_collection_items(
     current_user: models.User = Depends(deps.get_current_user),
     content_type: str = Header(None),
 ) -> Response:
-    items_updates = None
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
         items_updates = map_features_to_item_dtos(items_in.features)
@@ -354,25 +364,22 @@ def update_collection_items(
 def replace_collection_items(
     collection_uuid: UUID,
     items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+    visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
     content_type: str = Header(None),
-) -> Union[FeatureCollection, List[schemas.Item]]:
-    items = None
+) -> Union[FeatureCollection, List[schemas.Item], StreamingResponse]:
+
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
-        items = map_features_to_item_dtos(items_in.features)
+        item_dtos = map_features_to_item_dtos(items_in.features)
     else:
-        items = [item.to_dto() for item in items_in]
+        item_dtos = [item.to_dto() for item in items_in]
 
-    items = services.item.replace_collection_items(current_user, collection_uuid, items)
-
-    if accept == ItemRequestAcceptHeaders.geojson:
-        features = map_item_dtos_to_features(items)
-        feature_collection = FeatureCollection(features=features)
-        return feature_collection
-    else:
-        return [schemas.Item.from_dto(item) for item in items]
+    items = services.item.replace_collection_items(
+        current_user, collection_uuid, item_dtos
+    )
+    return format_items(items, accept, visualizer_params)
 
 
 @router.post(
@@ -386,25 +393,20 @@ def replace_collection_items(
 def create_collection_items(
     collection_uuid: UUID,
     items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+    visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
     content_type: str = Header(None),
-) -> Union[FeatureCollection, List[schemas.Item]]:
-    items = None
+) -> Union[FeatureCollection, List[schemas.Item], StreamingResponse]:
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
-        items = map_features_to_item_dtos(items_in.features)
+        item_dtos = map_features_to_item_dtos(items_in.features)
     else:
-        items = [item.to_dto() for item in items_in]
+        item_dtos = [item.to_dto() for item in items_in]
 
-    items = services.item.add_collection_items(current_user, collection_uuid, items)
+    items = services.item.add_collection_items(current_user, collection_uuid, item_dtos)
 
-    if accept == ItemRequestAcceptHeaders.geojson:
-        features = map_item_dtos_to_features(items)
-        feature_collection = FeatureCollection(features=features)
-        return feature_collection
-    else:
-        return [schemas.Item.from_dto(item) for item in items]
+    return format_items(items, accept, visualizer_params)
 
 
 @router.delete(
@@ -435,22 +437,7 @@ def get_collection_item(
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
 ) -> Union[schemas.Item, Feature, StreamingResponse]:
     item = services.item.get_collection_item(current_user, collection_uuid, item_uuid)
-
-    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
-        feature = map_item_dto_to_feature(item)
-        assert feature is not None
-        if accept == ItemRequestAcceptHeaders.png:
-            data = render_feature(
-                feature.dict(),
-                visualizer_params["width"],
-                visualizer_params["height"],
-                visualizer_params["map_id"],
-            )
-            return StreamingResponse(data, media_type="image/png")
-        else:  # "application/geojson"
-            return feature
-    else:
-        return schemas.Item.from_dto(item)
+    return format_item(item, accept, visualizer_params)
 
 
 @router.delete(
@@ -479,7 +466,6 @@ def update_collection_item(
     current_user: models.User = Depends(deps.get_current_user),
     content_type: str = Header(None),
 ) -> Response:
-    item_update = None
     # TODO: Should check content_type
     if isinstance(item_in, Feature):
         item_update = map_feature_to_item_dto(item_in)
@@ -509,7 +495,7 @@ def get_collection_items_by_name(
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user_or_guest),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
-) -> Any:
+) -> Union[List[schemas.Item], FeatureCollection, StreamingResponse]:
     """
     Retrieve items.
     """
@@ -517,19 +503,7 @@ def get_collection_items_by_name(
     items = services.item.get_collection_items_by_name(
         current_user, collection_name, filter_params, transforms_params
     )
-    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
-        features = map_item_dtos_to_features(items)
-        feature_collection = FeatureCollection(features=features)
-        if accept == ItemRequestAcceptHeaders.png:
-            data = render_feature_collection(
-                feature_collection.dict(),
-                visualizer_params["width"],
-                visualizer_params["height"],
-                visualizer_params["map_id"],
-            )
-            return StreamingResponse(data, media_type="image/png")
-        return feature_collection
-    return [schemas.Item.from_dto(item) for item in items]
+    return format_items(items, accept, visualizer_params)
 
 
 @router.get(
@@ -546,21 +520,7 @@ def get_item(
 ) -> Union[Feature, schemas.Item, StreamingResponse]:
     item = services.item.get_item(current_user, item_uuid)
 
-    if accept in [ItemRequestAcceptHeaders.geojson, ItemRequestAcceptHeaders.png]:
-        feature = map_item_dto_to_feature(item)
-        assert feature is not None
-        if accept == ItemRequestAcceptHeaders.png:
-            data = render_feature(
-                feature.dict(),
-                visualizer_params["width"],
-                visualizer_params["height"],
-                visualizer_params["map_id"],
-            )
-            return StreamingResponse(data, media_type="image/png")
-        else:  # "application/geojson":
-            return feature
-    else:
-        return schemas.Item.from_dto(item)
+    return format_item(item, accept, visualizer_params)
 
 
 @router.delete(
