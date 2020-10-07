@@ -316,8 +316,7 @@ def create_collection_item(
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
     content_type: str = Header(None),
-) -> Union[Optional[Feature], schemas.Item]:
-    item_create = None
+) -> Union[Optional[Feature], schemas.Item, StreamingResponse]:
     # TODO: Should check content_type
     if isinstance(item_in, Feature):
         item_create = map_feature_to_item_dto(item_in)
@@ -341,7 +340,6 @@ def update_collection_items(
     current_user: models.User = Depends(deps.get_current_user),
     content_type: str = Header(None),
 ) -> Response:
-    items_updates = None
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
         items_updates = map_features_to_item_dtos(items_in.features)
