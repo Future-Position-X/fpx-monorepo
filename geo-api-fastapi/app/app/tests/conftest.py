@@ -313,8 +313,8 @@ def client(
     token = create_access_token(user["uuid"])
     with TestClient(app) as client:
         client.headers["AUTHORIZATION"] = "Bearer " + token
-        client.headers["HTTP_CONTENT_TYPE"] = "application/json"
-        client.headers["HTTP_ACCEPT"] = "application/json"
+        client.headers["CONTENT_TYPE"] = "application/json"
+        client.headers["ACCEPT"] = "application/json"
         return client
 
 
@@ -343,8 +343,8 @@ def client2(
     token = create_access_token(user2["uuid"])
     with TestClient(app) as client:
         client.headers["AUTHORIZATION"] = "Bearer " + token
-        client.headers["HTTP_CONTENT_TYPE"] = "application/json"
-        client.headers["HTTP_ACCEPT"] = "application/json"
+        client.headers["CONTENT_TYPE"] = "application/json"
+        client.headers["ACCEPT"] = "application/json"
         return client
 
 
@@ -369,8 +369,8 @@ def anon_client(
     request,
 ):
     with TestClient(app) as client:
-        client.headers["HTTP_CONTENT_TYPE"] = "application/json"
-        client.headers["HTTP_ACCEPT"] = "application/json"
+        client.headers["CONTENT_TYPE"] = "application/json"
+        client.headers["ACCEPT"] = "application/json"
         return client
 
 
