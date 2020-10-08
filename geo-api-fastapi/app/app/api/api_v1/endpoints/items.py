@@ -198,7 +198,11 @@ class ItemRequestAcceptHeaders(Enum):
     json = "application/json"
     geojson = "application/geojson"
     png = "image/png"
-    any = "*/*"
+
+
+class ItemRequestContentTypeHeaders(Enum):
+    json = "application/json"
+    geojson = "application/geojson"
 
 
 def format_item(
@@ -265,9 +269,10 @@ def get_items(
 def update_items(
     items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
     current_user: models.User = Depends(deps.get_current_user),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Response:
-    items_updates = None
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
         items_updates = map_features_to_item_dtos(items_in.features)
@@ -318,7 +323,9 @@ def create_collection_item(
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Union[Optional[Feature], schemas.Item, StreamingResponse]:
     # TODO: Should check content_type
     if isinstance(item_in, Feature):
@@ -340,7 +347,9 @@ def update_collection_items(
     collection_uuid: UUID,
     items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
     current_user: models.User = Depends(deps.get_current_user),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Response:
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
@@ -369,9 +378,10 @@ def replace_collection_items(
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Union[FeatureCollection, List[schemas.Item], StreamingResponse]:
-
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
         item_dtos = map_features_to_item_dtos(items_in.features)
@@ -400,7 +410,9 @@ def create_collection_items(
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Union[FeatureCollection, List[schemas.Item], StreamingResponse]:
     # TODO: Should check content_type
     if isinstance(items_in, FeatureCollection):
@@ -470,7 +482,9 @@ def update_collection_item(
     item_uuid: UUID,
     item_in: Union[Feature, schemas.ItemUpdate],
     current_user: models.User = Depends(deps.get_current_user),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Response:
     # TODO: Should check content_type
     if isinstance(item_in, Feature):
@@ -550,9 +564,10 @@ def update_item(
     item_uuid: UUID,
     item_in: Union[schemas.ItemUpdate, Feature],
     current_user: models.User = Depends(deps.get_current_user),
-    content_type: str = Header(None),
+    content_type: ItemRequestContentTypeHeaders = Header(
+        ItemRequestContentTypeHeaders.json
+    ),
 ) -> Response:
-    item_update = None
     # TODO: Should check content_type
     if isinstance(item_in, Feature):
         item_update = map_feature_to_item_dto(item_in)
