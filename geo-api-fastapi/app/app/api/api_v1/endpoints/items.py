@@ -305,17 +305,23 @@ def get_items(
     **items_request_body("ItemUpdate"),
 )
 def update_items(
-    items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+    feature_collection_or_list_of_item_update: Union[
+        FeatureCollection, List[schemas.ItemUpdate]
+    ],
     current_user: models.User = Depends(deps.get_current_user),
     content_type: ItemRequestContentTypeHeaders = Header(
         ItemRequestContentTypeHeaders.json
     ),
 ) -> Response:
     # TODO: Should check content_type
-    if isinstance(items_in, FeatureCollection):
-        items_updates = map_features_to_item_dtos(items_in.features)
+    if isinstance(feature_collection_or_list_of_item_update, FeatureCollection):
+        items_updates = map_features_to_item_dtos(
+            feature_collection_or_list_of_item_update.features
+        )
     else:
-        items_updates = [item.to_dto() for item in items_in]
+        items_updates = [
+            item.to_dto() for item in feature_collection_or_list_of_item_update
+        ]
 
     services.item.update_items(current_user, items_updates)
     return Response(status_code=HTTP_204_NO_CONTENT)
@@ -358,7 +364,7 @@ def get_collection_items(
 )
 def create_collection_item(
     collection_uuid: UUID,
-    item_in: Union[Feature, schemas.ItemCreate],
+    feature_or_item_create: Union[Feature, schemas.ItemCreate],
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
@@ -367,10 +373,10 @@ def create_collection_item(
     ),
 ) -> Union[Optional[Feature], schemas.Item, StreamingResponse]:
     # TODO: Should check content_type
-    if isinstance(item_in, Feature):
-        item_create = map_feature_to_item_dto(item_in)
+    if isinstance(feature_or_item_create, Feature):
+        item_create = map_feature_to_item_dto(feature_or_item_create)
     else:
-        item_create = item_in.to_dto()
+        item_create = feature_or_item_create.to_dto()
     item = services.item.create_collection_item(
         current_user, collection_uuid, item_create
     )
@@ -385,17 +391,23 @@ def create_collection_item(
 )
 def update_collection_items(
     collection_uuid: UUID,
-    items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+    feature_collection_or_list_of_item_update: Union[
+        FeatureCollection, List[schemas.ItemUpdate]
+    ],
     current_user: models.User = Depends(deps.get_current_user),
     content_type: ItemRequestContentTypeHeaders = Header(
         ItemRequestContentTypeHeaders.json
     ),
 ) -> Response:
     # TODO: Should check content_type
-    if isinstance(items_in, FeatureCollection):
-        items_updates = map_features_to_item_dtos(items_in.features)
+    if isinstance(feature_collection_or_list_of_item_update, FeatureCollection):
+        items_updates = map_features_to_item_dtos(
+            feature_collection_or_list_of_item_update.features
+        )
     else:
-        items_updates = [item.to_dto() for item in items_in]
+        items_updates = [
+            item.to_dto() for item in feature_collection_or_list_of_item_update
+        ]
 
     services.item.update_collection_items(current_user, collection_uuid, items_updates)
     return Response(status_code=HTTP_204_NO_CONTENT)
@@ -415,7 +427,9 @@ def update_collection_items(
 )
 def replace_collection_items(
     collection_uuid: UUID,
-    items_in: Union[List[schemas.ItemCreate], FeatureCollection],
+    feature_collection_or_list_of_item_create: Union[
+        FeatureCollection, List[schemas.ItemCreate]
+    ],
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
@@ -424,10 +438,14 @@ def replace_collection_items(
     ),
 ) -> Union[FeatureCollection, List[schemas.Item], StreamingResponse]:
     # TODO: Should check content_type
-    if isinstance(items_in, FeatureCollection):
-        item_dtos = map_features_to_item_dtos(items_in.features)
+    if isinstance(feature_collection_or_list_of_item_create, FeatureCollection):
+        item_dtos = map_features_to_item_dtos(
+            feature_collection_or_list_of_item_create.features
+        )
     else:
-        item_dtos = [item.to_dto() for item in items_in]
+        item_dtos = [
+            item.to_dto() for item in feature_collection_or_list_of_item_create
+        ]
     for item_dto in item_dtos:
         item_dto.collection_uuid = collection_uuid
 
@@ -448,7 +466,9 @@ def replace_collection_items(
 )
 def create_collection_items(
     collection_uuid: UUID,
-    items_in: Union[List[schemas.ItemCreate], FeatureCollection],
+    feature_collection_or_list_of_item_create: Union[
+        FeatureCollection, List[schemas.ItemCreate]
+    ],
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
@@ -457,10 +477,14 @@ def create_collection_items(
     ),
 ) -> Union[FeatureCollection, List[schemas.Item], StreamingResponse]:
     # TODO: Should check content_type
-    if isinstance(items_in, FeatureCollection):
-        item_dtos = map_features_to_item_dtos(items_in.features)
+    if isinstance(feature_collection_or_list_of_item_create, FeatureCollection):
+        item_dtos = map_features_to_item_dtos(
+            feature_collection_or_list_of_item_create.features
+        )
     else:
-        item_dtos = [item.to_dto() for item in items_in]
+        item_dtos = [
+            item.to_dto() for item in feature_collection_or_list_of_item_create
+        ]
     for item_dto in item_dtos:
         item_dto.collection_uuid = collection_uuid
 
@@ -523,17 +547,17 @@ def delete_collection_item(
 def update_collection_item(
     collection_uuid: UUID,
     item_uuid: UUID,
-    item_in: Union[Feature, schemas.ItemUpdate],
+    feature_or_item_update: Union[Feature, schemas.ItemUpdate],
     current_user: models.User = Depends(deps.get_current_user),
     content_type: ItemRequestContentTypeHeaders = Header(
         ItemRequestContentTypeHeaders.json
     ),
 ) -> Response:
     # TODO: Should check content_type
-    if isinstance(item_in, Feature):
-        item_update = map_feature_to_item_dto(item_in)
+    if isinstance(feature_or_item_update, Feature):
+        item_update = map_feature_to_item_dto(feature_or_item_update)
     else:
-        item_update = item_in.to_dto()
+        item_update = feature_or_item_update.to_dto()
 
     services.item.update_collection_item(
         current_user, collection_uuid, item_uuid, item_update
@@ -606,17 +630,17 @@ def delete_item(
 )
 def update_item(
     item_uuid: UUID,
-    item_in: Union[schemas.ItemUpdate, Feature],
+    feature_or_item_update: Union[Feature, schemas.ItemUpdate],
     current_user: models.User = Depends(deps.get_current_user),
     content_type: ItemRequestContentTypeHeaders = Header(
         ItemRequestContentTypeHeaders.json
     ),
 ) -> Response:
     # TODO: Should check content_type
-    if isinstance(item_in, Feature):
-        item_update = map_feature_to_item_dto(item_in)
+    if isinstance(feature_or_item_update, Feature):
+        item_update = map_feature_to_item_dto(feature_or_item_update)
     else:
-        item_update = item_in.to_dto()
+        item_update = feature_or_item_update.to_dto()
 
     services.item.update_item(current_user, item_uuid, item_update)
     return Response(status_code=HTTP_204_NO_CONTENT)
