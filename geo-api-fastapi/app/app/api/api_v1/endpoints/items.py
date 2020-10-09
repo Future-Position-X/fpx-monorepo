@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Any, List, Optional, Union
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Query
 from geoalchemy2 import WKTElement
 from geoalchemy2.shape import to_shape
 from geojson_pydantic.features import Feature, FeatureCollection
@@ -13,6 +12,7 @@ from starlette.status import HTTP_204_NO_CONTENT
 from app import models, schemas, services
 from app.api import deps
 from app.dto import ItemDTO
+from fastapi import APIRouter, Depends, Header, Query
 from lib.visualizer.renderer import render_feature, render_feature_collection
 
 router = APIRouter()
@@ -194,6 +194,39 @@ def item_content() -> dict:
     }
 
 
+def items_request_body(item: str) -> dict:
+    return {
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/{}".format(item)},
+                    }
+                },
+                "application/geojson": {
+                    "schema": {"$ref": "#/components/schemas/FeatureCollection"}
+                },
+            }
+        }
+    }
+
+
+def item_request_body(item: str) -> dict:
+    return {
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/{}".format(item)}
+                },
+                "application/geojson": {
+                    "schema": {"$ref": "#/components/schemas/Feature"}
+                },
+            }
+        }
+    }
+
+
 class ItemRequestAcceptHeaders(Enum):
     json = "application/json"
     geojson = "application/geojson"
@@ -265,7 +298,12 @@ def get_items(
     return format_items(items, accept, visualizer_params)
 
 
-@router.put("/items", status_code=204, responses={204: {"description": "Update items"}})
+@router.put(
+    "/items",
+    status_code=204,
+    responses={204: {"description": "Update items"}},
+    **items_request_body("ItemUpdate"),
+)
 def update_items(
     items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
     current_user: models.User = Depends(deps.get_current_user),
@@ -316,6 +354,7 @@ def get_collection_items(
     responses={
         201: {"description": "Create collection item", "content": item_content()}
     },
+    **item_request_body("ItemCreate"),
 )
 def create_collection_item(
     collection_uuid: UUID,
@@ -342,6 +381,7 @@ def create_collection_item(
     "/collections/{collection_uuid}/items",
     status_code=204,
     responses={201: {"description": "Update items", "content": item_content()}},
+    **items_request_body("ItemUpdate"),
 )
 def update_collection_items(
     collection_uuid: UUID,
@@ -371,10 +411,11 @@ def update_collection_items(
             "content": items_content(),
         }
     },
+    **items_request_body("ItemCreate"),
 )
 def replace_collection_items(
     collection_uuid: UUID,
-    items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+    items_in: Union[List[schemas.ItemCreate], FeatureCollection],
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
@@ -403,10 +444,11 @@ def replace_collection_items(
     responses={
         201: {"description": "Create items in collection", "content": items_content()}
     },
+    **items_request_body("ItemCreate"),
 )
 def create_collection_items(
     collection_uuid: UUID,
-    items_in: Union[List[schemas.ItemUpdate], FeatureCollection],
+    items_in: Union[List[schemas.ItemCreate], FeatureCollection],
     visualizer_params: dict = Depends(visualizer_parameters),
     current_user: models.User = Depends(deps.get_current_user),
     accept: ItemRequestAcceptHeaders = Header(ItemRequestAcceptHeaders.json),
@@ -476,6 +518,7 @@ def delete_collection_item(
     "/collections/{collection_uuid}/items/{item_uuid}",
     status_code=204,
     responses={204: {"description": "Update collection item"}},
+    **item_request_body("ItemUpdate"),
 )
 def update_collection_item(
     collection_uuid: UUID,
@@ -559,6 +602,7 @@ def delete_item(
     "/items/{item_uuid}",
     status_code=204,
     responses={204: {"description": "Update item"}},
+    **item_request_body("ItemUpdate"),
 )
 def update_item(
     item_uuid: UUID,
