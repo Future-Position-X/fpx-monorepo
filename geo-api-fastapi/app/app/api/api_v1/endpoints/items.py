@@ -197,6 +197,7 @@ def item_content() -> dict:
 def items_request_body(item: str) -> dict:
     return {
         "requestBody": {
+            "required": True,
             "content": {
                 "application/json": {
                     "schema": {
@@ -207,7 +208,7 @@ def items_request_body(item: str) -> dict:
                 "application/geojson": {
                     "schema": {"$ref": "#/components/schemas/FeatureCollection"}
                 },
-            }
+            },
         }
     }
 
@@ -215,6 +216,7 @@ def items_request_body(item: str) -> dict:
 def item_request_body(item: str) -> dict:
     return {
         "requestBody": {
+            "required": True,
             "content": {
                 "application/json": {
                     "schema": {"$ref": "#/components/schemas/{}".format(item)}
@@ -222,7 +224,7 @@ def item_request_body(item: str) -> dict:
                 "application/geojson": {
                     "schema": {"$ref": "#/components/schemas/Feature"}
                 },
-            }
+            },
         }
     }
 
