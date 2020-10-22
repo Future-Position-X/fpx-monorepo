@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import yaml
@@ -10,7 +11,7 @@ from fastapi.utils import get_model_definitions
 from pydantic.schema import get_model_name_map
 from starlette.routing import BaseRoute
 
-geojson_file = open("geojson.yaml")
+geojson_file = open(os.path.join(os.path.dirname(__file__), "geojson.yaml"))
 geojson = yaml.load(geojson_file, Loader=yaml.FullLoader)
 print(geojson)
 
