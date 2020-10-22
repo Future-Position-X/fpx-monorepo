@@ -9,7 +9,8 @@ python = "^3.7"
 uvicorn = "^0.11.3"
 #fastapi = "^0.61.1"
 #fastapi = { path = "./fastapi/dist/fastapi-0.61.1.tar.gz", develop = true }
-fastapi = { git = "https://github.com/Future-Position-X/fastapi" }
+#fastapi = { git = "https://github.com/Future-Position-X/fastapi", develop = false}
+fastapi = { url = "https://github.com/Future-Position-X/fastapi/archive/master.zip" }
 python-multipart = "^0.0.5"
 email-validator = "^1.0.5"
 requests = "^2.23.0"
