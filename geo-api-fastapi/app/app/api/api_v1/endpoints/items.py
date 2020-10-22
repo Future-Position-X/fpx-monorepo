@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Any, List, Optional, Union
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, Header, Query
 from geoalchemy2 import WKTElement
 from geoalchemy2.shape import to_shape
 from geojson_pydantic.features import Feature, FeatureCollection
@@ -12,7 +13,6 @@ from starlette.status import HTTP_204_NO_CONTENT
 from app import models, schemas, services
 from app.api import deps
 from app.dto import ItemDTO
-from fastapi import APIRouter, Depends, Header, Query
 from lib.visualizer.renderer import render_feature, render_feature_collection
 
 router = APIRouter()

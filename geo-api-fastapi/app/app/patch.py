@@ -2,14 +2,13 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 import yaml
 from deepmerge import conservative_merger
-from pydantic.schema import get_model_name_map
-from starlette.routing import BaseRoute
-
 from fastapi import routing
 from fastapi.encoders import jsonable_encoder
 from fastapi.openapi.models import OpenAPI
 from fastapi.openapi.utils import get_flat_models_from_routes, get_openapi_path
 from fastapi.utils import get_model_definitions
+from pydantic.schema import get_model_name_map
+from starlette.routing import BaseRoute
 
 geojson_file = open("geojson.yaml")
 geojson = yaml.load(geojson_file, Loader=yaml.FullLoader)
