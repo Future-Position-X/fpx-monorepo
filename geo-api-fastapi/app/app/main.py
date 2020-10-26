@@ -1,16 +1,19 @@
 from functools import lru_cache
 
 import sqlalchemy_mixins
-from fastapi import FastAPI
+from fastapi import FastAPI, applications
 from fastapi_utils.openapi import simplify_operation_ids
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app import patch
 from app.api.api_v1.api import api_router
 from app.core import config
 from app.core.config import Settings
 from app.errors import UnauthorizedError
+
+applications.get_openapi = patch.get_openapi
 
 
 @lru_cache()
