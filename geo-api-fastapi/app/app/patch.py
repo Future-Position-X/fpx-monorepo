@@ -13,7 +13,6 @@ from starlette.routing import BaseRoute
 
 geojson_file = open(os.path.join(os.path.dirname(__file__), "geojson.yaml"))
 geojson = yaml.load(geojson_file, Loader=yaml.FullLoader)
-print(geojson)
 
 
 def get_openapi(
