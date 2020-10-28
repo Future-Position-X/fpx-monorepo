@@ -318,6 +318,7 @@ export default {
       this.updateCodeView(fc);
     },
     itemModified(item) {
+      console.debug("itemModified");
       modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {

@@ -32,6 +32,7 @@ export default {
     ctx.modifiedItems.push(item);
   },
   async commit(ctx, collectionId) {
+    console.debug("commit");
     if (ctx.addedItems.length > 0) {
       const success = await collection.addItems(collectionId, ctx.addedItems);
 

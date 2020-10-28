@@ -41,7 +41,9 @@ export default {
       }
     } */
   },
-  onJsonChange() {},
+  onJsonChange() {
+    console.debug("onJsonChange");
+  },
   mounted() {
     const container = this.$refs.jsoneditor;
     const options = {
