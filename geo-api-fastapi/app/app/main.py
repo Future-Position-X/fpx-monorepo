@@ -1,8 +1,10 @@
 from functools import lru_cache
 
+import sentry_sdk
 import sqlalchemy_mixins
 from fastapi import FastAPI, applications
 from fastapi_utils.openapi import simplify_operation_ids
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -75,3 +77,7 @@ if settings.BACKEND_CORS_ORIGINS:
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 simplify_operation_ids(app)
+
+sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.2)
+
+asgi_app = SentryAsgiMiddleware(app)
