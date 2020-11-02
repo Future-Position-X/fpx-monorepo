@@ -51,7 +51,7 @@ services:
       - "80:80"
     volumes:
     - ./app:/app
-    command: /start-reload.sh
+    command: /app/start-reload.sh
 
   celeryworker:
     image: '${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}'
