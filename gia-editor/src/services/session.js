@@ -22,7 +22,7 @@ export default {
 
     await this.validateResponse(response);
 
-    this.token = (await response.json()).token;
+    this.token = (await response.json()).access_token;
     this.user = await this.getUser();
   },
   clear() {

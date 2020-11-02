@@ -1,4 +1,3 @@
-import logging
 from typing import Generator, Optional
 
 from fastapi import Depends, HTTPException, status
@@ -36,7 +35,6 @@ def get_current_user(
         )
         token_data = schemas.TokenPayload(**payload)
     except (jwt.JWTError, ValidationError, AttributeError) as e:
-        logging.error(type(e))
         if type(e) != AttributeError:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

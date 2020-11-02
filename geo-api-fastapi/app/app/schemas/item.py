@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from typing import Any, Optional, Type
 from uuid import UUID
@@ -26,11 +25,9 @@ class ItemBase(BaseModel):
             return v
         if type(v) is str:
             as_dict = mapping(to_shape(WKTElement(v)))
-            logging.error(type(as_dict))
             return as_dict
         if type(v) is WKBElement:
             as_dict = mapping(to_shape(v))
-            logging.error(type(as_dict))
             return as_dict
         elif hasattr(v, "__geo_interface__"):
             return v.__geo_interface__

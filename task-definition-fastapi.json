@@ -81,6 +81,14 @@
           "name": "SENTRY_DSN"
         },
         {
+          "valueFrom": "/geo-api-fastapi/NEW_RELIC_LICENSE_KEY",
+          "name": "NEW_RELIC_LICENSE_KEY"
+        },
+        {
+          "valueFrom": "/geo-api-fastapi/NEW_RELIC_ENVIRONMENT",
+          "name": "NEW_RELIC_ENVIRONMENT"
+        },
+        {
           "valueFrom": "/geo-api-fastapi/SMTP_HOST",
           "name": "SMTP_HOST"
         },

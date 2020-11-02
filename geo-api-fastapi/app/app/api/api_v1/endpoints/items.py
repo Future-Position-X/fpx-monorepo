@@ -283,6 +283,7 @@ def format_items(
 @router.get(
     "/items",
     response_model=Union[List[schemas.Item], FeatureCollection],
+    response_model_exclude_unset=True,
     responses={200: {"description": "Items requested", "content": items_content()}},
 )
 def get_items(
@@ -332,6 +333,7 @@ def update_items(
 @router.get(
     "/collections/{collection_uuid}/items",
     response_model=Union[List[schemas.Item], FeatureCollection],
+    response_model_exclude_unset=True,
     responses={
         200: {"description": "Collection items requested", "content": items_content()}
     },
@@ -358,6 +360,7 @@ def get_collection_items(
 @router.post(
     "/collections/{collection_uuid}/items",
     response_model=Union[schemas.Item, Feature],
+    response_model_exclude_unset=True,
     status_code=201,
     responses={
         201: {"description": "Create collection item", "content": item_content()}
@@ -418,6 +421,7 @@ def update_collection_items(
 @router.post(
     "/collections/{collection_uuid}/items/replace",
     response_model=Union[List[schemas.Item], FeatureCollection],
+    response_model_exclude_unset=True,
     status_code=201,
     responses={
         201: {
@@ -460,6 +464,7 @@ def replace_collection_items(
 @router.post(
     "/collections/{collection_uuid}/items/bulk",
     response_model=Union[List[schemas.Item], FeatureCollection],
+    response_model_exclude_unset=True,
     status_code=201,
     responses={
         201: {"description": "Create items in collection", "content": items_content()}
@@ -510,6 +515,7 @@ def delete_collection_items(
 @router.get(
     "/collections/{collection_uuid}/items/{item_uuid}",
     response_model=Union[schemas.Item, Feature],
+    response_model_exclude_unset=True,
     status_code=200,
     responses={
         200: {"description": "Get item in collection", "content": items_content()}
@@ -570,6 +576,7 @@ def update_collection_item(
 @router.get(
     "/collections/by_name/{collection_name}/items",
     response_model=Union[List[schemas.Item], FeatureCollection],
+    response_model_exclude_unset=True,
     responses={
         200: {
             "description": "Collection items by collection name",
@@ -598,6 +605,7 @@ def get_collection_items_by_name(
 @router.get(
     "/items/{item_uuid}",
     response_model=Union[schemas.Item, Feature],
+    response_model_exclude_unset=True,
     status_code=200,
     responses={200: {"description": "Get item", "content": item_content()}},
 )

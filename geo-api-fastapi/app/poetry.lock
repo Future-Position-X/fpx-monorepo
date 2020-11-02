@@ -336,6 +336,7 @@ test = ["pytest (5.4.3)", "pytest-cov (2.10.0)", "pytest-asyncio (>=0.14.0,<0.15
 [package.source]
 type = "url"
 url = "https://github.com/Future-Position-X/fastapi/archive/master.zip"
+
 [[package]]
 name = "fastapi-utils"
 version = "0.2.1"
@@ -582,6 +583,17 @@ description = "Experimental type system extensions for programs checked with the
 category = "dev"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "newrelic"
+version = "5.22.1.152"
+description = "New Relic Python Agent"
+category = "main"
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+
+[package.extras]
+infinite-tracing = ["grpcio (<2)", "protobuf (<4)"]
 
 [[package]]
 name = "packaging"
@@ -1124,7 +1136,7 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "656c824ad11028c9532f9c52fdf5944aaf8df0b76d842c0fe8fbc94dd9dee9ff"
+content-hash = "21cc69e84111a1229b6c578ae93b1ad87cd3855771dfbd6e050177766aca9dc7"
 
 [metadata.files]
 alembic = [
@@ -1477,6 +1489,21 @@ mypy = [
 mypy-extensions = [
     {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
+]
+newrelic = [
+    {file = "newrelic-5.22.1.152-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:1ee7aa93f39da366ba051fe97e62c87c16c6a6344e22204454df5e162c580928"},
+    {file = "newrelic-5.22.1.152-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:8097a86ca1ad547bee12043a1abf85c3be34d9000ae74d4c03ed9099da4dd320"},
+    {file = "newrelic-5.22.1.152-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:990f238b3e62ee8b6d93878848e4c36ee6ef48103f7592b2132cb7215da7385e"},
+    {file = "newrelic-5.22.1.152-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:344d3fe149e7c327e58824a0f77cccdf86b6b42e092cfe3f17608e996d08b159"},
+    {file = "newrelic-5.22.1.152-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:6e25f398c5844bb326feeac75de0d6dd3ad0e89c4e5746e22e70c38da81088ef"},
+    {file = "newrelic-5.22.1.152-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:c1961afc267d210972f8bf5f21ebeeca567a10242ca81e98d4c556ab03e3e55f"},
+    {file = "newrelic-5.22.1.152-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:152d475d3f638fc312a995e3e6db0c3d81d1f0c379314d3daad3f89e249e6d3f"},
+    {file = "newrelic-5.22.1.152-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:fccba6e61efce265b90f45ed4f4007621213f9bf5dead3f2e4b17eb0e05fabd9"},
+    {file = "newrelic-5.22.1.152-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:ba4b22483c5506c17c1d1387aaaa39b6f06931a47b0b3592077ffaeba9ab9069"},
+    {file = "newrelic-5.22.1.152-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:359de086148aa4c0a02bdfd41e00effa37f9373f40ca187f1d27b4591975ba83"},
+    {file = "newrelic-5.22.1.152-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:1d1023c13b71c428fe28f5b68c80f7e1112c4ef361265e2045bfde35144dbdf7"},
+    {file = "newrelic-5.22.1.152-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:5ec2e6fa77b8918c910b36d962864e01db2c01248aafa64e28bbae4d55c4ce0b"},
+    {file = "newrelic-5.22.1.152.tar.gz", hash = "sha256:0cedc2df0b54c5fd451a5c6baefb11eb9fb3aa817f6fa0708e407f3917874358"},
 ]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
