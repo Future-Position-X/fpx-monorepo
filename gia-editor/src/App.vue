@@ -124,6 +124,9 @@
                 <Code v-bind:code="code" style="display: flex; flex-direction: column; flex: 1" />
               </v-tab-item>
             </v-tabs>
+            <div class="selectedCollectionName">
+              Collection name: <span>{{selectedCollection && selectedCollection.name}}</span>
+            </div>
             <div class="my-2 save-button">
               <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated"
                 >Save modifications</v-btn
@@ -360,8 +363,16 @@ export default {
     async onCreateCollectionClick() {
       await collection
         .create(this.collectionName, this.isPublicCollection)
-        .then((coll) => this.$refs.collectionTree.addCollection(coll))
-        .catch((error) => console.error('backend error: ', error));
+        .then((coll) => {
+          this.$refs.collectionTree.addCollection(coll);
+          this.addAlert({ type: 'success', message: `Created ${this.collectionName} successfully` });
+          this.collectionName = null;
+          this.isPublicCollection = false;
+        })
+        .catch((error) => {
+          console.error('backend error: ', error);
+          this.addAlert({ type: 'error', message: `Creating ${this.collectionName} failed` });
+        });
     },
     async showAvailableCollections() {
       this.collections = await collection.fetchCollections();
@@ -516,5 +527,15 @@ export default {
 
 .v-select__slot {
   background-color: #999;
+}
+
+.selectedCollectionName {
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 10px 0px;
+  color: white;
+}
+.selectedCollectionName span{
+  font-weight: bold;
 }
 </style>

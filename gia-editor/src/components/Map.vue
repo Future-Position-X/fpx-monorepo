@@ -73,7 +73,7 @@ export default {
     },
     zoomUpdate(zoom) {
       if (this.$refs.theMap.mapObject.pm !== undefined) {
-        if (zoom >= 16) {
+        if (zoom >= 16 && (this.layers && this.layers.length >= 1)) {
           this.$refs.theMap.mapObject.pm.addControls();
         } else {
           this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
@@ -150,6 +150,14 @@ export default {
         console.debug('geojson updated');
         const layers = Object.values(this.geojson);
         this.layers = layers;
+        if (this.$refs.theMap.mapObject.pm !== undefined) {
+          if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1)) {
+            this.$refs.theMap.mapObject.pm.addControls();
+          } else {
+            this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
+            this.$refs.theMap.mapObject.pm.removeControls();
+          }
+        }
       },
       deep: true,
     },
@@ -158,13 +166,6 @@ export default {
     console.debug('Map mounted');
     this.$nextTick(() => {
       const map = this.$refs.theMap.mapObject;
-      if (map.pm !== undefined) {
-        map.pm.addControls({
-          position: 'topleft',
-          drawCircle: false,
-        });
-      }
-
       map.on('pm:globaldragmodetoggled', (e) => {
         console.debug('globaldragmodetoggled: ', e);
 
