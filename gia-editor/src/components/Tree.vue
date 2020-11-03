@@ -34,7 +34,11 @@ export default {
           }
         } else {
           this.active = []
+          this.$emit('updateCodeView', null);
         }
+      } else {
+        this.active = []
+        this.$emit('updateCodeView', null);
       }
       },
       selectionUpdate(selectedItems) {
