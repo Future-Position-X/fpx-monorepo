@@ -17,4 +17,4 @@ RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; els
 
 COPY ./app /app
 ENV PYTHONPATH=/app
-CMD ["/app/start-reload.sh"]
+CMD ["/app/start.sh"]
