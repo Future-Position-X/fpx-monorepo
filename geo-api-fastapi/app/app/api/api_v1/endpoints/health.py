@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get("/health", status_code=200)
 def get_health(
-    current_user: models.User = Depends(deps.get_current_user_or_guest)
+    current_user: models.User = Depends(deps.get_current_user_or_guest),
 ) -> str:
     spatial_filter = spatial_filter_parameters(
         spatial_filter="intersect",
