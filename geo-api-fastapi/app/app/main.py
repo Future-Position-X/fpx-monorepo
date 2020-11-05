@@ -80,4 +80,4 @@ simplify_operation_ids(app)
 
 sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.2)
 
-asgi_app = SentryAsgiMiddleware(app)
+app = SentryAsgiMiddleware(app)
