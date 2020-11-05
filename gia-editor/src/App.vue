@@ -185,6 +185,7 @@ export default {
       collections: [],
       sortedCollections: [],
       geojson: {},
+      orgGeojson: {},
       renderedCollections: [],
       activeCollection: null,
       bounds: null,
@@ -211,7 +212,7 @@ export default {
   methods: {
     geojsonUpdateFromCode(geojson) {
       console.debug('geojsonUpdateFromCode');
-      this.geojson[this.activeCollection.uuid].geojson = geojson;
+      this.geojson[this.activeId].geojson = geojson;
     },
     geojsonUpdateFromMap(geojson) {
       console.debug('geojsonUpdateFromMap');
@@ -231,13 +232,26 @@ export default {
         this.code = val;
       }
     },
+    setGeoJson(id, geojson) {
+      this.$set(this.geojson, id, {
+        id,
+        color: this.collectionColors[id],
+        geojson,
+      });
+      this.orgGeojson[id] = geojson
+      console.debug('$set geojson');
+    },
+    deleteGeoJson(id) {
+      this.$delete(this.geojson, id);
+      delete this.orgGeojson[id];
+    },
     async selectionUpdate(ids) {
       console.debug('selectionUpdate', ids);
       let index = -1;
       this.renderedCollections.forEach((c) => {
         if (!ids.includes(c.uuid)) {
           index = this.renderedCollections.indexOf(c);
-          this.$delete(this.geojson, c.uuid);
+          this.deleteGeoJson(c.uuid)
         }
       });
       this.renderedCollections.splice(index, 1);
@@ -319,6 +333,7 @@ export default {
       modify.onItemAdded(this.modCtx, item);
       const fc = this.geojson[this.activeId].geojson;
       fc.features.push(item);
+      // Update the map with the new Item
       this.updateCodeView(fc);
     },
     itemModified(item) {
@@ -326,12 +341,8 @@ export default {
       modify.onItemModified(this.modCtx, item);
     },
     async onSaveClick() {
-      await modify
-        .commit(this.modCtx, this.activeId)
-        .then(() => {
-          this.modCtx = modify.createContext();
-        })
-        .catch((error) => console.error('backend error: ', error));
+      await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));
+      await this.fetchGeoJson([this.activeId]);
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
@@ -463,12 +474,7 @@ export default {
           // eslint-disable-next-line no-await-in-loop
           const data = await collection.fetchItems(signal, id, dataBounds, simplify);
 
-          this.$set(this.geojson, id, {
-            id,
-            color: this.collectionColors[id],
-            geojson: data,
-          });
-          console.debug('$set geojson');
+          this.setGeoJson(id, data);
         } catch (err) {
           console.error(err);
           this.isLoadingUuids.delete(id);

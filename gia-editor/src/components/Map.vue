@@ -218,6 +218,7 @@ export default {
         if (feature != null) {
           this.$emit('itemAdded', feature);
         }
+        map.removeLayer(layerEvent.layer);
       });
     });
   },

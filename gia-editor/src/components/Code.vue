@@ -26,7 +26,7 @@ export default {
   },
   methods: {
     onChangeText(jsonString) {
-      console.debug("onChange", jsonString);
+      console.debug("onChange");
       try {
         const geojsonParsed = JSON.parse(jsonString);
         if (gjv.valid(geojsonParsed)) {
