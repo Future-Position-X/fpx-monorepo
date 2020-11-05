@@ -1,27 +1,21 @@
 <template>
-  <div>
-    <v-btn @click="click">Yolo</v-btn>
-    <CollectionTreeView
-        ref="treeview"
-        return-object
-        @input="onSelectionUpdate"
-        @update:active="onActiveUpdate"
-        :active="active"
-        :items="items"
-        selectable
-        activatable
-        :open.sync="open"
-    >
-      <template v-slot:append="{ item }">
-        <v-icon :color="item.color">mdi-brightness-1</v-icon>
-      </template>
-    </CollectionTreeView>
-
-  </div>
+  <CollectionTreeView
+      ref="treeview"
+      return-object
+      @input="onSelectionUpdate"
+      @update:active="onActiveUpdate"
+      :items="items"
+      selectable
+      activatable
+      :open.sync="open"
+  >
+    <template v-slot:append="{ item }">
+      <v-icon :color="item.color">mdi-brightness-1</v-icon>
+    </template>
+  </CollectionTreeView>
 </template>
 
 <script>
-/* eslint-disable no-console, no-prototype-builtins */
 import CollectionTreeView from "./CollectionTreeView.vue";
 import session from '../services/session';
 
@@ -32,7 +26,7 @@ export default {
     click() {
     },
     onActiveUpdate(activeCollections) {
-      console.log("onActiveUpdate", activeCollections);
+      console.debug("onActiveUpdate", activeCollections);
       if (activeCollections.length >= 1) {
         const collection = activeCollections[0];
         this.$emit('activeUpdate', collection.uuid)
@@ -41,7 +35,7 @@ export default {
       }
     },
     onSelectionUpdate(selectedItems) {
-      console.log("onSelectionUpdate", selectedItems);
+      console.debug("onSelectionUpdate", selectedItems);
       const selectedUuids = selectedItems.filter((x) => !!x.uuid).map((x) => x.uuid);
       this.$emit('selectionUpdate', selectedUuids);
     },
@@ -117,21 +111,10 @@ export default {
       });
       this.open = ['Owned collections'];
     },
-    /*
-    active: {
-      handler(val) {
-        // eslint-disable-next-line no-console
-        console.log("args3", val, this.active)
-      }
-    }
-
-     */
   },
   data: () => ({
-    selectedUuids: [],
     items: [],
     open: [],
-    active: [],
   }),
 };
 </script>

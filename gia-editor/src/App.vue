@@ -7,7 +7,7 @@
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
-              @updateCodeView="onUpdateCodeView"
+              @activeUpdate="activeUpdate"
               ref="collectionTree"
             />
             <div class="my-2 export-image-button ma-3 flex-grow-0 flex-shrink-0">
@@ -121,11 +121,11 @@
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
               <v-tab-item style="display: flex; flex-direction: column; flex: 1">
-                <Code v-bind:code="code" style="display: flex; flex-direction: column; flex: 1" />
+                <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
               </v-tab-item>
             </v-tabs>
             <div class="selectedCollectionName">
-              Collection name: <span>{{selectedCollection && selectedCollection.name}}</span>
+              Collection name: <span>{{ activeCollection && activeCollection.name }}</span>
             </div>
             <div class="my-2 save-button">
               <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated"
@@ -186,11 +186,10 @@ export default {
       sortedCollections: [],
       geojson: {},
       renderedCollections: [],
-      selectedCollection: null,
+      activeCollection: null,
       bounds: null,
       dataBounds: null,
       fetchController: null,
-      isFetchingItems: false,
       isLoading: false,
       isLoadingUuids: new Set(),
       collectionName: null,
@@ -207,16 +206,12 @@ export default {
     };
   },
   watch: {
-    selectedCollection(val) {
-      console.debug('selectedCollection');
-      const geojson = val == null ? {} : this.geojson[val.uuid].geojson;
-      this.updateCodeView(geojson);
-    },
+
   },
   methods: {
     geojsonUpdateFromCode(geojson) {
       console.debug('geojsonUpdateFromCode');
-      this.geojson = geojson;
+      this.geojson[this.activeCollection.uuid].geojson = geojson;
     },
     geojsonUpdateFromMap(geojson) {
       console.debug('geojsonUpdateFromMap');
@@ -225,7 +220,7 @@ export default {
     onRendered(id) {
       console.debug('onRendered');
       this.isLoadingUuids.delete(id);
-      this.isLoading = this.isLoadingUuids.length > 0;
+      this.isLoading = this.isLoadingUuids.size > 0;
     },
     updateCodeView(val) {
       console.debug('update code view');
@@ -237,32 +232,35 @@ export default {
       }
     },
     async selectionUpdate(ids) {
+      console.debug('selectionUpdate', ids);
       let index = -1;
       this.renderedCollections.forEach((c) => {
         if (!ids.includes(c.uuid)) {
-          if (this.selectedCollection === c) {
-            this.selectedCollection = null;
-          }
-
           index = this.renderedCollections.indexOf(c);
           this.$delete(this.geojson, c.uuid);
         }
       });
       this.renderedCollections.splice(index, 1);
-      console.debug('selectionUpdate');
       await this.fetchGeoJson(
         ids.filter((id) => !this.renderedCollections.some((c) => c.uuid === id))
       );
       this.updateFetchedCollections(ids);
     },
+    async activeUpdate(id) {
+      console.debug("activeUpdate", id);
+      this.activeId = id;
+      if(id === null) {
+        this.activeCollection = null;
+        this.updateCodeView({});
+        return;
+      }
+      if(this.isLoadingUuids.size > 0) return;
+      this.activeCollection = this.collections.find((c) => c.uuid === id);
+      this.updateCodeView(this.geojson[id].geojson);
+    },
     updateFetchedCollections(ids) {
       console.debug('updateFetchedCollections');
       this.renderedCollections = this.collections.filter((c) => ids.some((id) => id === c.uuid));
-      [this.selectedCollection] = this.collections.filter((c) => c.uuid === ids[ids.length - 1]);
-    },
-    onUpdateCodeView(selectedCollection) {
-      console.debug('onUpdateCodeView');
-      this.selectedCollection = selectedCollection;
     },
     zoomUpdate(zoom) {
       if (this.zoom !== zoom) {
@@ -307,16 +305,19 @@ export default {
         }
       }
     },
-    itemRemovedFromMap(item) {
+    itemRemovedFromMap(_item) {
+      /*
+      We need to figure out how to remove the thing from the right collection, also what to do if that collection isn't the active one
       modify.onItemRemoved(this.modCtx, item);
-      const fc = this.geojson[this.selectedCollection.uuid].geojson;
+      const fc = this.geojson[this.activeId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.updateCodeView(fc);
+       */
     },
     itemAddedToMap(item) {
       modify.onItemAdded(this.modCtx, item);
-      const fc = this.geojson[this.selectedCollection.uuid].geojson;
+      const fc = this.geojson[this.activeId].geojson;
       fc.features.push(item);
       this.updateCodeView(fc);
     },
@@ -326,7 +327,7 @@ export default {
     },
     async onSaveClick() {
       await modify
-        .commit(this.modCtx, this.selectedCollection.uuid)
+        .commit(this.modCtx, this.activeId)
         .then(() => {
           this.modCtx = modify.createContext();
         })
@@ -434,6 +435,7 @@ export default {
     async fetchGeoJson(ids) {
       console.debug('fetchGeoJson');
       this.isLoading = ids.length > 0 || this.isLoading;
+      ids.forEach((id) => this.isLoadingUuids.add(id));
       if (this.debouncedDoFetchGeoJson === undefined) {
         this.debouncedDoFetchGeoJson = debounce(this.doFetchGeoJson, 100);
       }
@@ -442,6 +444,7 @@ export default {
       } catch (err) {
         console.error(err);
       }
+
     },
     async doFetchGeoJson(ids) {
       console.debug('doFetchGeoJson');
@@ -456,7 +459,6 @@ export default {
 
       // eslint-disable-next-line no-restricted-syntax
       for (const id of ids) {
-        this.isLoadingUuids.add(id);
         try {
           // eslint-disable-next-line no-await-in-loop
           const data = await collection.fetchItems(signal, id, dataBounds, simplify);
@@ -474,7 +476,11 @@ export default {
         }
       }
       this.dataBounds = dataBounds;
-      this.isFetchingItems = false;
+
+      if(this.activeId !== null) {
+        this.activeCollection = this.collections.find((c) => c.uuid === this.activeId);
+        this.updateCodeView(this.geojson[this.activeId].geojson);
+      }
     },
   },
 

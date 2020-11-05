@@ -8,8 +8,6 @@ export default {
 
   },
   render (h) {
-    // eslint-disable-next-line no-console
-    console.log(CollectionTreeViewNode);
     const children = this.items.length
         ? this.items.map(CollectionTreeViewNode.methods.genChild.bind(this))
         : this.$slots.default
