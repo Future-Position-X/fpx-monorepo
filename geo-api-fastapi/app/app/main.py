@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import cast
 
 import sentry_sdk
 import sqlalchemy_mixins
@@ -80,4 +81,4 @@ simplify_operation_ids(app)
 
 sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.2)
 
-app = SentryAsgiMiddleware(app)
+app = cast(FastAPI, SentryAsgiMiddleware(app))
