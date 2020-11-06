@@ -62,6 +62,10 @@ export default {
       // url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       url: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      toolbarOptions: {
+        drawCircle: false,
+        drawCircleMarker: false,
+      }
     };
   },
   methods: {
@@ -72,9 +76,10 @@ export default {
       this.$emit('boundsUpdate', bounds);
     },
     zoomUpdate(zoom) {
+      console.debug("zoomUpdate");
       if (this.$refs.theMap.mapObject.pm !== undefined) {
         if (zoom >= 16 && (this.layers && this.layers.length >= 1)) {
-          this.$refs.theMap.mapObject.pm.addControls();
+          this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
         } else {
           this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
           this.$refs.theMap.mapObject.pm.removeControls();
@@ -108,6 +113,7 @@ export default {
       };
     },
     pointStyle(layer) {
+      console.debug("pointStyle");
       return {
         weight: 1,
         color: layer.color,
@@ -118,6 +124,7 @@ export default {
       };
     },
     style(layer) {
+      console.debug("style");
       return {
         weight: 1,
         color: '#333',
@@ -127,6 +134,7 @@ export default {
       };
     },
     geoJsonOptions(layer) {
+      console.debug("geoJsonOptions");
       return {
         // onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
@@ -136,7 +144,9 @@ export default {
       };
     },
     styleFunction(layer) {
+      console.debug("styleFunction");
       return () => {
+        console.debug("styleFunction inner");
         if (layer.geojson.features[0].geometry.type === 'Point') {
           return this.pointStyle(layer);
         }
@@ -147,12 +157,12 @@ export default {
   watch: {
     geojson: {
       handler() {
-        console.debug('geojson updated');
+        console.debug('map.watch.geojson.handler');
         const layers = Object.values(this.geojson);
         this.layers = layers;
         if (this.$refs.theMap.mapObject.pm !== undefined) {
           if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1)) {
-            this.$refs.theMap.mapObject.pm.addControls();
+            this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
           } else {
             this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
             this.$refs.theMap.mapObject.pm.removeControls();
@@ -205,6 +215,7 @@ export default {
       });
 
       map.on('pm:remove', (layerEvent) => {
+        console.debug(layerEvent)
         const item = layerEvent.layer.feature;
 
         if (item != null) {

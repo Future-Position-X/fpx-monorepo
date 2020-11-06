@@ -99,6 +99,7 @@
               v-show="!showDeleteConfirmationDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
+              v-bind:activeId="activeId"
               @geojsonUpdate="geojsonUpdateFromMap"
               @boundsUpdate="boundsUpdate"
               @itemRemoved="itemRemovedFromMap"
@@ -180,30 +181,31 @@ export default {
   },
   data() {
     return {
-      code: '',
-      zoom: 16,
-      collections: [],
-      sortedCollections: [],
-      geojson: {},
-      orgGeojson: {},
-      renderedCollections: [],
       activeCollection: null,
+      activeId: null,
+      alerts: [],
+      authenticated: false,
       bounds: null,
+      code: '',
+      collectionColors: {},
+      collectionName: null,
+      collections: [],
       dataBounds: null,
+      deleteConfirmationContent: null,
+      email: null,
       fetchController: null,
+      geojson: {},
       isLoading: false,
       isLoadingUuids: new Set(),
-      collectionName: null,
       isPublicCollection: false,
-      collectionColors: {},
       modCtx: modify.createContext(),
-      showDeleteConfirmationDialog: false,
-      deleteConfirmationContent: null,
-      authenticated: false,
-      email: null,
+      orgGeojson: {},
       password: null,
+      renderedCollections: [],
+      showDeleteConfirmationDialog: false,
       showPassword: false,
-      alerts: [],
+      sortedCollections: [],
+      zoom: 16,
     };
   },
   watch: {
@@ -219,7 +221,7 @@ export default {
       this.updateCodeView(geojson);
     },
     onRendered(id) {
-      console.debug('onRendered');
+      console.debug('onRendered', id);
       this.isLoadingUuids.delete(id);
       this.isLoading = this.isLoadingUuids.size > 0;
     },

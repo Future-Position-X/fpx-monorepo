@@ -72,6 +72,7 @@ export default {
         console.debug('GiaGeoJson geojson watch');
         this.switchLayers(val);
       },
+      deep: true,
     },
   },
   methods: {
