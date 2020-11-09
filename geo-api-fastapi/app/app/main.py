@@ -1,4 +1,6 @@
+import sys
 from functools import lru_cache
+from typing import cast
 
 import sentry_sdk
 import sqlalchemy_mixins
@@ -78,6 +80,6 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 simplify_operation_ids(app)
 
-sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.2)
-
-asgi_app = SentryAsgiMiddleware(app)
+if "pytest" not in sys.modules:
+    sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.2)
+    app = cast(FastAPI, SentryAsgiMiddleware(app))
