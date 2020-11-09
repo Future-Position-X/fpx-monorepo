@@ -321,15 +321,13 @@ export default {
         }
       }
     },
-    itemRemovedFromMap(_item) {
-      /*
-      We need to figure out how to remove the thing from the right collection, also what to do if that collection isn't the active one
+    itemRemovedFromMap(item) {
+      // We need to figure out how to remove the thing from the right collection, also what to do if that collection isn't the active one
       modify.onItemRemoved(this.modCtx, item);
       const fc = this.geojson[this.activeId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.updateCodeView(fc);
-       */
     },
     itemAddedToMap(item) {
       modify.onItemAdded(this.modCtx, item);

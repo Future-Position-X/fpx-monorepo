@@ -14,7 +14,7 @@
         v-for="layer in layers"
         v-bind:key="layer.id"
         :geojson="layer.geojson"
-        :options="geoJsonOptions(layer)"
+        :options="geoJsonOptions(layer, activeId)"
         :options-style="styleFunction(layer)"
         @rendered="onRendered"
       />
@@ -23,6 +23,7 @@
 </template>
 
 <script>
+/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax */
 import * as L from 'leaflet';
 import { LMap, LTileLayer } from 'vue2-leaflet';
 import svgMarker from '../vendor/svg-icon';
@@ -52,7 +53,7 @@ export default {
     LTileLayer,
     GiaGeoJson,
   },
-  props: ['geojson'],
+  props: ['geojson', 'activeId'],
   data() {
     return {
       zoom: 16,
@@ -133,14 +134,15 @@ export default {
         fillOpacity: 0.3 + Math.random() * 0.05,
       };
     },
-    geoJsonOptions(layer) {
-      console.debug("geoJsonOptions");
+    geoJsonOptions(layer, activeId) {
+      console.debug("geoJsonOptions", layer);
       return {
         // onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
           return svgMarker(latlng, this.pointStyle(layer));
         },
         layer,
+        active: layer.id === activeId,
       };
     },
     styleFunction(layer) {
@@ -155,6 +157,13 @@ export default {
     },
   },
   watch: {
+    activeId: {
+      handler() {
+        if(this.$refs.theMap.mapObject.pm !== undefined) {
+          this.$refs.theMap.mapObject.pm.disableGlobalEditMode();
+        }
+      }
+    },
     geojson: {
       handler() {
         console.debug('map.watch.geojson.handler');
@@ -176,40 +185,51 @@ export default {
     console.debug('Map mounted');
     this.$nextTick(() => {
       const map = this.$refs.theMap.mapObject;
+
+      const edited = (ev) => {
+        console.debug('edit: ', ev);
+        if (ev.target.feature != null) {
+          this.$emit('itemModified', ev.target.toGeoJSON());
+        }
+      }
+
+      const dragged = (ev) => {
+        console.debug('dragedit: ', ev);
+        if (ev.target.feature != null) {
+          this.$emit('itemModified', ev.target.toGeoJSON());
+        }
+      }
+
       map.on('pm:globaldragmodetoggled', (e) => {
         console.debug('globaldragmodetoggled: ', e);
 
-        if (e.enabled) {
-          // TODO: Fix this
-          // eslint-disable-next-line guard-for-in,no-restricted-syntax,no-underscore-dangle
-          for (const id in e.map._layers) {
-            console.debug('id: ', id);
-            // eslint-disable-next-line no-underscore-dangle
-            e.map._layers[id].on('pm:edit', (ev) => {
-              console.debug('edit: ', ev);
-              if (ev.target.feature != null) {
-                this.$emit('itemModified', ev.target.toGeoJSON());
-              }
-            });
+        // TODO: Fix this
+        // eslint-disable-next-line guard-for-in,no-restricted-syntax
+        for (const id in e.map._layers) {
+          // console.debug('dragged id: ', id);
+          if (e.enabled) {
+            e.map._layers[id].on('pm:edit', dragged);
+          } else {
+            e.map._layers[id].off('pm:edit', dragged);
           }
         }
       });
+
+
 
       map.on('pm:globaleditmodetoggled', (e) => {
         console.debug('globaleditmodetoggled: ', e);
 
         if (e.enabled) {
           // TODO: Fix this
-          // eslint-disable-next-line guard-for-in,no-restricted-syntax,no-underscore-dangle
+          // eslint-disable-next-line guard-for-in,no-restricted-syntax
           for (const id in e.map._layers) {
-            console.debug('id: ', id);
-            // eslint-disable-next-line no-underscore-dangle
-            e.map._layers[id].on('pm:edit', (ev) => {
-              console.debug('edit: ', ev);
-              if (ev.target.feature != null) {
-                this.$emit('itemModified', ev.target.toGeoJSON());
-              }
-            });
+            // console.debug('edited id: ', id);
+            if (e.enabled) {
+              e.map._layers[id].on('pm:edit', edited);
+            } else {
+              e.map._layers[id].off('pm:edit', edited);
+            }
           }
         }
       });

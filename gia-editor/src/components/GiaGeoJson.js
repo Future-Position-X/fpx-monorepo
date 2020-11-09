@@ -1,3 +1,4 @@
+/* eslint-disable no-return-assign,no-param-reassign,no-underscore-dangle */
 import {
   optionsMerger,
   propsBinder,
@@ -88,6 +89,10 @@ export default {
       console.timeEnd('switchLayers removeLayer');
       console.time('switchLayers geoJSON');
       this.mapObject = geoJSON(newVal, this.mergedOptions);
+      this.mapObject.pm.pmIgnore = true;
+      this.mapObject.pm._layers.forEach((l) => {
+        l.pm.pmIgnore = true
+      });
       console.timeEnd('switchLayers geoJSON');
       DomEvent.on(this.mapObject, this.$listeners);
       console.time('switchLayers addLayer');
@@ -114,7 +119,14 @@ export default {
       return this.mapObject.getBounds();
     },
     setOptions(_newVal, _oldVal) {
-      console.debug('setOptions');
+      console.debug('setOptions', typeof this.mapObject);
+      this.mapObject.pm.pmIgnore = !_newVal.active;
+      // this.mapObject.pm.disable()
+      this.mapObject.pm._layers.forEach((l) => {
+        l.pm.pmIgnore = !_newVal.active
+        // l.pm.disable()
+      });
+
       /*
       this.mapObject.clearLayers();
       console.debug("setOptions layers cleared")
