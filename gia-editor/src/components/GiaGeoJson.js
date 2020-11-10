@@ -89,9 +89,9 @@ export default {
       console.timeEnd('switchLayers removeLayer');
       console.time('switchLayers geoJSON');
       this.mapObject = geoJSON(newVal, this.mergedOptions);
-      this.mapObject.pm.pmIgnore = true;
+      this.mapObject.options.pmLock = true;
       this.mapObject.pm._layers.forEach((l) => {
-        l.pm.pmIgnore = true
+        l.options.pmLock = true
       });
       console.timeEnd('switchLayers geoJSON');
       DomEvent.on(this.mapObject, this.$listeners);
@@ -120,11 +120,9 @@ export default {
     },
     setOptions(_newVal, _oldVal) {
       console.debug('setOptions', typeof this.mapObject);
-      this.mapObject.pm.pmIgnore = !_newVal.active;
-      // this.mapObject.pm.disable()
+      this.mapObject.options.pmLock = !_newVal.active;
       this.mapObject.pm._layers.forEach((l) => {
-        l.pm.pmIgnore = !_newVal.active
-        // l.pm.disable()
+        l.options.pmLock = !_newVal.active
       });
 
       /*

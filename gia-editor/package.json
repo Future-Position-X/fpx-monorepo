@@ -8,7 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@geoman-io/leaflet-geoman-free": "git+https://github.com/Future-Position-X/leaflet-geoman.git",
+    "@geoman-io/leaflet-geoman-free": "^2.7.0",
     "@mdi/font": "^5.2.45",
     "core-js": "^3.6.4",
     "debounce-async": "0.0.2",

@@ -35,6 +35,8 @@ import 'leaflet/dist/leaflet.css';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
+import '../vendor/pmLock';
+
 // eslint-disable-next-line no-underscore-dangle
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -146,9 +148,7 @@ export default {
       };
     },
     styleFunction(layer) {
-      console.debug("styleFunction");
       return () => {
-        console.debug("styleFunction inner");
         if (layer.geojson.features[0].geometry.type === 'Point') {
           return this.pointStyle(layer);
         }
@@ -185,6 +185,9 @@ export default {
     console.debug('Map mounted');
     this.$nextTick(() => {
       const map = this.$refs.theMap.mapObject;
+
+      // eslint-disable-next-line no-unused-vars
+      const pmLock = new L.PMLock(map, {showControl: false})
 
       const edited = (ev) => {
         console.debug('edit: ', ev);
