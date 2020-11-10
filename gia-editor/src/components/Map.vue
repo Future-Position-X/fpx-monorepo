@@ -17,6 +17,7 @@
         :options="geoJsonOptions(layer, activeId)"
         :options-style="styleFunction(layer)"
         @rendered="onRendered"
+        @edit="onEdit"
       />
     </l-map>
   </div>
@@ -75,6 +76,10 @@ export default {
     onRendered(id) {
       this.$emit('rendered', id);
     },
+    onEdit(e) {
+      console.debug(e);
+      this.$emit('itemModified', e.sourceTarget.toGeoJSON());
+    },
     boundsUpdate(bounds) {
       this.$emit('boundsUpdate', bounds);
     },
@@ -116,7 +121,6 @@ export default {
       };
     },
     pointStyle(layer) {
-      console.debug("pointStyle");
       return {
         weight: 1,
         color: layer.color,
@@ -127,7 +131,6 @@ export default {
       };
     },
     style(layer) {
-      console.debug("style");
       return {
         weight: 1,
         color: '#333',
@@ -188,55 +191,7 @@ export default {
 
       // eslint-disable-next-line no-unused-vars
       const pmLock = new L.PMLock(map, {showControl: false})
-
-      const edited = (ev) => {
-        console.debug('edit: ', ev);
-        if (ev.target.feature != null) {
-          this.$emit('itemModified', ev.target.toGeoJSON());
-        }
-      }
-
-      const dragged = (ev) => {
-        console.debug('dragedit: ', ev);
-        if (ev.target.feature != null) {
-          this.$emit('itemModified', ev.target.toGeoJSON());
-        }
-      }
-
-      map.on('pm:globaldragmodetoggled', (e) => {
-        console.debug('globaldragmodetoggled: ', e);
-
-        // TODO: Fix this
-        // eslint-disable-next-line guard-for-in,no-restricted-syntax
-        for (const id in e.map._layers) {
-          // console.debug('dragged id: ', id);
-          if (e.enabled) {
-            e.map._layers[id].on('pm:edit', dragged);
-          } else {
-            e.map._layers[id].off('pm:edit', dragged);
-          }
-        }
-      });
-
-
-
-      map.on('pm:globaleditmodetoggled', (e) => {
-        console.debug('globaleditmodetoggled: ', e);
-
-        if (e.enabled) {
-          // TODO: Fix this
-          // eslint-disable-next-line guard-for-in,no-restricted-syntax
-          for (const id in e.map._layers) {
-            // console.debug('edited id: ', id);
-            if (e.enabled) {
-              e.map._layers[id].on('pm:edit', edited);
-            } else {
-              e.map._layers[id].off('pm:edit', edited);
-            }
-          }
-        }
-      });
-
+      
       map.on('pm:remove', (layerEvent) => {
         console.debug(layerEvent)
         const item = layerEvent.layer.feature;

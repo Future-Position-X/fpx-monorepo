@@ -147,6 +147,8 @@
 // import Table from "./components/Table.vue";
 import leafletImage from 'leaflet-image';
 import debounce from 'debounce-async';
+import cloneDeep from 'lodash.clonedeep';
+import { v4 as uuidv4 } from 'uuid';
 import Map from './components/Map.vue';
 import Code from './components/Code.vue';
 import Tree from './components/Tree.vue';
@@ -240,7 +242,8 @@ export default {
         color: this.collectionColors[id],
         geojson,
       });
-      this.orgGeojson[id] = geojson
+      // eslint-disable-next-line prefer-object-spread
+      this.orgGeojson[id] = cloneDeep(geojson);
       console.debug('$set geojson');
     },
     deleteGeoJson(id) {
@@ -322,23 +325,30 @@ export default {
       }
     },
     itemRemovedFromMap(item) {
-      // We need to figure out how to remove the thing from the right collection, also what to do if that collection isn't the active one
-      modify.onItemRemoved(this.modCtx, item);
+      console.debug("itemRemovedFromMap");
       const fc = this.geojson[this.activeId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
       this.updateCodeView(fc);
     },
     itemAddedToMap(item) {
-      modify.onItemAdded(this.modCtx, item);
+      console.debug("itemAddedToMap")
       const fc = this.geojson[this.activeId].geojson;
-      fc.features.push(item);
+      fc.features.push({...item, id: `tmp_${uuidv4()}`});
       // Update the map with the new Item
       this.updateCodeView(fc);
     },
     itemModified(item) {
-      console.debug("itemModified");
-      modify.onItemModified(this.modCtx, item);
+      console.debug("itemModified", item);
+      const fc = this.geojson[this.activeId].geojson;
+      if(item.id) {
+        const oldItem = fc.features.find((f) => f.id === item.id);
+        if (oldItem) {
+          oldItem.type = item.type;
+          oldItem.geometry = item.geometry;
+          oldItem.properties = item.properties;
+        }
+      }
     },
     async onSaveClick() {
       await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));

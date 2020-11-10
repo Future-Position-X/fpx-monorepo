@@ -59,11 +59,14 @@ export default {
   async commit(orgGeojson, geojson, collectionId) {
     const promises = [];
     const geojsonIds = geojson.features.map((f) => f.id);
+    const orgGeojsonIds = orgGeojson.features.map((f) => f.id);
+    console.debug("ids", orgGeojsonIds, geojsonIds);
     const itemsToDelete = orgGeojson.features.filter((f) => !geojsonIds.includes(f.id))
     console.debug("itemsToDelete", itemsToDelete);
     if(itemsToDelete.length > 0) promises.push(collection.removeItems(itemsToDelete));
 
-    const itemsToCreate = geojson.features.filter((f) => f.id === undefined);
+    // eslint-disable-next-line no-param-reassign
+    const itemsToCreate = geojson.features.filter((f) => (f.id === undefined || (f.id.startsWith('tmp_') && delete f.id)));
     console.debug("itemsToCreate", itemsToCreate);
     if(itemsToCreate.length > 0) promises.push(collection.addItems(collectionId, itemsToCreate));
 

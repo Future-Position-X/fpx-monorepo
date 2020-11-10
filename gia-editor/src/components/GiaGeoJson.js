@@ -48,6 +48,7 @@ export default {
     console.time('GiaGeoJson mount');
     this.mapObject = geoJSON(this.geojson, this.mergedOptions);
     DomEvent.on(this.mapObject, this.$listeners);
+    this.mapObject.on("pm:edit", (e) => this.editEventProxy(e))
     propsBinder(this, this.mapObject, this.$options.props);
     this.parentContainer = findRealParent(this.$parent, true);
     this.parentContainer.addLayer(this, !this.visible);
@@ -77,6 +78,9 @@ export default {
     },
   },
   methods: {
+    editEventProxy(e) {
+      this.$emit("edit", e);
+    },
     setGeojson(_newVal) {
       console.debug('setGeojson');
       // this.switchLayers(newVal)
@@ -85,6 +89,7 @@ export default {
     switchLayers(newVal) {
       console.debug('switchLayers');
       console.time('switchLayers removeLayer');
+      // eslint-disable-next-line no-undef
       this.parentContainer.mapObject.removeLayer(this.mapObject);
       console.timeEnd('switchLayers removeLayer');
       console.time('switchLayers geoJSON');
@@ -95,6 +100,7 @@ export default {
       });
       console.timeEnd('switchLayers geoJSON');
       DomEvent.on(this.mapObject, this.$listeners);
+      this.mapObject.on("pm:edit", (e) => this.editEventProxy(e))
       console.time('switchLayers addLayer');
       this.parentContainer.addLayer(this, !this.visible);
       console.timeEnd('switchLayers addLayer');
