@@ -129,7 +129,7 @@
               Collection name: <span>{{ activeCollection && activeCollection.name }}</span>
             </div>
             <div class="my-2 save-button">
-              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated"
+              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated || !(zoom >= 16) || !dirty"
                 >Save modifications</v-btn
               >
             </div>
@@ -194,6 +194,7 @@ export default {
       collections: [],
       dataBounds: null,
       deleteConfirmationContent: null,
+      dirty: false,
       email: null,
       fetchController: null,
       geojson: {},
@@ -217,6 +218,7 @@ export default {
     geojsonUpdateFromCode(geojson) {
       console.debug('geojsonUpdateFromCode');
       this.geojson[this.activeId].geojson = geojson;
+      this.dirty = true
     },
     geojsonUpdateFromMap(geojson) {
       console.debug('geojsonUpdateFromMap');
@@ -329,14 +331,16 @@ export default {
       const fc = this.geojson[this.activeId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
-      this.updateCodeView(fc);
+      // this.updateCodeView(fc);
+      this.dirty = true;
     },
     itemAddedToMap(item) {
       console.debug("itemAddedToMap")
       const fc = this.geojson[this.activeId].geojson;
       fc.features.push({...item, id: `tmp_${uuidv4()}`});
       // Update the map with the new Item
-      this.updateCodeView(fc);
+      // this.updateCodeView(fc);
+      this.dirty = true;
     },
     itemModified(item) {
       console.debug("itemModified", item);
@@ -349,6 +353,7 @@ export default {
           oldItem.properties = item.properties;
         }
       }
+      this.dirty = true;
     },
     async onSaveClick() {
       await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));
@@ -492,7 +497,7 @@ export default {
         }
       }
       this.dataBounds = dataBounds;
-
+      this.dirty = false;
       if(this.activeId !== null) {
         this.activeCollection = this.collections.find((c) => c.uuid === this.activeId);
         this.updateCodeView(this.geojson[this.activeId].geojson);
