@@ -191,7 +191,7 @@ export default {
 
       // eslint-disable-next-line no-unused-vars
       const pmLock = new L.PMLock(map, {showControl: false})
-      
+
       map.on('pm:remove', (layerEvent) => {
         console.debug(layerEvent)
         const item = layerEvent.layer.feature;

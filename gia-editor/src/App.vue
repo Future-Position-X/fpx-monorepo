@@ -505,7 +505,8 @@ export default {
       this.email = process.env.VUE_APP_EMAIL;
       this.password = process.env.VUE_APP_PASSWORD;
     }
-
+    session.load();
+    this.authenticated = session.authenticated();
     await this.showAvailableCollections();
   },
 };
