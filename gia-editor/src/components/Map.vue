@@ -14,15 +14,17 @@
         v-for="layer in layers"
         v-bind:key="layer.id"
         :geojson="layer.geojson"
-        :options="geoJsonOptions(layer)"
+        :options="geoJsonOptions(layer, activeId)"
         :options-style="styleFunction(layer)"
         @rendered="onRendered"
+        @edit="onEdit"
       />
     </l-map>
   </div>
 </template>
 
 <script>
+/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
 import * as L from 'leaflet';
 import { LMap, LTileLayer } from 'vue2-leaflet';
 import svgMarker from '../vendor/svg-icon';
@@ -34,14 +36,12 @@ import 'leaflet/dist/leaflet.css';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
-// eslint-disable-next-line no-underscore-dangle
+import '../vendor/pmLock';
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  // eslint-disable-next-line global-require
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  // eslint-disable-next-line global-require
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  // eslint-disable-next-line global-require
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
@@ -52,7 +52,7 @@ export default {
     LTileLayer,
     GiaGeoJson,
   },
-  props: ['geojson'],
+  props: ['geojson', 'activeId'],
   data() {
     return {
       zoom: 16,
@@ -62,19 +62,28 @@ export default {
       // url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       url: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
       attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      toolbarOptions: {
+        drawCircle: false,
+        drawCircleMarker: false,
+      }
     };
   },
   methods: {
     onRendered(id) {
       this.$emit('rendered', id);
     },
+    onEdit(e) {
+      console.debug(e);
+      this.$emit('itemModified', e.sourceTarget.toGeoJSON());
+    },
     boundsUpdate(bounds) {
       this.$emit('boundsUpdate', bounds);
     },
     zoomUpdate(zoom) {
+      console.debug("zoomUpdate");
       if (this.$refs.theMap.mapObject.pm !== undefined) {
         if (zoom >= 16 && (this.layers && this.layers.length >= 1)) {
-          this.$refs.theMap.mapObject.pm.addControls();
+          this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
         } else {
           this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
           this.$refs.theMap.mapObject.pm.removeControls();
@@ -84,9 +93,7 @@ export default {
     },
     getDataBounds() {
       const map = this.$refs.theMap.mapObject;
-      // eslint-disable-next-line no-underscore-dangle
       let swCoord = map.getBounds()._southWest;
-      // eslint-disable-next-line no-underscore-dangle
       let neCoord = map.getBounds()._northEast;
 
       const swPoint = map.project(swCoord, map.getZoom()).subtract(map.getPixelOrigin());
@@ -126,13 +133,15 @@ export default {
         fillOpacity: 0.3 + Math.random() * 0.05,
       };
     },
-    geoJsonOptions(layer) {
+    geoJsonOptions(layer, activeId) {
+      console.debug("geoJsonOptions", layer);
       return {
         // onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
           return svgMarker(latlng, this.pointStyle(layer));
         },
         layer,
+        active: layer.id === activeId,
       };
     },
     styleFunction(layer) {
@@ -145,14 +154,21 @@ export default {
     },
   },
   watch: {
+    activeId: {
+      handler() {
+        if(this.$refs.theMap.mapObject.pm !== undefined) {
+          this.$refs.theMap.mapObject.pm.disableGlobalEditMode();
+        }
+      }
+    },
     geojson: {
       handler() {
-        console.debug('geojson updated');
+        console.debug('map.watch.geojson.handler');
         const layers = Object.values(this.geojson);
         this.layers = layers;
         if (this.$refs.theMap.mapObject.pm !== undefined) {
           if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1)) {
-            this.$refs.theMap.mapObject.pm.addControls();
+            this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
           } else {
             this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
             this.$refs.theMap.mapObject.pm.removeControls();
@@ -166,45 +182,12 @@ export default {
     console.debug('Map mounted');
     this.$nextTick(() => {
       const map = this.$refs.theMap.mapObject;
-      map.on('pm:globaldragmodetoggled', (e) => {
-        console.debug('globaldragmodetoggled: ', e);
 
-        if (e.enabled) {
-          // TODO: Fix this
-          // eslint-disable-next-line guard-for-in,no-restricted-syntax,no-underscore-dangle
-          for (const id in e.map._layers) {
-            console.debug('id: ', id);
-            // eslint-disable-next-line no-underscore-dangle
-            e.map._layers[id].on('pm:edit', (ev) => {
-              console.debug('edit: ', ev);
-              if (ev.target.feature != null) {
-                this.$emit('itemModified', ev.target.toGeoJSON());
-              }
-            });
-          }
-        }
-      });
-
-      map.on('pm:globaleditmodetoggled', (e) => {
-        console.debug('globaleditmodetoggled: ', e);
-
-        if (e.enabled) {
-          // TODO: Fix this
-          // eslint-disable-next-line guard-for-in,no-restricted-syntax,no-underscore-dangle
-          for (const id in e.map._layers) {
-            console.debug('id: ', id);
-            // eslint-disable-next-line no-underscore-dangle
-            e.map._layers[id].on('pm:edit', (ev) => {
-              console.debug('edit: ', ev);
-              if (ev.target.feature != null) {
-                this.$emit('itemModified', ev.target.toGeoJSON());
-              }
-            });
-          }
-        }
-      });
+      // eslint-disable-next-line no-unused-vars
+      const pmLock = new L.PMLock(map, {showControl: false})
 
       map.on('pm:remove', (layerEvent) => {
+        console.debug(layerEvent)
         const item = layerEvent.layer.feature;
 
         if (item != null) {
@@ -218,6 +201,7 @@ export default {
         if (feature != null) {
           this.$emit('itemAdded', feature);
         }
+        map.removeLayer(layerEvent.layer);
       });
     });
   },

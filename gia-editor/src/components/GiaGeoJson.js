@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import {
   optionsMerger,
   propsBinder,
@@ -47,6 +48,7 @@ export default {
     console.time('GiaGeoJson mount');
     this.mapObject = geoJSON(this.geojson, this.mergedOptions);
     DomEvent.on(this.mapObject, this.$listeners);
+    this.mapObject.on("pm:edit", (e) => this.editEventProxy(e))
     propsBinder(this, this.mapObject, this.$options.props);
     this.parentContainer = findRealParent(this.$parent, true);
     this.parentContainer.addLayer(this, !this.visible);
@@ -72,9 +74,13 @@ export default {
         console.debug('GiaGeoJson geojson watch');
         this.switchLayers(val);
       },
+      deep: true,
     },
   },
   methods: {
+    editEventProxy(e) {
+      this.$emit("edit", e);
+    },
     setGeojson(_newVal) {
       console.debug('setGeojson');
       // this.switchLayers(newVal)
@@ -87,8 +93,14 @@ export default {
       console.timeEnd('switchLayers removeLayer');
       console.time('switchLayers geoJSON');
       this.mapObject = geoJSON(newVal, this.mergedOptions);
+      this.mapObject.options.pmLock = true;
+      this.mapObject.pm._layers.forEach((l) => {
+        // eslint-disable-next-line no-param-reassign
+        l.options.pmLock = true
+      });
       console.timeEnd('switchLayers geoJSON');
       DomEvent.on(this.mapObject, this.$listeners);
+      this.mapObject.on("pm:edit", (e) => this.editEventProxy(e))
       console.time('switchLayers addLayer');
       this.parentContainer.addLayer(this, !this.visible);
       console.timeEnd('switchLayers addLayer');
@@ -113,7 +125,13 @@ export default {
       return this.mapObject.getBounds();
     },
     setOptions(_newVal, _oldVal) {
-      console.debug('setOptions');
+      console.debug('setOptions', typeof this.mapObject);
+      this.mapObject.options.pmLock = !_newVal.active;
+      this.mapObject.pm._layers.forEach((l) => {
+        // eslint-disable-next-line no-param-reassign
+        l.options.pmLock = !_newVal.active
+      });
+
       /*
       this.mapObject.clearLayers();
       console.debug("setOptions layers cleared")

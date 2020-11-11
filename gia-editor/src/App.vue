@@ -7,7 +7,7 @@
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
-              @updateCodeView="onUpdateCodeView"
+              @activeUpdate="activeUpdate"
               ref="collectionTree"
             />
             <div class="my-2 export-image-button ma-3 flex-grow-0 flex-shrink-0">
@@ -99,6 +99,7 @@
               v-show="!showDeleteConfirmationDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
+              v-bind:activeId="activeId"
               @geojsonUpdate="geojsonUpdateFromMap"
               @boundsUpdate="boundsUpdate"
               @itemRemoved="itemRemovedFromMap"
@@ -121,14 +122,14 @@
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
               <v-tab-item style="display: flex; flex-direction: column; flex: 1">
-                <Code v-bind:code="code" style="display: flex; flex-direction: column; flex: 1" />
+                <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
               </v-tab-item>
             </v-tabs>
             <div class="selectedCollectionName">
-              Collection name: <span>{{selectedCollection && selectedCollection.name}}</span>
+              Collection name: <span>{{ activeCollection && activeCollection.name }}</span>
             </div>
             <div class="my-2 save-button">
-              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated"
+              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated || !(zoom >= 16) || !dirty"
                 >Save modifications</v-btn
               >
             </div>
@@ -143,9 +144,13 @@
 </template>
 
 <script>
+/* eslint-disable no-underscore-dangle,no-restricted-syntax,no-await-in-loop */
+
 // import Table from "./components/Table.vue";
 import leafletImage from 'leaflet-image';
 import debounce from 'debounce-async';
+import cloneDeep from 'lodash.clonedeep';
+import { v4 as uuidv4 } from 'uuid';
 import Map from './components/Map.vue';
 import Code from './components/Code.vue';
 import Tree from './components/Tree.vue';
@@ -180,52 +185,50 @@ export default {
   },
   data() {
     return {
-      code: '',
-      zoom: 16,
-      collections: [],
-      sortedCollections: [],
-      geojson: {},
-      renderedCollections: [],
-      selectedCollection: null,
+      activeCollection: null,
+      activeId: null,
+      alerts: [],
+      authenticated: false,
       bounds: null,
+      code: '',
+      collectionColors: {},
+      collectionName: null,
+      collections: [],
       dataBounds: null,
+      deleteConfirmationContent: null,
+      dirty: false,
+      email: null,
       fetchController: null,
-      isFetchingItems: false,
+      geojson: {},
       isLoading: false,
       isLoadingUuids: new Set(),
-      collectionName: null,
       isPublicCollection: false,
-      collectionColors: {},
-      modCtx: modify.createContext(),
-      showDeleteConfirmationDialog: false,
-      deleteConfirmationContent: null,
-      authenticated: false,
-      email: null,
+      orgGeojson: {},
       password: null,
+      renderedCollections: [],
+      showDeleteConfirmationDialog: false,
       showPassword: false,
-      alerts: [],
+      sortedCollections: [],
+      zoom: 16,
     };
   },
   watch: {
-    selectedCollection(val) {
-      console.debug('selectedCollection');
-      const geojson = val == null ? {} : this.geojson[val.uuid].geojson;
-      this.updateCodeView(geojson);
-    },
+
   },
   methods: {
     geojsonUpdateFromCode(geojson) {
       console.debug('geojsonUpdateFromCode');
-      this.geojson = geojson;
+      this.geojson[this.activeId].geojson = geojson;
+      this.dirty = true
     },
     geojsonUpdateFromMap(geojson) {
       console.debug('geojsonUpdateFromMap');
       this.updateCodeView(geojson);
     },
     onRendered(id) {
-      console.debug('onRendered');
+      console.debug('onRendered', id);
       this.isLoadingUuids.delete(id);
-      this.isLoading = this.isLoadingUuids.length > 0;
+      this.isLoading = this.isLoadingUuids.size > 0;
     },
     updateCodeView(val) {
       console.debug('update code view');
@@ -236,33 +239,49 @@ export default {
         this.code = val;
       }
     },
+    setGeoJson(id, geojson) {
+      this.$set(this.geojson, id, {
+        id,
+        color: this.collectionColors[id],
+        geojson,
+      });
+      this.orgGeojson[id] = cloneDeep(geojson);
+      console.debug('$set geojson');
+    },
+    deleteGeoJson(id) {
+      this.$delete(this.geojson, id);
+      delete this.orgGeojson[id];
+    },
     async selectionUpdate(ids) {
+      console.debug('selectionUpdate', ids);
       let index = -1;
       this.renderedCollections.forEach((c) => {
         if (!ids.includes(c.uuid)) {
-          if (this.selectedCollection === c) {
-            this.selectedCollection = null;
-          }
-
           index = this.renderedCollections.indexOf(c);
-          this.$delete(this.geojson, c.uuid);
+          this.deleteGeoJson(c.uuid)
         }
       });
       this.renderedCollections.splice(index, 1);
-      console.debug('selectionUpdate');
       await this.fetchGeoJson(
         ids.filter((id) => !this.renderedCollections.some((c) => c.uuid === id))
       );
       this.updateFetchedCollections(ids);
     },
+    async activeUpdate(id) {
+      console.debug("activeUpdate", id);
+      this.activeId = id;
+      if(id === null) {
+        this.activeCollection = null;
+        this.updateCodeView({});
+        return;
+      }
+      if(this.isLoadingUuids.size > 0) return;
+      this.activeCollection = this.collections.find((c) => c.uuid === id);
+      this.updateCodeView(this.geojson[id].geojson);
+    },
     updateFetchedCollections(ids) {
       console.debug('updateFetchedCollections');
       this.renderedCollections = this.collections.filter((c) => ids.some((id) => id === c.uuid));
-      [this.selectedCollection] = this.collections.filter((c) => c.uuid === ids[ids.length - 1]);
-    },
-    onUpdateCodeView(selectedCollection) {
-      console.debug('onUpdateCodeView');
-      this.selectedCollection = selectedCollection;
     },
     zoomUpdate(zoom) {
       if (this.zoom !== zoom) {
@@ -280,13 +299,9 @@ export default {
     },
     boundsUpdate(bounds) {
       this.bounds = {
-        // eslint-disable-next-line no-underscore-dangle
         minX: bounds._southWest.lng,
-        // eslint-disable-next-line no-underscore-dangle
         minY: bounds._southWest.lat,
-        // eslint-disable-next-line no-underscore-dangle
         maxX: bounds._northEast.lng,
-        // eslint-disable-next-line no-underscore-dangle
         maxY: bounds._northEast.lat,
       };
 
@@ -308,29 +323,34 @@ export default {
       }
     },
     itemRemovedFromMap(item) {
-      modify.onItemRemoved(this.modCtx, item);
-      const fc = this.geojson[this.selectedCollection.uuid].geojson;
+      console.debug("itemRemovedFromMap");
+      const fc = this.geojson[this.activeId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
-      this.updateCodeView(fc);
+      this.dirty = true;
     },
     itemAddedToMap(item) {
-      modify.onItemAdded(this.modCtx, item);
-      const fc = this.geojson[this.selectedCollection.uuid].geojson;
-      fc.features.push(item);
-      this.updateCodeView(fc);
+      console.debug("itemAddedToMap")
+      const fc = this.geojson[this.activeId].geojson;
+      fc.features.push({...item, id: `tmp_${uuidv4()}`});
+      this.dirty = true;
     },
     itemModified(item) {
-      console.debug("itemModified");
-      modify.onItemModified(this.modCtx, item);
+      console.debug("itemModified", item);
+      const fc = this.geojson[this.activeId].geojson;
+      if(item.id) {
+        const oldItem = fc.features.find((f) => f.id === item.id);
+        if (oldItem) {
+          oldItem.type = item.type;
+          oldItem.geometry = item.geometry;
+          oldItem.properties = item.properties;
+        }
+      }
+      this.dirty = true;
     },
     async onSaveClick() {
-      await modify
-        .commit(this.modCtx, this.selectedCollection.uuid)
-        .then(() => {
-          this.modCtx = modify.createContext();
-        })
-        .catch((error) => console.error('backend error: ', error));
+      await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));
+      await this.fetchGeoJson([this.activeId]);
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
@@ -351,11 +371,7 @@ export default {
     async onConfirmDeleteCollections() {
       this.showDeleteConfirmationDialog = false;
 
-      // TODO: Fix
-      // eslint-disable-next-line no-restricted-syntax
       for (const coll of this.renderedCollections) {
-        // TODO: Fix
-        // eslint-disable-next-line no-await-in-loop
         await collection.remove(coll.uuid);
         this.$refs.collectionTree.removeCollection(coll);
       }
@@ -379,7 +395,6 @@ export default {
       const sortedCollections = groupBy(this.collections, 'name');
       const len = Object.keys(sortedCollections).length;
       let i = 1;
-      // eslint-disable-next-line no-restricted-syntax
       for (let value of Object.values(sortedCollections)) {
         const color = selectColor(i, len);
         value = value.map((c) => {
@@ -434,6 +449,7 @@ export default {
     async fetchGeoJson(ids) {
       console.debug('fetchGeoJson');
       this.isLoading = ids.length > 0 || this.isLoading;
+      ids.forEach((id) => this.isLoadingUuids.add(id));
       if (this.debouncedDoFetchGeoJson === undefined) {
         this.debouncedDoFetchGeoJson = debounce(this.doFetchGeoJson, 100);
       }
@@ -442,6 +458,7 @@ export default {
       } catch (err) {
         console.error(err);
       }
+
     },
     async doFetchGeoJson(ids) {
       console.debug('doFetchGeoJson');
@@ -454,19 +471,10 @@ export default {
       const dataBounds = this.$refs.leafletMap.getDataBounds();
       const simplify = this.zoom >= 16 ? 0.0 : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
 
-      // eslint-disable-next-line no-restricted-syntax
       for (const id of ids) {
-        this.isLoadingUuids.add(id);
         try {
-          // eslint-disable-next-line no-await-in-loop
           const data = await collection.fetchItems(signal, id, dataBounds, simplify);
-
-          this.$set(this.geojson, id, {
-            id,
-            color: this.collectionColors[id],
-            geojson: data,
-          });
-          console.debug('$set geojson');
+          this.setGeoJson(id, data);
         } catch (err) {
           console.error(err);
           this.isLoadingUuids.delete(id);
@@ -474,7 +482,11 @@ export default {
         }
       }
       this.dataBounds = dataBounds;
-      this.isFetchingItems = false;
+      this.dirty = false;
+      if(this.activeId !== null) {
+        this.activeCollection = this.collections.find((c) => c.uuid === this.activeId);
+        this.updateCodeView(this.geojson[this.activeId].geojson);
+      }
     },
   },
 
@@ -483,7 +495,8 @@ export default {
       this.email = process.env.VUE_APP_EMAIL;
       this.password = process.env.VUE_APP_PASSWORD;
     }
-
+    session.load();
+    this.authenticated = session.authenticated();
     await this.showAvailableCollections();
   },
 };

@@ -24,13 +24,33 @@ export default {
 
     this.token = (await response.json()).access_token;
     this.user = await this.getUser();
+    const sessionObject = {
+      token: this.token,
+      user: this.user,
+    }
+    sessionStorage.setItem('sessionObject', JSON.stringify(sessionObject));
+  },
+  load() {
+    const sessionObjectStr = sessionStorage.getItem('sessionObject');
+    if(sessionObjectStr) {
+      const sessionObject = JSON.parse(sessionObjectStr);
+      this.setToken(sessionObject.token);
+      this.setUser(sessionObject.user);
+    }
   },
   clear() {
     this.token = null;
     this.user = null;
+    sessionStorage.removeItem("sessionObject");
   },
   authenticated() {
     return !!this.token;
+  },
+  setToken(token) {
+    this.token = token;
+  },
+  setUser(user) {
+    this.user = user;
   },
   async getUser() {
     const headers = {

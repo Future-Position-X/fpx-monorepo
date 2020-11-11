@@ -123,10 +123,12 @@ describe('Tree', () => {
     it('should render $checkboxOn when item is selected', async () => {
       const wrapper = mount(Tree);
       await wrapper.setProps({ sortedCollections });
-      await wrapper
-        .findComponent({ name: 'v-treeview' })
-        .vm.updateSelected('Other collections', true);
-      expect(wrapper.text()).toContain('$checkboxOnOther collections');
+      const treeview = await wrapper.findComponent({ name: 'v-treeview' }).vm;
+      await treeview.updateOpen('Owned collections', false);
+      await treeview.updateOpen('Other collections', true);
+      await treeview.updateOpen('__test', true);
+      await treeview.updateSelected('daa0c041-e720-48ee-bd73-657c6ef55d25', true);
+      expect(wrapper.text()).toContain('$checkboxOn__test$subgroupgg');
       expect(wrapper.element).toMatchSnapshot();
     });
   });

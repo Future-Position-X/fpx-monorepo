@@ -1,33 +1,41 @@
 <template>
-  <v-treeview
-    return-object
-    @input="selectionUpdate"
-    @update:active="onActiveUpdate"
-    :items="items"
-    selectable
-    activatable
-    :open.sync="open"
+  <CollectionTreeView
+      ref="treeview"
+      return-object
+      @input="onSelectionUpdate"
+      @update:active="onActiveUpdate"
+      :items="items"
+      selectable
+      activatable
+      :open.sync="open"
   >
     <template v-slot:append="{ item }">
       <v-icon :color="item.color">mdi-brightness-1</v-icon>
     </template>
-  </v-treeview>
+  </CollectionTreeView>
 </template>
 
 <script>
+import CollectionTreeView from "./CollectionTreeView.vue";
 import session from '../services/session';
 
 export default {
+  components: {CollectionTreeView},
   props: ['sortedCollections'],
   methods: {
+    click() {
+    },
     onActiveUpdate(activeCollections) {
-      const collection = activeCollections[0];
-
-      if (collection.editable) {
-        this.$emit('updateCodeView', collection);
+      console.debug("onActiveUpdate", activeCollections);
+      if (activeCollections.length >= 1) {
+        const collection = activeCollections[0];
+        this.$emit('activeUpdate', collection.uuid)
+      } else {
+        this.$emit('activeUpdate', null)
       }
     },
-    selectionUpdate(selectedItems) {
+    onSelectionUpdate(selectedItems) {
+      console.debug("onSelectionUpdate", selectedItems);
       const selectedUuids = selectedItems.filter((x) => !!x.uuid).map((x) => x.uuid);
       this.$emit('selectionUpdate', selectedUuids);
     },
@@ -37,7 +45,7 @@ export default {
       const saturation = 100;
       const color = `hsl(${(colorNum * (360 / colors)) % 360},${saturation}%,50%)`;
 
-      const newCollection = { ...collection, color, editable: true, id: collection.uuid };
+      const newCollection = {...collection, color, editable: true, id: collection.uuid};
 
       const item = {
         id: newCollection.name,
@@ -67,9 +75,13 @@ export default {
           color: '#FFF',
           provider_uuid: value[0].provider_uuid,
           editable: false,
+          activatable: false,
+          selectable: false,
           children: value.map((e) => {
             e.id = e.uuid;
             e.editable = true;
+            e.activatable = true;
+            e.selectable = true;
             // e.name = e.provider_uuid;
             return e;
           }),
@@ -84,6 +96,8 @@ export default {
         name: 'Owned collections',
         color: '#FFF',
         editable: false,
+        activatable: false,
+        selectable: false,
         children: collections.filter((coll) => coll.provider_uuid === providerUuid),
       });
       this.items.push({
@@ -91,6 +105,8 @@ export default {
         name: 'Other collections',
         color: '#FFF',
         editable: false,
+        activatable: false,
+        selectable: false,
         children: collections.filter((coll) => coll.provider_uuid !== providerUuid),
       });
       this.open = ['Owned collections'];

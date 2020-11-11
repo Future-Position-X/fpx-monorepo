@@ -8,7 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@geoman-io/leaflet-geoman-free": "^2.5.0",
+    "@geoman-io/leaflet-geoman-free": "^2.7.0",
     "@mdi/font": "^5.2.45",
     "core-js": "^3.6.4",
     "debounce-async": "0.0.2",
@@ -16,7 +16,10 @@
     "jsoneditor": "^8.6.6",
     "leaflet": "^1.6.0",
     "leaflet-image": "^0.4.0",
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.isequal": "^4.5.0",
     "serverless-finch": "^2.5.2",
+    "uuid": "^8.3.1",
     "vue": "^2.6.11",
     "vue2-leaflet": "^2.5.2",
     "vuetify": "^2.2.26"
@@ -39,6 +42,7 @@
     "eslint-plugin-jest": "^23.20.0",
     "eslint-plugin-vue": "^6.2.2",
     "jest": "^26.4.2",
+    "jest-css-modules": "^2.1.0",
     "prettier": "^2.1.0",
     "sass": "^1.19.0",
     "sass-loader": "^8.0.0",

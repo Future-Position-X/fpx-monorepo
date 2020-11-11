@@ -3,7 +3,7 @@
 </template>
 
 <script>
-// import gjv from "geojson-validation";
+import gjv from "geojson-validation";
 import JSONEditor from 'jsoneditor/dist/jsoneditor';
 import 'jsoneditor/dist/jsoneditor.min.css';
 
@@ -25,30 +25,26 @@ export default {
     },
   },
   methods: {
-    /* onCmCodeChange(newCode, changeObj) {
-      console.debug("codeChanged: ", changeObj);
-      if (changeObj.origin == "setValue") return;
+    onChangeText(jsonString) {
+      console.debug("onChange");
       try {
-        const newCodeParsed = JSON.parse(newCode);
-        if (gjv.valid(newCodeParsed)) {
-          console.debug("newCode is valid!");
-          this.$emit("geojsonUpdate", newCodeParsed);
+        const geojsonParsed = JSON.parse(jsonString);
+        if (gjv.valid(geojsonParsed)) {
+          console.debug("geojson is valid!");
+          this.$emit("geojsonUpdate", geojsonParsed);
         } else {
-          console.debug("newCode is NOT valid!");
+          console.debug("geojson is NOT valid!");
         }
       } catch (e) {
         console.debug(e.name);
       }
-    } */
-  },
-  onJsonChange() {
-    console.debug("onJsonChange");
+    },
   },
   mounted() {
     const container = this.$refs.jsoneditor;
     const options = {
       mode: 'code',
-      onChange: this.onJsonChange,
+      onChangeText: this.onChangeText,
     };
 
     this.editor = new JSONEditor(container, options);
