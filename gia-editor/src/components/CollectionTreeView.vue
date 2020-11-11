@@ -4,9 +4,6 @@ import CollectionTreeViewNode from "./CollectionTreeViewNode.vue";
 
 export default {
   extends: VTreeview,
-  methods: {
-
-  },
   render (h) {
     const children = this.items.length
         ? this.items.map(CollectionTreeViewNode.methods.genChild.bind(this))

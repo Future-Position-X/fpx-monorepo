@@ -1,7 +1,6 @@
 <script>
-import {VTreeviewNode} from "vuetify/lib/components/VTreeview"
+import {VTreeviewNode, VIcon} from "vuetify/lib";
 import {getObjectValueByPath} from "vuetify/lib/util/helpers";
-import {VIcon} from "vuetify/lib/components/VIcon/index";
 
 const CollectionTreeViewNode = {
   extends: VTreeviewNode,
