@@ -1,4 +1,4 @@
-/* eslint-disable no-return-assign,no-param-reassign,no-underscore-dangle */
+/* eslint-disable no-underscore-dangle */
 import {
   optionsMerger,
   propsBinder,
@@ -89,13 +89,13 @@ export default {
     switchLayers(newVal) {
       console.debug('switchLayers');
       console.time('switchLayers removeLayer');
-      // eslint-disable-next-line no-undef
       this.parentContainer.mapObject.removeLayer(this.mapObject);
       console.timeEnd('switchLayers removeLayer');
       console.time('switchLayers geoJSON');
       this.mapObject = geoJSON(newVal, this.mergedOptions);
       this.mapObject.options.pmLock = true;
       this.mapObject.pm._layers.forEach((l) => {
+        // eslint-disable-next-line no-param-reassign
         l.options.pmLock = true
       });
       console.timeEnd('switchLayers geoJSON');
@@ -128,6 +128,7 @@ export default {
       console.debug('setOptions', typeof this.mapObject);
       this.mapObject.options.pmLock = !_newVal.active;
       this.mapObject.pm._layers.forEach((l) => {
+        // eslint-disable-next-line no-param-reassign
         l.options.pmLock = !_newVal.active
       });
 

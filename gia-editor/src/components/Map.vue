@@ -24,7 +24,7 @@
 </template>
 
 <script>
-/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax */
+/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
 import * as L from 'leaflet';
 import { LMap, LTileLayer } from 'vue2-leaflet';
 import svgMarker from '../vendor/svg-icon';
@@ -38,14 +38,10 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
 import '../vendor/pmLock';
 
-// eslint-disable-next-line no-underscore-dangle
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  // eslint-disable-next-line global-require
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  // eslint-disable-next-line global-require
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  // eslint-disable-next-line global-require
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
@@ -97,9 +93,7 @@ export default {
     },
     getDataBounds() {
       const map = this.$refs.theMap.mapObject;
-      // eslint-disable-next-line no-underscore-dangle
       let swCoord = map.getBounds()._southWest;
-      // eslint-disable-next-line no-underscore-dangle
       let neCoord = map.getBounds()._northEast;
 
       const swPoint = map.project(swCoord, map.getZoom()).subtract(map.getPixelOrigin());

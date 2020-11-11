@@ -144,6 +144,8 @@
 </template>
 
 <script>
+/* eslint-disable no-underscore-dangle,no-restricted-syntax,no-await-in-loop */
+
 // import Table from "./components/Table.vue";
 import leafletImage from 'leaflet-image';
 import debounce from 'debounce-async';
@@ -201,7 +203,6 @@ export default {
       isLoading: false,
       isLoadingUuids: new Set(),
       isPublicCollection: false,
-      modCtx: modify.createContext(),
       orgGeojson: {},
       password: null,
       renderedCollections: [],
@@ -244,7 +245,6 @@ export default {
         color: this.collectionColors[id],
         geojson,
       });
-      // eslint-disable-next-line prefer-object-spread
       this.orgGeojson[id] = cloneDeep(geojson);
       console.debug('$set geojson');
     },
@@ -299,13 +299,9 @@ export default {
     },
     boundsUpdate(bounds) {
       this.bounds = {
-        // eslint-disable-next-line no-underscore-dangle
         minX: bounds._southWest.lng,
-        // eslint-disable-next-line no-underscore-dangle
         minY: bounds._southWest.lat,
-        // eslint-disable-next-line no-underscore-dangle
         maxX: bounds._northEast.lng,
-        // eslint-disable-next-line no-underscore-dangle
         maxY: bounds._northEast.lat,
       };
 
@@ -331,15 +327,12 @@ export default {
       const fc = this.geojson[this.activeId].geojson;
       const i = fc.features.indexOf(item);
       fc.features.splice(i, 1);
-      // this.updateCodeView(fc);
       this.dirty = true;
     },
     itemAddedToMap(item) {
       console.debug("itemAddedToMap")
       const fc = this.geojson[this.activeId].geojson;
       fc.features.push({...item, id: `tmp_${uuidv4()}`});
-      // Update the map with the new Item
-      // this.updateCodeView(fc);
       this.dirty = true;
     },
     itemModified(item) {
@@ -378,11 +371,7 @@ export default {
     async onConfirmDeleteCollections() {
       this.showDeleteConfirmationDialog = false;
 
-      // TODO: Fix
-      // eslint-disable-next-line no-restricted-syntax
       for (const coll of this.renderedCollections) {
-        // TODO: Fix
-        // eslint-disable-next-line no-await-in-loop
         await collection.remove(coll.uuid);
         this.$refs.collectionTree.removeCollection(coll);
       }
@@ -406,7 +395,6 @@ export default {
       const sortedCollections = groupBy(this.collections, 'name');
       const len = Object.keys(sortedCollections).length;
       let i = 1;
-      // eslint-disable-next-line no-restricted-syntax
       for (let value of Object.values(sortedCollections)) {
         const color = selectColor(i, len);
         value = value.map((c) => {
@@ -483,12 +471,9 @@ export default {
       const dataBounds = this.$refs.leafletMap.getDataBounds();
       const simplify = this.zoom >= 16 ? 0.0 : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
 
-      // eslint-disable-next-line no-restricted-syntax
       for (const id of ids) {
         try {
-          // eslint-disable-next-line no-await-in-loop
           const data = await collection.fetchItems(signal, id, dataBounds, simplify);
-
           this.setGeoJson(id, data);
         } catch (err) {
           console.error(err);
