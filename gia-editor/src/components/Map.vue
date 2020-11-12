@@ -136,7 +136,7 @@ export default {
     geoJsonOptions(layer, activeId) {
       console.debug("geoJsonOptions", layer);
       return {
-        // onEachFeature: this.onEachFeatureFunction,
+        onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
           return svgMarker(latlng, this.pointStyle(layer));
         },
@@ -208,32 +208,24 @@ export default {
   computed: {
     onEachFeatureFunction() {
       /*
+      return () => {};
+
       if (!this.enableTooltip) {
         return () => {};
       }
       */
-      return () => {};
 
-      /*
       return (feature, layer) => {
-        layer.on('pm:update', args => {
-            console.debug("pm:update", args);
-            const geojsonData = this.$refs.geojsonChild.getGeoJSONData();
-            console.debug(geojsonData);
-            this.$emit('geojsonUpdate', geojsonData)
-        });
-        
+        const content = [];
+        for( const [key, value] of Object.entries(feature.properties)) {
+          content.push(`<div>${key}:${value}</div>`)
+        }
+        if(content.length <= 0) return;
         layer.bindTooltip(
-          "<div>id:" +
-            feature.properties.id +
-            "</div><div>name: " +
-            feature.properties.name +
-            "</div>",
+          content.join(''),
           { permanent: false, sticky: true }
         );
-        
       };
-      */
     },
   },
 };

@@ -121,8 +121,12 @@
           >
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
+              <v-tab>Table</v-tab>
               <v-tab-item style="display: flex; flex-direction: column; flex: 1">
                 <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
+              </v-tab-item>
+              <v-tab-item style="display: flex; flex-direction: column; flex: 1">
+                <Table v-bind:afc="afc"/>
               </v-tab-item>
             </v-tabs>
             <div class="selectedCollectionName">
@@ -146,11 +150,11 @@
 <script>
 /* eslint-disable no-underscore-dangle,no-restricted-syntax,no-await-in-loop */
 
-// import Table from "./components/Table.vue";
 import leafletImage from 'leaflet-image';
 import debounce from 'debounce-async';
 import cloneDeep from 'lodash.clonedeep';
 import { v4 as uuidv4 } from 'uuid';
+import Table from "./components/Table.vue";
 import Map from './components/Map.vue';
 import Code from './components/Code.vue';
 import Tree from './components/Tree.vue';
@@ -178,7 +182,7 @@ function selectColor(colorNum, colors) {
 export default {
   name: 'App',
   components: {
-    // Table,
+    Table,
     Map,
     Code,
     Tree,
@@ -186,6 +190,7 @@ export default {
   data() {
     return {
       activeCollection: null,
+      afc: null,
       activeId: null,
       alerts: [],
       authenticated: false,
@@ -272,11 +277,13 @@ export default {
       this.activeId = id;
       if(id === null) {
         this.activeCollection = null;
+        this.afc = null;
         this.updateCodeView({});
         return;
       }
       if(this.isLoadingUuids.size > 0) return;
       this.activeCollection = this.collections.find((c) => c.uuid === id);
+      this.afc = this.geojson[id].geojson;
       this.updateCodeView(this.geojson[id].geojson);
     },
     updateFetchedCollections(ids) {
@@ -485,6 +492,7 @@ export default {
       this.dirty = false;
       if(this.activeId !== null) {
         this.activeCollection = this.collections.find((c) => c.uuid === this.activeId);
+        this.afc = this.geojson[this.activeId].geojson;
         this.updateCodeView(this.geojson[this.activeId].geojson);
       }
     },
@@ -534,9 +542,11 @@ export default {
   padding: 5px;
 }
 
+/*
 .code-column .v-tabs-bar {
-  display: none;
+  display: block;
 }
+ */
 
 .v-select__slot {
   background-color: #999;

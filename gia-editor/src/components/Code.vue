@@ -1,5 +1,5 @@
 <template>
-  <div class="editorContainer" ref="jsoneditor"></div>
+  <div class="editorContainer" ref="jsoneditor" height="calc(100vh - 220px)"></div>
 </template>
 
 <script>
