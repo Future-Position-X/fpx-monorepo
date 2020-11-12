@@ -1,15 +1,14 @@
-from typing import Generator, Optional
+from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
-from sqlalchemy.orm import Session
 
 from app import models, schemas, services
 from app.core import security
 from app.core.config import settings
-from app.db.session import SessionLocal
+from app.db.session import AsyncSessionLocal
 from app.models.base_model import BaseModel
 
 reusable_oauth2 = OAuth2PasswordBearer(
@@ -17,18 +16,17 @@ reusable_oauth2 = OAuth2PasswordBearer(
 )
 
 
-def get_db() -> Generator:
+def get_db() -> None:
     try:
-        db = SessionLocal()
-        BaseModel.set_session(db)
-        yield db
-    finally:
-        db.close()
+        session = AsyncSessionLocal
+        with session.no_autoflush as s:
+            BaseModel.set_session(s)
+    except Exception as e:
+        print(e)
+        raise e
 
 
-def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
-) -> Optional[schemas.User]:
+def get_current_user(token: str = Depends(reusable_oauth2)) -> Optional[schemas.User]:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
