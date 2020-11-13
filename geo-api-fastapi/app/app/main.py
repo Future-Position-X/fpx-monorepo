@@ -18,6 +18,7 @@ from app.core.config import Settings
 from app.errors import UnauthorizedError
 
 applications.get_openapi = patch.get_openapi
+applications.get_swagger_ui_html = patch.get_swagger_ui_html
 
 
 @lru_cache()

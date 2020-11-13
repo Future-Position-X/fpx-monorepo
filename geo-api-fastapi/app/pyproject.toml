@@ -7,10 +7,7 @@ authors = ["Admin <admin@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 uvicorn = "^0.11.3"
-#fastapi = "^0.61.1"
-#fastapi = { path = "./fastapi/dist/fastapi-0.61.1.tar.gz", develop = true }
-#fastapi = { git = "https://github.com/Future-Position-X/fastapi", develop = false}
-fastapi = { url = "https://github.com/Future-Position-X/fastapi/archive/master.zip" }
+fastapi = { git = "https://github.com/Future-Position-X/fastapi", branch = "rebase-61.2", develop = false }
 python-multipart = "^0.0.5"
 email-validator = "^1.0.5"
 requests = "^2.23.0"
@@ -25,7 +22,7 @@ jinja2 = "^2.11.2"
 psycopg2-binary = "^2.8.5"
 alembic = "^1.4.2"
 GeoAlchemy2 = "^0.8.4"
-sqlalchemy_mixins = { url = "https://github.com/Future-Position-X/sqlalchemy-mixins/archive/master.zip" }
+sqlalchemy_mixins = { git = "https://github.com/Future-Position-X/sqlalchemy-mixins", develop = false }
 SQLAlchemy-Utils = "0.36.7"
 Shapely = "^1.7.0"
 shapely-geojson = "^0.0.1"
