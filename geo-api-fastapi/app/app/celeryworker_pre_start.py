@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
@@ -17,10 +18,14 @@ wait_seconds = 1
     before=before_log(logger, logging.INFO),
     after=after_log(logger, logging.WARN),
 )
-async def init() -> None:
+def init() -> None:
+    asyncio.run(connect_db())
+
+
+async def connect_db() -> None:
     try:
-        # Try to create session to check if DB is awake
         db = AsyncSessionLocal
+        # Try to create session to check if DB is awake
         await db.execute("SELECT 1")
     except Exception as e:
         logger.error(e)
