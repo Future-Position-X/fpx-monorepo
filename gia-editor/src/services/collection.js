@@ -130,6 +130,26 @@ export default {
     const collection = await response.json();
     return collection;
   },
+  async createFromFile(collectionName, isPublic, file) {
+    const formData = new FormData();
+    formData.append('collection_name', collectionName);
+    formData.append('is_public', isPublic);
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE_URL}/collections/from_file`, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        Authorization: `Bearer ${session.token}`
+      },
+      body: formData,
+    });
+
+    await this.validateResponse(response);
+
+    const collection = await response.json();
+    return collection;
+  },
   async remove(collectionId) {
     const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
       method: 'DELETE',

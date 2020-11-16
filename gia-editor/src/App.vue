@@ -40,6 +40,12 @@
               <v-col>
                 <div class="mx-3 pa-0">
                   <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+                  <v-file-input
+                    accept=".zip"
+                    show-size
+                    placeholder="Select a .zip file containing shapefiles"
+                    @change="onFileSelected"
+                  ></v-file-input>
                   <div class="d-flex justify-space-between ma-0">
                     <v-checkbox
                       v-model="isPublicCollection"
@@ -210,12 +216,17 @@ export default {
       showPassword: false,
       sortedCollections: [],
       zoom: 16,
+      file: null
     };
   },
   watch: {
 
   },
   methods: {
+    onFileSelected(file) {
+      console.debug("onFileSelected: ", file);
+      this.file = file;
+    },
     geojsonUpdateFromCode(geojson) {
       console.debug('geojsonUpdateFromCode');
       this.geojson[this.activeId].geojson = geojson;
@@ -377,8 +388,11 @@ export default {
       }
     },
     async onCreateCollectionClick() {
-      await collection
-        .create(this.collectionName, this.isPublicCollection)
+      const createPromise = this.file == null
+        ? collection.create(this.collectionName, this.isPublicCollection)
+        : collection.createFromFile(this.collectionName, this.isPublicCollection, this.file);
+
+      await createPromise
         .then((coll) => {
           this.$refs.collectionTree.addCollection(coll);
           this.addAlert({ type: 'success', message: `Created ${this.collectionName} successfully` });
