@@ -1,10 +1,13 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile, Form
 
 from app import models, schemas, services
 from app.api import deps
+from app.api.api_v1.endpoints.items import map_features_to_item_dtos
+from app.dto import CollectionDTO
+from geojson_pydantic.features import Feature, FeatureCollection
 
 router = APIRouter()
 
@@ -25,6 +28,37 @@ def create_collection(
     collection = schemas.Collection.from_dto(
         services.collection.create_collection(current_user, collection_in.to_dto())
     )
+    return collection
+
+
+@router.post("/collections/from_file", status_code=201)
+async def create_upload_file(
+    collection_name: str = Form(...),
+    is_public: bool = Form(...),
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(deps.get_current_user)
+) -> schemas.Collection:
+    print("collection_name", collection_name)
+    print("is_public", is_public)
+    print("file name:", file.filename)
+    print("mime:", file.content_type)
+    collection = schemas.Collection.from_dto(
+        services.collection.create_collection(current_user, CollectionDTO(**{
+            "name": collection_name,
+            "is_public": is_public
+        }))
+    )
+
+    geojson = services.shapefile.convert_shapefile_to_geojson(file)
+
+    item_dtos = map_features_to_item_dtos(
+        [Feature(**f) for f in geojson["features"]]
+    )
+
+    for item in item_dtos:
+        item.collection_uuid = collection.uuid
+
+    services.item.add_collection_items(current_user, collection.uuid, item_dtos)
     return collection
 
 

@@ -1,5 +1,8 @@
 from typing import List, Optional
 from uuid import UUID
+import zipfile
+import tempfile
+import glob
 
 from sqlalchemy_mixins import ModelNotFoundError
 
@@ -22,6 +25,16 @@ def create_collection(
     collection.save()
     collection.session.commit()
     return to_model(collection, CollectionDTO)
+
+
+def create_collection_from_shapefile(
+    collection: CollectionDTO,
+    zip_file: zipfile.ZipFile
+) -> CollectionDTO:
+    dir = tempfile.TemporaryDirectory()
+    zip_file.extractall(dir)
+    shapefile = glob.glob(dir + '/*.shp')[0]
+
 
 
 def get_collection_by_uuid(
