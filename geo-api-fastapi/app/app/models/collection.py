@@ -31,7 +31,7 @@ class Collection(BaseModel):
     name = sa.Column(sa.Text())
     is_public = sa.Column(sa.Boolean, default=False)
 
-    items = relationship("Item", lazy=True)
+    items = relationship("Item", lazy=True, viewonly=True)
 
     provider_uuid = sa.Column(
         pg.UUID(as_uuid=True),
@@ -93,7 +93,7 @@ class Collection(BaseModel):
     # TODO: Investigate if this should be done with JOIN instead of SUBQUERY
     @classmethod
     def find_readable(cls, user: InternalUserDTO) -> List[Collection]:
-        readable_sq = cls.readable_query(user).subquery()
+        readable_sq = cls.readable_query(user)
         q = cls.query.filter(cls.uuid.in_(readable_sq))
         res = q.all()
 
@@ -104,7 +104,7 @@ class Collection(BaseModel):
     def find_readable_or_fail(
         cls, user: InternalUserDTO, collection_uuid: UUID
     ) -> Collection:
-        readable_sq = cls.readable_query(user).subquery()
+        readable_sq = cls.readable_query(user)
         q = cls.query.filter(cls.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(readable_sq))
         res = q.first()
@@ -118,7 +118,7 @@ class Collection(BaseModel):
     def find_writeable_or_fail(
         cls, user: InternalUserDTO, collection_uuid: UUID
     ) -> Collection:
-        writeable_sq = cls.writeable_query(user).subquery()
+        writeable_sq = cls.writeable_query(user)
         q = cls.query.filter(cls.uuid == collection_uuid)
         q = q.filter(cls.uuid.in_(writeable_sq))
         res = q.first()

@@ -18,6 +18,7 @@ from app.core.config import Settings
 from app.errors import UnauthorizedError
 
 applications.get_openapi = patch.get_openapi
+applications.get_swagger_ui_html = patch.get_swagger_ui_html
 
 
 @lru_cache()
@@ -80,6 +81,6 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 simplify_operation_ids(app)
 
-if "pytest" not in sys.modules:
+if "pytest" not in sys.modules and False:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.2)
     app = cast(FastAPI, SentryAsgiMiddleware(app))

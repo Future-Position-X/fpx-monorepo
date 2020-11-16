@@ -1,40 +1,87 @@
+from copy import copy
 from typing import Dict, Generator
 
 import bcrypt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import make_url
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy_utils import create_database, database_exists
 
 from app.api.deps import get_db
 from app.core.config import settings
-from app.db.session import engine
 from app.main import app
 from app.models.base_model import BaseModel
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 
-db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
-test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)()
+test_db_engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
+test_db_session = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)()
+
+async_test_db_engine = create_async_engine(
+    settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True
+)
+async_test_db_session = AsyncSession(
+    autocommit=False, autoflush=False, bind=async_test_db_engine
+)
 
 
 def override_get_db():
-    BaseModel.set_session(test_db_session)
-    return test_db_session
+    try:
+        session = test_db_session
+        with session.no_autoflush as s:
+            BaseModel.set_session(s)
+    except Exception as e:
+        print(e)
+        raise e
 
 
 app.dependency_overrides[get_db] = override_get_db
 
 
+def get_scalar_result(engine, sql):
+    result_proxy = engine.execute(sql)
+    result = result_proxy.scalar()
+    result_proxy.close()
+    engine.dispose()
+    return result
+
+
+def database_exists(url):
+    url = copy(make_url(url))
+    database = url.database
+    url = url.set(database="postgres")
+    engine = create_engine(url)
+    sql = "SELECT 1 FROM pg_database WHERE datname='%s'" % database
+    return get_scalar_result(engine, sql)
+
+
+def create_database(url):
+    url = copy(make_url(url))
+    database = url.database
+    url = url.set(database="postgres")
+    engine = create_engine(url)
+    encoding = "utf8"
+    template = "template1"
+    text = "CREATE DATABASE {0} ENCODING '{1}' TEMPLATE {2}".format(
+        database, encoding, template
+    )
+    from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+    engine.raw_connection().set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    engine.execute(text)
+
+
 @pytest.fixture(scope="session")
 def db() -> Generator:
+    print("db")
     if not database_exists(settings.SQLALCHEMY_DATABASE_URI):
         create_database(settings.SQLALCHEMY_DATABASE_URI)
-    engine.execute("CREATE EXTENSION IF NOT EXISTS postgis")
-    engine.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
-    BaseModel.metadata.drop_all(bind=engine)
-    BaseModel.metadata.create_all(bind=engine)
+    test_db_engine.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+    test_db_engine.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
+    BaseModel.metadata.drop_all(bind=test_db_engine)
+    BaseModel.metadata.create_all(bind=test_db_engine)
     BaseModel.set_session(test_db_session)
     yield test_db_session
 
