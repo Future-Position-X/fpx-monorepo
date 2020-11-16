@@ -3,7 +3,7 @@
 set -e
 set -x
 
-mypy app
+mypy --verbose app
 black app --check
 isort --check-only app
 flake8
