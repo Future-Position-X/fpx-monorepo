@@ -1,13 +1,14 @@
-import zipfile
-import tempfile
 import glob
-import shutil
-import os
-from pathlib import Path
-from fastapi import UploadFile
-from tempfile import NamedTemporaryFile
-import geopandas
 import json
+import os
+import shutil
+import tempfile
+import zipfile
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+import geopandas
+from fastapi import UploadFile
 
 
 def save_upload_file_tmp(upload_file: UploadFile) -> Path:

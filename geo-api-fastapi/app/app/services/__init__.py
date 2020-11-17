@@ -1,1 +1,1 @@
-from . import acl, collection, item, provider, session, user, shapefile
+from . import acl, collection, item, provider, session, shapefile, user

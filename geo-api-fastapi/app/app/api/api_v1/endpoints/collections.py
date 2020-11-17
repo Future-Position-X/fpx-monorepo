@@ -1,13 +1,13 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, UploadFile, Form
+from fastapi import APIRouter, Depends, File, Form, UploadFile
+from geojson_pydantic.features import Feature, FeatureCollection
 
 from app import models, schemas, services
 from app.api import deps
 from app.api.api_v1.endpoints.items import map_features_to_item_dtos
 from app.dto import CollectionDTO
-from geojson_pydantic.features import Feature, FeatureCollection
 
 router = APIRouter()
 
