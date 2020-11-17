@@ -45,7 +45,7 @@ export default {
       const saturation = 100;
       const color = `hsl(${(colorNum * (360 / colors)) % 360},${saturation}%,50%)`;
 
-      const newCollection = {...collection, color, editable: true, id: collection.uuid};
+      const newCollection = {...collection, color, editable: true, activatable: true, selectable: true, id: collection.uuid};
 
       const item = {
         id: newCollection.name,
