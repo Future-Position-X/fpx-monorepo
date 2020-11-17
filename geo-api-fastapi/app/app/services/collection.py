@@ -27,16 +27,6 @@ def create_collection(
     return to_model(collection, CollectionDTO)
 
 
-def create_collection_from_shapefile(
-    collection: CollectionDTO,
-    zip_file: zipfile.ZipFile
-) -> CollectionDTO:
-    dir = tempfile.TemporaryDirectory()
-    zip_file.extractall(dir)
-    shapefile = glob.glob(dir + '/*.shp')[0]
-
-
-
 def get_collection_by_uuid(
     user: InternalUserDTO, collection_uuid: UUID
 ) -> CollectionDTO:

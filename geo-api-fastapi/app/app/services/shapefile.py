@@ -20,25 +20,25 @@ def save_upload_file_tmp(upload_file: UploadFile) -> Path:
     return tmp_path
 
 
-def shapefile_to_feature_collection(shapefile_path):
+def shapefile_to_feature_collection(shapefile_path: str) -> dict:
     shp = geopandas.read_file(shapefile_path)
     shp.to_crs(epsg=4326, inplace=True)
     geojson = shp.to_json()
     return json.loads(geojson)
 
 
-def jsonfile_to_feature_collection(jsonfile_path):
+def jsonfile_to_feature_collection(jsonfile_path: str) -> dict:
     with open(jsonfile_path, "r") as file:
         return json.loads(file.read())
 
 
-def merge_feature_collections(dst_fc, src_fc):
+def merge_feature_collections(dst_fc: dict, src_fc: dict) -> None:
     for f in src_fc["features"]:
         dst_fc["features"].append(f)
 
 
 other_shapefile_extensions = [".shx", ".dbf", ".sbn", ".sbx", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs", ".prj", ".xml", ".cpg"]
-def convert_zip_to_feature_collection(upload_file: UploadFile):
+def convert_zip_to_feature_collection(upload_file: UploadFile) -> dict:
     path = save_upload_file_tmp(upload_file)
     zip = zipfile.ZipFile(path, 'r')
     dir = tempfile.TemporaryDirectory().name
