@@ -40,12 +40,20 @@
               <v-col>
                 <div class="mx-3 pa-0">
                   <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-                  <v-file-input
-                    accept=".zip"
-                    show-size
-                    placeholder="Select a .zip file containing shapefiles"
-                    @change="onFileSelected"
-                  ></v-file-input>
+                  <v-card style="margin-bottom: 10px">
+                    <v-card-text>
+                      <div class="text--primary">
+                        You can optionally select a zip file containing GeoJSON and/or Shapefiles
+                      </div>
+                      <v-file-input
+                        accept=".zip"
+                        show-size
+                        placeholder="Select .zip file..."
+                        @change="onFileSelected"
+                        style="font-size: 13px; line-height: 15px"
+                      ></v-file-input>
+                    </v-card-text>
+                  </v-card>
                   <div class="d-flex justify-space-between ma-0">
                     <v-checkbox
                       v-model="isPublicCollection"
