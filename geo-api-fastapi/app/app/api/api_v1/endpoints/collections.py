@@ -2,7 +2,7 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from geojson_pydantic.features import Feature, FeatureCollection
+from geojson_pydantic.features import Feature
 
 from app import models, schemas, services
 from app.api import deps

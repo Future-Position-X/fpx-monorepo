@@ -1,4 +1,3 @@
-import glob
 import json
 import os
 import shutil
@@ -78,7 +77,7 @@ def convert_zip_to_feature_collection(upload_file: UploadFile) -> dict:
         elif ext == ".json" or ext == ".geojson":
             merge_feature_collections(fc, jsonfile_to_feature_collection(f))
         else:
-            if not ext in other_shapefile_extensions:
+            if exit not in other_shapefile_extensions:
                 raise Exception("unknown file extension: " + ext)
 
     shutil.rmtree(dir)
