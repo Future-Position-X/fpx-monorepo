@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 import geopandas
 import json
 
+
 def save_upload_file_tmp(upload_file: UploadFile) -> Path:
     try:
         suffix = Path(upload_file.filename).suffix
@@ -37,18 +38,36 @@ def merge_feature_collections(dst_fc: dict, src_fc: dict) -> None:
         dst_fc["features"].append(f)
 
 
-other_shapefile_extensions = [".shx", ".dbf", ".sbn", ".sbx", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs", ".prj", ".xml", ".cpg"]
+other_shapefile_extensions = [
+    ".shx",
+    ".dbf",
+    ".sbn",
+    ".sbx",
+    ".fbn",
+    ".fbx",
+    ".ain",
+    ".aih",
+    ".atx",
+    ".ixs",
+    ".mxs",
+    ".prj",
+    ".xml",
+    ".cpg",
+]
+
+
 def convert_zip_to_feature_collection(upload_file: UploadFile) -> dict:
     path = save_upload_file_tmp(upload_file)
-    zip = zipfile.ZipFile(path, 'r')
+    zip = zipfile.ZipFile(path, "r")
     dir = tempfile.TemporaryDirectory().name
     zip.extractall(Path(dir))
 
-    files = [os.path.join(dir,f) for f in os.listdir(dir) if os.path.isfile(os.path.join(dir,f))]
-    fc = {
-        "type": "FeatureCollection",
-        "features": []
-    }
+    files = [
+        os.path.join(dir, f)
+        for f in os.listdir(dir)
+        if os.path.isfile(os.path.join(dir, f))
+    ]
+    fc = {"type": "FeatureCollection", "features": []}
 
     for f in files:
         ext = Path(f).suffix.lower()

@@ -36,24 +36,22 @@ async def create_upload_file(
     collection_name: str = Form(...),
     is_public: bool = Form(...),
     file: UploadFile = File(...),
-    current_user: models.User = Depends(deps.get_current_user)
+    current_user: models.User = Depends(deps.get_current_user),
 ) -> schemas.Collection:
     print("collection_name", collection_name)
     print("is_public", is_public)
     print("file name:", file.filename)
     print("mime:", file.content_type)
     collection = schemas.Collection.from_dto(
-        services.collection.create_collection(current_user, CollectionDTO(**{
-            "name": collection_name,
-            "is_public": is_public
-        }))
+        services.collection.create_collection(
+            current_user,
+            CollectionDTO(**{"name": collection_name, "is_public": is_public}),
+        )
     )
 
     geojson = services.shapefile.convert_zip_to_feature_collection(file)
 
-    item_dtos = map_features_to_item_dtos(
-        [Feature(**f) for f in geojson["features"]]
-    )
+    item_dtos = map_features_to_item_dtos([Feature(**f) for f in geojson["features"]])
 
     for item in item_dtos:
         item.collection_uuid = collection.uuid
