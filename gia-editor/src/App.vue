@@ -402,6 +402,7 @@ export default {
 
       await createPromise
         .then((coll) => {
+          this.collections.push(coll);
           const color = selectColor(Object.keys(this.sortedCollections).length, Object.keys(this.sortedCollections).length + 1);
           // eslint-disable-next-line no-param-reassign
           coll.color = color;
