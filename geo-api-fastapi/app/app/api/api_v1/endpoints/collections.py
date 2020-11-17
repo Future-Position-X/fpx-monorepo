@@ -49,7 +49,7 @@ async def create_upload_file(
         }))
     )
 
-    geojson = services.shapefile.convert_shapefile_to_geojson(file)
+    geojson = services.shapefile.convert_zip_to_feature_collection(file)
 
     item_dtos = map_features_to_item_dtos(
         [Feature(**f) for f in geojson["features"]]
