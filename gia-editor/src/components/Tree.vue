@@ -37,16 +37,12 @@ export default {
     onSelectionUpdate(selectedItems) {
       console.debug("onSelectionUpdate", selectedItems);
       const selectedUuids = selectedItems.filter((x) => !!x.uuid).map((x) => x.uuid);
+      console.debug("selectedUuids: ", selectedUuids);
       this.$emit('selectionUpdate', selectedUuids);
     },
     addCollection(collection) {
-      const colorNum = this.items.length;
-      const colors = this.items.length + 1;
-      const saturation = 100;
-      const color = `hsl(${(colorNum * (360 / colors)) % 360},${saturation}%,50%)`;
-
-      const newCollection = {...collection, color, editable: true, id: collection.uuid};
-
+      const newCollection = {...collection, editable: true, activatable: true, selectable: true, id: collection.uuid};
+      console.debug("newCollection: ", newCollection);
       const item = {
         id: newCollection.name,
         name: newCollection.name,

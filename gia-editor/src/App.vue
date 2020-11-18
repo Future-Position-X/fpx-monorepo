@@ -402,6 +402,18 @@ export default {
 
       await createPromise
         .then((coll) => {
+          this.collections.push(coll);
+          const color = selectColor(Object.keys(this.sortedCollections).length, Object.keys(this.sortedCollections).length + 1);
+          // eslint-disable-next-line no-param-reassign
+          coll.color = color;
+          this.collectionColors[coll.uuid] = color;
+
+          if (this.sortedCollections[coll.name] != null) {
+            this.sortedCollections[coll.name].push(coll);
+          } else {
+            this.sortedCollections[coll.name] = [coll];
+          }
+
           this.$refs.collectionTree.addCollection(coll);
           this.addAlert({ type: 'success', message: `Created ${this.collectionName} successfully` });
           this.collectionName = null;
