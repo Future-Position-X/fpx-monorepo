@@ -36,6 +36,6 @@ database "Databases" {
 geoApp --> geoDb
 
 @enduml
-```plantuml
+```
 
-![](./diagrams/architecture.svg)
+![](diagrams/architecture.svg)
