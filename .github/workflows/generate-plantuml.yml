@@ -13,7 +13,7 @@ jobs:
       id: plantuml
       uses: Future-Position-X/generate-plantuml-action@v1.5
       with:
-        path: ./
+        path: diagrams
         message: "Render PlantUML files"
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
