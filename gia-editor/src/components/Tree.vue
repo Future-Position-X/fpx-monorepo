@@ -96,7 +96,10 @@ export default {
             e.editable = true;
             e.activatable = true;
             e.selectable = true;
-            e.name += ` (${this.providerCache[e.provider_uuid].name})`;
+            const suffix = ` (${this.providerCache[e.provider_uuid].name})`
+            if (!e.name.endsWith(suffix)) {
+              e.name += suffix;
+            }
             // e.name = e.provider_uuid;
             return e;
           }),
