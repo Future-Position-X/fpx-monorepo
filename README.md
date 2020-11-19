@@ -9,6 +9,7 @@ This repository includes those primary projects:
 
 ### Architecture
 
+
 ```plantuml:architecture
 @startuml
 
