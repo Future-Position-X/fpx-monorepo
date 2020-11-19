@@ -41,7 +41,13 @@ services:
       - SERVER_NAME=${DOMAIN?Variable not set}
       - SERVER_HOST=https://${DOMAIN?Variable not set}
       # Allow explicit env var override for tests
+      - EMAILS_ENABLED=${EMAILS_ENABLED}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - SMTP_TLS=${SMTP_TLS}
       - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     build:
       context: .
       dockerfile: backend.dockerfile
