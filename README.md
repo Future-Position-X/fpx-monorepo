@@ -33,7 +33,7 @@ database "Databases" {
 [geo-api-docs] ==> [geo-api]
 [geo-api] ==> geoApp
 geoApp ==> geoDb
-gg ==> gg
+
 @enduml
 
 ```
