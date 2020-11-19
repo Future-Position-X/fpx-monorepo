@@ -18,6 +18,7 @@
 <script>
 import CollectionTreeView from "./CollectionTreeView.vue";
 import session from '../services/session';
+import providerService from '../services/provider';
 
 export default {
   components: {CollectionTreeView},
@@ -60,11 +61,25 @@ export default {
     removeCollection(collection) {
       this.items.splice(this.items.indexOf(collection), 1);
     },
+    async cacheProvider(uuid) {
+      let provider = this.providerCache[uuid];
+
+      if (provider == null) {
+        provider = await providerService.get(uuid);
+        this.providerCache[uuid] = provider;
+      }
+    }
   },
   watch: {
     async sortedCollections() {
       this.items = [];
       const collections = [];
+
+      const promises = Object.values(this.sortedCollections)
+        .reduce((acc, coll) => acc.concat(coll))
+        .map(c => this.cacheProvider(c.provider_uuid));
+
+      await Promise.all(promises);
 
       // eslint-disable-next-line no-restricted-syntax
       for (const [key, value] of Object.entries(this.sortedCollections)) {
@@ -81,6 +96,7 @@ export default {
             e.editable = true;
             e.activatable = true;
             e.selectable = true;
+            e.name += ` (${this.providerCache[e.provider_uuid].name})`;
             // e.name = e.provider_uuid;
             return e;
           }),
@@ -128,6 +144,7 @@ export default {
   data: () => ({
     items: [],
     open: [],
+    providerCache: {}
   }),
 };
 </script>
