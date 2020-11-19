@@ -42,14 +42,17 @@ export default {
     },
     addCollection(collection) {
       const newCollection = {...collection, editable: true, activatable: true, selectable: true, id: collection.uuid};
+
       console.debug("newCollection: ", newCollection);
       const item = {
-        id: newCollection.name,
+        id: newCollection.uuid,
+        uuid: newCollection.uuid,
         name: newCollection.name,
-        color: '#FFF',
+        color: newCollection.color,
         provider_uuid: newCollection.provider_uuid,
-        editable: false,
-        children: [newCollection],
+        editable: true,
+        activatable: true,
+        selectable: true
       };
 
       this.items[0].children.push(item);
@@ -87,6 +90,11 @@ export default {
       if (session.authenticated()) {
         providerUuid = session.user.provider_uuid;
       }
+
+      const our = Object.values(this.sortedCollections)
+        .reduce((acc, coll) => acc.concat(coll))
+        .filter(coll => coll.provider_uuid === providerUuid);
+
       this.items.push({
         id: 'Owned collections',
         name: 'Owned collections',
@@ -94,7 +102,16 @@ export default {
         editable: false,
         activatable: false,
         selectable: false,
-        children: collections.filter((coll) => coll.provider_uuid === providerUuid),
+        children: our.map(coll => ({
+          id: coll.uuid,
+          uuid: coll.uuid,
+          name: coll.name,
+          color: coll.color,
+          provider_uuid: providerUuid,
+          editable: true,
+          activatable: true,
+          selectable: true
+        }))
       });
       this.items.push({
         id: 'Other collections',
