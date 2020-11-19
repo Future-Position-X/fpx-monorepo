@@ -9,7 +9,7 @@ This repository includes those primary projects:
 
 ### Architecture
 
-```plantuml:architecture
+```plantuml :architecture
 @startuml
 
 package "Frontends" {
@@ -38,4 +38,4 @@ geoApp ==> geoDb
 
 ```
 
-![](diagrams/architecture.svg)
+![Architecture](diagrams/architecture.svg)
