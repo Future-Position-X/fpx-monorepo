@@ -9,7 +9,7 @@ This repository includes those primary projects:
 
 ### Architecture
 
-```plantuml :architecture
+```plantuml:architecture
 @startuml
 
 package "Frontends" {
@@ -29,10 +29,10 @@ database "Databases" {
     [Postgis(geo)] as geoDb
 }
 
-[geo-editor] --> [geo-api]
-[geo-api-docs] --> [geo-api]
-[geo-api] --> geoApp
-geoApp --> geoDb
+[geo-editor] ==> [geo-api]
+[geo-api-docs] ==> [geo-api]
+[geo-api] ==> geoApp
+geoApp ==> geoDb
 
 @enduml
 
