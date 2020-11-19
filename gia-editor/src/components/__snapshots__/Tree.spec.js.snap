@@ -3,71 +3,7 @@
 exports[`Tree data should render "owned" and "other" root elems when tree has items 1`] = `
 <div
   class="v-treeview theme--light"
->
-  <div
-    aria-expanded="false"
-    class="v-treeview-node v-treeview-node--leaf"
-  >
-    <div
-      class="v-treeview-node__root"
-    >
-      <div
-        class="v-treeview-node__level"
-      />
-      <div
-        class="v-treeview-node__content"
-      >
-        <div
-          class="v-treeview-node__label"
-        >
-          Owned collections
-        </div>
-        <div
-          class="v-treeview-node__append"
-        >
-          <i
-            aria-hidden="true"
-            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
-            style="color: rgb(255, 255, 255); caret-color: #FFF;"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-  <div
-    aria-expanded="false"
-    class="v-treeview-node"
-  >
-    <div
-      class="v-treeview-node__root"
-    >
-      <button
-        class="v-icon notranslate v-treeview-node__toggle v-icon--link material-icons theme--light"
-        type="button"
-      >
-        $subgroup
-      </button>
-      <div
-        class="v-treeview-node__content"
-      >
-        <div
-          class="v-treeview-node__label"
-        >
-          Other collections
-        </div>
-        <div
-          class="v-treeview-node__append"
-        >
-          <i
-            aria-hidden="true"
-            class="v-icon notranslate mdi mdi-brightness-1 theme--light"
-            style="color: rgb(255, 255, 255); caret-color: #FFF;"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+/>
 `;
 
 exports[`Tree data should render $checkboxOn when item is selected 1`] = `
@@ -205,7 +141,7 @@ exports[`Tree data should render $checkboxOn when item is selected 1`] = `
                 <div
                   class="v-treeview-node__label"
                 >
-                  __test
+                  __test (fpx)
                 </div>
                 <div
                   class="v-treeview-node__append"

@@ -18,6 +18,7 @@
 <script>
 import CollectionTreeView from "./CollectionTreeView.vue";
 import session from '../services/session';
+import providerService from '../services/provider';
 
 export default {
   components: {CollectionTreeView},
@@ -42,14 +43,17 @@ export default {
     },
     addCollection(collection) {
       const newCollection = {...collection, editable: true, activatable: true, selectable: true, id: collection.uuid};
+
       console.debug("newCollection: ", newCollection);
       const item = {
-        id: newCollection.name,
+        id: newCollection.uuid,
+        uuid: newCollection.uuid,
         name: newCollection.name,
-        color: '#FFF',
+        color: newCollection.color,
         provider_uuid: newCollection.provider_uuid,
-        editable: false,
-        children: [newCollection],
+        editable: true,
+        activatable: true,
+        selectable: true
       };
 
       this.items[0].children.push(item);
@@ -57,11 +61,25 @@ export default {
     removeCollection(collection) {
       this.items.splice(this.items.indexOf(collection), 1);
     },
+    async cacheProvider(uuid) {
+      let provider = this.providerCache[uuid];
+
+      if (provider == null) {
+        provider = await providerService.get(uuid);
+        this.providerCache[uuid] = provider;
+      }
+    }
   },
   watch: {
     async sortedCollections() {
       this.items = [];
       const collections = [];
+
+      const promises = Object.values(this.sortedCollections)
+        .reduce((acc, coll) => acc.concat(coll))
+        .map(c => this.cacheProvider(c.provider_uuid));
+
+      await Promise.all(promises);
 
       // eslint-disable-next-line no-restricted-syntax
       for (const [key, value] of Object.entries(this.sortedCollections)) {
@@ -78,6 +96,10 @@ export default {
             e.editable = true;
             e.activatable = true;
             e.selectable = true;
+            const suffix = ` (${this.providerCache[e.provider_uuid].name})`
+            if (!e.name.endsWith(suffix)) {
+              e.name += suffix;
+            }
             // e.name = e.provider_uuid;
             return e;
           }),
@@ -87,6 +109,11 @@ export default {
       if (session.authenticated()) {
         providerUuid = session.user.provider_uuid;
       }
+
+      const our = Object.values(this.sortedCollections)
+        .reduce((acc, coll) => acc.concat(coll))
+        .filter(coll => coll.provider_uuid === providerUuid);
+
       this.items.push({
         id: 'Owned collections',
         name: 'Owned collections',
@@ -94,7 +121,16 @@ export default {
         editable: false,
         activatable: false,
         selectable: false,
-        children: collections.filter((coll) => coll.provider_uuid === providerUuid),
+        children: our.map(coll => ({
+          id: coll.uuid,
+          uuid: coll.uuid,
+          name: coll.name,
+          color: coll.color,
+          provider_uuid: providerUuid,
+          editable: true,
+          activatable: true,
+          selectable: true
+        }))
       });
       this.items.push({
         id: 'Other collections',
@@ -111,6 +147,7 @@ export default {
   data: () => ({
     items: [],
     open: [],
+    providerCache: {}
   }),
 };
 </script>

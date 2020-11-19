@@ -6,6 +6,13 @@ import Tree from './Tree.vue';
 
 Vue.use(Vuetify);
 
+const providerCache = {
+  "677c6efd-5a6b-4201-b247-e1068c0376fc": {
+    uuid: "677c6efd-5a6b-4201-b247-e1068c0376fc",
+    name: "fpx"
+  }
+};
+
 const sortedCollections = {
   __test: [
     {
@@ -60,7 +67,7 @@ const items = [
           {
             uuid: 'daa0c041-e720-48ee-bd73-657c6ef55d25',
             provider_uuid: '677c6efd-5a6b-4201-b247-e1068c0376fc',
-            name: '__test',
+            name: '__test (fpx)',
             is_public: true,
             revision: 1,
             created_at: '2020-06-23 07:03:06.926628',
@@ -81,7 +88,7 @@ const items = [
           {
             uuid: '00000000-0000-0000-0000-000000000000',
             provider_uuid: '677c6efd-5a6b-4201-b247-e1068c0376fc',
-            name: 'gg',
+            name: 'gg (fpx)',
             is_public: true,
             revision: 0,
             created_at: '2020-05-07 13:07:23.126129',
@@ -105,6 +112,7 @@ describe('Tree', () => {
 
     it('should render "owned" and "other" root elems when tree has items', async () => {
       const wrapper = mount(Tree);
+      await wrapper.setData({ providerCache });
       await wrapper.setProps({ sortedCollections });
       expect(wrapper.vm.items).toMatchObject(items);
       expect(wrapper.element).toMatchSnapshot();
@@ -112,6 +120,7 @@ describe('Tree', () => {
 
     it('should render child items when opened', async () => {
       const wrapper = mount(Tree);
+      await wrapper.setData({ providerCache });
       await wrapper.setProps({ sortedCollections });
       await wrapper.findComponent({ name: 'v-treeview' }).vm.updateOpen('Owned collections', false);
       await wrapper.findComponent({ name: 'v-treeview' }).vm.updateOpen('Other collections', true);
@@ -122,13 +131,14 @@ describe('Tree', () => {
 
     it('should render $checkboxOn when item is selected', async () => {
       const wrapper = mount(Tree);
+      await wrapper.setData({ providerCache });
       await wrapper.setProps({ sortedCollections });
       const treeview = await wrapper.findComponent({ name: 'v-treeview' }).vm;
       await treeview.updateOpen('Owned collections', false);
       await treeview.updateOpen('Other collections', true);
       await treeview.updateOpen('__test', true);
       await treeview.updateSelected('daa0c041-e720-48ee-bd73-657c6ef55d25', true);
-      expect(wrapper.text()).toContain('$checkboxOn__test$subgroupgg');
+      expect(wrapper.text()).toContain('$checkboxOn__test (fpx)$subgroupgg');
       expect(wrapper.element).toMatchSnapshot();
     });
   });
