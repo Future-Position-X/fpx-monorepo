@@ -81,6 +81,11 @@ export default {
 
       await Promise.all(promises);
 
+      let providerUuid = null;
+      if (session.authenticated()) {
+        providerUuid = session.user.provider_uuid;
+      }
+
       // eslint-disable-next-line no-restricted-syntax
       for (const [key, value] of Object.entries(this.sortedCollections)) {
         collections.push({
@@ -96,18 +101,18 @@ export default {
             e.editable = true;
             e.activatable = true;
             e.selectable = true;
-            const suffix = ` (${this.providerCache[e.provider_uuid].name})`
-            if (!e.name.endsWith(suffix)) {
-              e.name += suffix;
+
+            if (e.provider_uuid !== providerUuid) {
+              const suffix = ` (${this.providerCache[e.provider_uuid].name})`
+              
+              if (!e.name.endsWith(suffix)) {
+                e.name += suffix;
+              }
             }
-            // e.name = e.provider_uuid;
+
             return e;
           }),
         });
-      }
-      let providerUuid = null;
-      if (session.authenticated()) {
-        providerUuid = session.user.provider_uuid;
       }
 
       const our = Object.values(this.sortedCollections)
