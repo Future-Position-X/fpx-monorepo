@@ -12,12 +12,15 @@ router = APIRouter()
 @router.get("/providers")
 def get_providers() -> List[schemas.Provider]:
     providers = services.provider.get_providers()
+    for p in providers:
+        p.name = p.name.split("@")[0]
     return [schemas.Provider.from_dto(provider) for provider in providers]
 
 
 @router.get("/providers/{provider_uuid}")
 def get_provider(provider_uuid: UUID,) -> schemas.Provider:
     provider = services.provider.get_provider(provider_uuid)
+    provider.name = provider.name.split("@")[0]
     return schemas.Provider.from_dto(provider)
 
 
