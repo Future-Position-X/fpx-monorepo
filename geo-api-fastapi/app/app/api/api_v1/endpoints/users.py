@@ -29,10 +29,15 @@ def get_current_user_uuid(
     return schemas.User.from_dto(user)
 
 
-# @router.get("/users/{user_uuid}")
-# def get_user(user_uuid: UUID,) -> schemas.User:
-#     user = services.user.get_user(user_uuid)
-#     return schemas.User.from_dto(user)
+@router.get("/users/{user_uuid}")
+def get_user(
+    user_uuid: UUID, current_user: schemas.User = Depends(deps.get_current_user)
+) -> schemas.User:
+    if user_uuid != current_user.uuid:
+        raise PermissionError
+
+    user = services.user.get_user(current_user.uuid)
+    return schemas.User.from_dto(user)
 
 
 @router.put("/users/{user_uuid}", status_code=204)
@@ -41,6 +46,9 @@ def update_user(
     user_in: schemas.UserUpdate,
     current_user: schemas.User = Depends(deps.get_current_user),
 ) -> None:
+    if user_uuid != current_user.uuid:
+        raise PermissionError
+
     services.user.update_user(current_user.provider_uuid, user_uuid, user_in.to_dto())
     return None
 
@@ -49,5 +57,8 @@ def update_user(
 def delete_user(
     user_uuid: UUID, current_user: schemas.User = Depends(deps.get_current_user)
 ) -> None:
+    if user_uuid != current_user.uuid:
+        raise PermissionError
+
     services.user.delete_user(current_user.provider_uuid, user_uuid)
     return None
