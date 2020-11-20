@@ -1,4 +1,4 @@
-from typing import List
+# from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -9,10 +9,10 @@ from app.api import deps
 router = APIRouter()
 
 
-@router.get("/users")
-def get_users() -> List[schemas.User]:
-    users = services.user.get_users()
-    return [schemas.User.from_dto(user) for user in users]
+# @router.get("/users")
+# def get_users() -> List[schemas.User]:
+#     users = services.user.get_users()
+#     return [schemas.User.from_dto(user) for user in users]
 
 
 @router.post("/users", status_code=201)
@@ -29,10 +29,10 @@ def get_current_user_uuid(
     return schemas.User.from_dto(user)
 
 
-@router.get("/users/{user_uuid}")
-def get_user(user_uuid: UUID,) -> schemas.User:
-    user = services.user.get_user(user_uuid)
-    return schemas.User.from_dto(user)
+# @router.get("/users/{user_uuid}")
+# def get_user(user_uuid: UUID,) -> schemas.User:
+#     user = services.user.get_user(user_uuid)
+#     return schemas.User.from_dto(user)
 
 
 @router.put("/users/{user_uuid}", status_code=204)
