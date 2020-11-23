@@ -50,21 +50,17 @@
 
                 <v-card>
                   <v-card-text>
+                    <v-card-title class="headline">Create collection</v-card-title>
                     <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
                     <v-tabs v-model="selectedTab">
                       <v-tab>Empty</v-tab>
                       <v-tab>From file</v-tab>
                       <v-tab>Copy</v-tab>
 
-                      <v-tab-item>
-                        <v-card style="margin-bottom: 10px">
-                          <div class="text--primary">
-                            No additional input required
-                          </div>
-                        </v-card>
+                      <v-tab-item class="mt-3">
                       </v-tab-item>
-                      <v-tab-item>
-                        <v-card style="margin-bottom: 10px">
+                      <v-tab-item class="mt-3">
+                        <v-card>
                           <v-card-text>
                             <div class="text--primary">
                               You can optionally select a zip file containing GeoJSON and/or Shapefiles
@@ -79,8 +75,8 @@
                           </v-card-text>
                         </v-card>
                       </v-tab-item>
-                      <v-tab-item>
-                        <v-card style="margin-bottom: 10px">
+                      <v-tab-item class="mt-3">
+                        <v-card>
                           <v-card-text>
                             <div class="text--primary">
                               Select the collection from which items will be copied
@@ -98,7 +94,7 @@
                         </v-card>
                       </v-tab-item>
                     </v-tabs>
-                    <div class="d-flex justify-space-between ma-0">
+                    <div class="d-flex justify-space-between ma-0 mt-3">
                       <v-checkbox
                         v-model="isPublicCollection"
                         label="Public"
@@ -632,10 +628,6 @@ export default {
 
 .code-column .v-tabs-bar {
   display: none;
-}
-
-.v-select__slot {
-  background-color: #999;
 }
 
 .selectedCollectionName {
