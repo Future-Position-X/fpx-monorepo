@@ -60,8 +60,13 @@ async def value_exception_handler(request: Request, exc: ValueError) -> JSONResp
 
 
 @app.exception_handler(UserAlreadyExistsError)
-async def user_already_exists_exception_handler(request: Request, exc: UserAlreadyExistsError) -> JSONResponse:
-    return JSONResponse(status_code=409, content={"message": "The specified email is already registered"})
+async def user_already_exists_exception_handler(
+    request: Request, exc: UserAlreadyExistsError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=409,
+        content={"message": "The specified email is already registered"},
+    )
 
 
 # @app.exception_handler(ValidationError)

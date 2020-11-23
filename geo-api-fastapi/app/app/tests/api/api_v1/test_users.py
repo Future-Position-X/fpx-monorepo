@@ -1,4 +1,5 @@
 from app.core.config import settings
+
 # from app.tests.conftest import UUID_ZERO
 
 
