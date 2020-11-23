@@ -51,12 +51,18 @@
                 <v-card>
                   <v-card-text>
                     <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-                    <v-tabs>
+                    <v-tabs v-model="selectedTab">
                       <v-tab>Empty</v-tab>
                       <v-tab>From file</v-tab>
                       <v-tab>Copy</v-tab>
 
-                      <v-tab-item/>
+                      <v-tab-item>
+                        <v-card style="margin-bottom: 10px">
+                          <div class="text--primary">
+                            No additional input required
+                          </div>
+                        </v-card>
+                      </v-tab-item>
                       <v-tab-item>
                         <v-card style="margin-bottom: 10px">
                           <v-card-text>
@@ -70,6 +76,24 @@
                               @change="onFileSelected"
                               style="font-size: 13px; line-height: 15px"
                             ></v-file-input>
+                          </v-card-text>
+                        </v-card>
+                      </v-tab-item>
+                      <v-tab-item>
+                        <v-card style="margin-bottom: 10px">
+                          <v-card-text>
+                            <div class="text--primary">
+                              Select the collection from which items will be copied
+                            </div>
+                            <v-select
+                              v-model="selectedSourceCollection"
+                              :items="collections"
+                              item-text="name"
+                              item-value="uuid"
+                              return-object
+                              dense
+                              outlined
+                            ></v-select>
                           </v-card-text>
                         </v-card>
                       </v-tab-item>
@@ -91,20 +115,6 @@
                   </v-card-text>
                 </v-card>
               </v-dialog>
-              <!-- <v-card style="margin-bottom: 10px">
-                <v-card-text>
-                  <div class="text--primary">
-                    You can optionally select a zip file containing GeoJSON and/or Shapefiles
-                  </div>
-                  <v-file-input
-                    accept=".zip"
-                    show-size
-                    placeholder="Select .zip file..."
-                    @change="onFileSelected"
-                    style="font-size: 13px; line-height: 15px"
-                  ></v-file-input>
-                </v-card-text>
-              </v-card> -->
             </div>
             <div v-show="!authenticated">
               <div class="ma-3">
@@ -260,7 +270,9 @@ export default {
       sortedCollections: [],
       zoom: 16,
       file: null,
-      showCreateCollectionDialog: false
+      showCreateCollectionDialog: false,
+      selectedTab: null,
+      selectedSourceCollection: null
     };
   },
   watch: {
@@ -432,9 +444,23 @@ export default {
       }
     },
     async onCreateCollectionClick() {
-      const createPromise = this.file == null
-        ? collection.create(this.collectionName, this.isPublicCollection)
-        : collection.createFromFile(this.collectionName, this.isPublicCollection, this.file);
+      let createPromise;
+
+      this.showCreateCollectionDialog = false;
+
+      switch (this.selectedTab) {
+        case 0:
+          createPromise = collection.create(this.collectionName, this.isPublicCollection);
+          break;
+        case 1:
+          createPromise = collection.createFromFile(this.collectionName, this.isPublicCollection, this.file);
+          break;
+        case 2:
+          createPromise = collection.createFromCollection(this.selectedSourceCollection);
+          break;
+        default:
+          throw new Error("invalid selectedTab, should not happen");
+      }
 
       await createPromise
         .then((coll) => {
