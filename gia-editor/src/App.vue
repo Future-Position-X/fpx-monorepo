@@ -36,41 +36,76 @@
                 </v-card>
               </v-dialog>
             </div>
-            <v-row style="background-color: #eee">
-              <v-col>
-                <div class="mx-3 pa-0">
-                  <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-                  <v-card style="margin-bottom: 10px">
-                    <v-card-text>
-                      <div class="text--primary">
-                        You can optionally select a zip file containing GeoJSON and/or Shapefiles
-                      </div>
-                      <v-file-input
-                        accept=".zip"
-                        show-size
-                        placeholder="Select .zip file..."
-                        @change="onFileSelected"
-                        style="font-size: 13px; line-height: 15px"
-                      ></v-file-input>
-                    </v-card-text>
-                  </v-card>
-                  <div class="d-flex justify-space-between ma-0">
-                    <v-checkbox
-                      v-model="isPublicCollection"
-                      label="Public"
-                      class="ma-0 pa-0"
-                    ></v-checkbox>
-                    <v-btn
-                      @click="onCreateCollectionClick"
-                      small
-                      color="primary"
-                      :disabled="!authenticated"
-                      >Create</v-btn
-                    >
+            <div class="mx-3 pa-0">
+              <v-dialog v-model="showCreateCollectionDialog" width="400">
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="showCreateCollectionDialog = true"
+                    small
+                    color="primary"
+                    :disabled="!authenticated"
+                    v-on="on"
+                    >Create collection...</v-btn>
+                </template>
+
+                <v-card>
+                  <v-card-text>
+                    <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+                    <v-tabs>
+                      <v-tab>Empty</v-tab>
+                      <v-tab>From file</v-tab>
+                      <v-tab>Copy</v-tab>
+
+                      <v-tab-item/>
+                      <v-tab-item>
+                        <v-card style="margin-bottom: 10px">
+                          <v-card-text>
+                            <div class="text--primary">
+                              You can optionally select a zip file containing GeoJSON and/or Shapefiles
+                            </div>
+                            <v-file-input
+                              accept=".zip"
+                              show-size
+                              placeholder="Select .zip file..."
+                              @change="onFileSelected"
+                              style="font-size: 13px; line-height: 15px"
+                            ></v-file-input>
+                          </v-card-text>
+                        </v-card>
+                      </v-tab-item>
+                    </v-tabs>
+                    <div class="d-flex justify-space-between ma-0">
+                      <v-checkbox
+                        v-model="isPublicCollection"
+                        label="Public"
+                        class="ma-0 pa-0"
+                      ></v-checkbox>
+                      <v-btn
+                        @click="onCreateCollectionClick"
+                        small
+                        color="primary"
+                        :disabled="!authenticated"
+                        >Create</v-btn
+                      >
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+              <!-- <v-card style="margin-bottom: 10px">
+                <v-card-text>
+                  <div class="text--primary">
+                    You can optionally select a zip file containing GeoJSON and/or Shapefiles
                   </div>
-                </div>
-              </v-col>
-            </v-row>
+                  <v-file-input
+                    accept=".zip"
+                    show-size
+                    placeholder="Select .zip file..."
+                    @change="onFileSelected"
+                    style="font-size: 13px; line-height: 15px"
+                  ></v-file-input>
+                </v-card-text>
+              </v-card> -->
+            </div>
             <div v-show="!authenticated">
               <div class="ma-3">
                 <v-text-field v-model="email" label="Email"></v-text-field>
@@ -110,7 +145,7 @@
               style="position: absolute; top: 4px; right: 4px; z-index: 999"
             ></v-progress-circular>
             <Map
-              v-show="!showDeleteConfirmationDialog"
+              v-show="!showDeleteConfirmationDialog && !showCreateCollectionDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               v-bind:activeId="activeId"
@@ -224,7 +259,8 @@ export default {
       showPassword: false,
       sortedCollections: [],
       zoom: 16,
-      file: null
+      file: null,
+      showCreateCollectionDialog: false
     };
   },
   watch: {
