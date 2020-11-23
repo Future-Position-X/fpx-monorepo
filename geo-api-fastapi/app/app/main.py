@@ -15,7 +15,7 @@ from app import patch
 from app.api.api_v1.api import api_router
 from app.core import config
 from app.core.config import Settings
-from app.errors import UnauthorizedError
+from app.errors import UnauthorizedError, UserAlreadyExistsError
 
 applications.get_openapi = patch.get_openapi
 applications.get_swagger_ui_html = patch.get_swagger_ui_html
@@ -57,6 +57,11 @@ async def unauthorized_exception_handler(
 @app.exception_handler(ValueError)
 async def value_exception_handler(request: Request, exc: ValueError) -> JSONResponse:
     return JSONResponse(status_code=400, content={"message": "Value error"})
+
+
+@app.exception_handler(UserAlreadyExistsError)
+async def user_already_exists_exception_handler(request: Request, exc: UserAlreadyExistsError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"message": "The specified email is already registered"})
 
 
 # @app.exception_handler(ValidationError)
