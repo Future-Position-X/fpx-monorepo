@@ -22,7 +22,7 @@ def test_user_creation_transaction_rollback(client, user):
         f"{settings.API_V1_STR}/users",
         json={"email": user["email"], "password": user["password"]},
     )
-    assert res.status_code == 400
+    assert res.status_code == 409
 
     res = client.get(f"{settings.API_V1_STR}/providers")
     assert res.status_code == 200
@@ -33,7 +33,7 @@ def test_user_creation_errors(client, user):
     res = client.post(f"{settings.API_V1_STR}/users", json=user_attributes())
     assert res.status_code == 201
     res = client.post(f"{settings.API_V1_STR}/users", json=user_attributes())
-    assert res.status_code == 400
+    assert res.status_code == 409
 
 
 # def test_get_users(client, user):
