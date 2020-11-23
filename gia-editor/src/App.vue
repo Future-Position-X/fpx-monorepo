@@ -36,41 +36,82 @@
                 </v-card>
               </v-dialog>
             </div>
-            <v-row style="background-color: #eee">
-              <v-col>
-                <div class="mx-3 pa-0">
-                  <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
-                  <v-card style="margin-bottom: 10px">
-                    <v-card-text>
-                      <div class="text--primary">
-                        You can optionally select a zip file containing GeoJSON and/or Shapefiles
-                      </div>
-                      <v-file-input
-                        accept=".zip"
-                        show-size
-                        placeholder="Select .zip file..."
-                        @change="onFileSelected"
-                        style="font-size: 13px; line-height: 15px"
-                      ></v-file-input>
-                    </v-card-text>
-                  </v-card>
-                  <div class="d-flex justify-space-between ma-0">
-                    <v-checkbox
-                      v-model="isPublicCollection"
-                      label="Public"
-                      class="ma-0 pa-0"
-                    ></v-checkbox>
-                    <v-btn
-                      @click="onCreateCollectionClick"
-                      small
-                      color="primary"
-                      :disabled="!authenticated"
-                      >Create</v-btn
-                    >
-                  </div>
-                </div>
-              </v-col>
-            </v-row>
+            <div class="mx-3 pa-0">
+              <v-dialog v-model="showCreateCollectionDialog" width="400">
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="showCreateCollectionDialog = true"
+                    small
+                    color="primary"
+                    :disabled="!authenticated"
+                    v-on="on"
+                    >Create collection...</v-btn>
+                </template>
+
+                <v-card>
+                  <v-card-text>
+                    <v-card-title class="headline">Create collection</v-card-title>
+                    <v-text-field v-model="collectionName" label="Collection name"></v-text-field>
+                    <v-tabs v-model="selectedTab">
+                      <v-tab>Empty</v-tab>
+                      <v-tab>From file</v-tab>
+                      <v-tab>Copy</v-tab>
+
+                      <v-tab-item class="mt-3">
+                      </v-tab-item>
+                      <v-tab-item class="mt-3">
+                        <v-card>
+                          <v-card-text>
+                            <div class="text--primary">
+                              You can optionally select a zip file containing GeoJSON and/or Shapefiles
+                            </div>
+                            <v-file-input
+                              accept=".zip"
+                              show-size
+                              placeholder="Select .zip file..."
+                              @change="onFileSelected"
+                              style="font-size: 13px; line-height: 15px"
+                            ></v-file-input>
+                          </v-card-text>
+                        </v-card>
+                      </v-tab-item>
+                      <v-tab-item class="mt-3">
+                        <v-card>
+                          <v-card-text>
+                            <div class="text--primary">
+                              Select the collection from which items will be copied
+                            </div>
+                            <v-select
+                              v-model="selectedSourceCollection"
+                              :items="collections"
+                              item-text="name"
+                              item-value="uuid"
+                              return-object
+                              dense
+                              outlined
+                            ></v-select>
+                          </v-card-text>
+                        </v-card>
+                      </v-tab-item>
+                    </v-tabs>
+                    <div class="d-flex justify-space-between ma-0 mt-3">
+                      <v-checkbox
+                        v-model="isPublicCollection"
+                        label="Public"
+                        class="ma-0 pa-0"
+                      ></v-checkbox>
+                      <v-btn
+                        @click="onCreateCollectionClick"
+                        small
+                        color="primary"
+                        :disabled="!authenticated"
+                        >Create</v-btn
+                      >
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </div>
             <div v-show="!authenticated">
               <div class="ma-3">
                 <v-text-field v-model="email" label="Email"></v-text-field>
@@ -110,7 +151,7 @@
               style="position: absolute; top: 4px; right: 4px; z-index: 999"
             ></v-progress-circular>
             <Map
-              v-show="!showDeleteConfirmationDialog"
+              v-show="!showDeleteConfirmationDialog && !showCreateCollectionDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               v-bind:activeId="activeId"
@@ -224,7 +265,10 @@ export default {
       showPassword: false,
       sortedCollections: [],
       zoom: 16,
-      file: null
+      file: null,
+      showCreateCollectionDialog: false,
+      selectedTab: null,
+      selectedSourceCollection: null
     };
   },
   watch: {
@@ -396,9 +440,23 @@ export default {
       }
     },
     async onCreateCollectionClick() {
-      const createPromise = this.file == null
-        ? collection.create(this.collectionName, this.isPublicCollection)
-        : collection.createFromFile(this.collectionName, this.isPublicCollection, this.file);
+      let createPromise;
+
+      this.showCreateCollectionDialog = false;
+
+      switch (this.selectedTab) {
+        case 0:
+          createPromise = collection.create(this.collectionName, this.isPublicCollection);
+          break;
+        case 1:
+          createPromise = collection.createFromFile(this.collectionName, this.isPublicCollection, this.file);
+          break;
+        case 2:
+          createPromise = collection.createFromCollection(this.selectedSourceCollection);
+          break;
+        default:
+          throw new Error("invalid selectedTab, should not happen");
+      }
 
       await createPromise
         .then((coll) => {
@@ -570,10 +628,6 @@ export default {
 
 .code-column .v-tabs-bar {
   display: none;
-}
-
-.v-select__slot {
-  background-color: #999;
 }
 
 .selectedCollectionName {

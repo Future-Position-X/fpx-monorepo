@@ -161,4 +161,19 @@ export default {
 
     await this.validateResponse(response);
   },
+  async createFromCollection(srcCollection) {
+    const response = await fetch(`${BASE_URL}/collections/${srcCollection.uuid}/copy`, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        Authorization: `Bearer ${session.token}`,
+        'Content-Type': `application/json`,
+      }
+    });
+
+    await this.validateResponse(response);
+
+    const collection = await response.json();
+    return collection;
+  }
 };
