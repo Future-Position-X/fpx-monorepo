@@ -2,7 +2,7 @@ const BASE_URL = process.env.VUE_APP_BASE_URL;
 
 export default {
   async validateResponse(response) {
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) throw new Error((await response.json()).message);
   },
   async create(email, password) {
     const response = await fetch(`${BASE_URL}/users`, {

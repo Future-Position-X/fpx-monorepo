@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.security import verify_password
 from app.dto import ProviderDTO, UserDTO
-from app.errors import UnauthorizedError
+from app.errors import UnauthorizedError, UserAlreadyExistsError
 from app.models import User
 from app.models.base_model import to_model, to_models
 from app.services.provider import create_provider
@@ -25,8 +25,14 @@ def create_user(user: UserDTO) -> UserDTO:
         provider = create_provider(ProviderDTO(name=user.email))
         user.provider_uuid = provider.uuid
         new_user = User.create(**user.to_dict())
-    except IntegrityError:
+    except IntegrityError as ie:
         User.session.rollback()
+
+        orig = str(ie.__dict__["orig"])
+
+        if "already exists" in orig and user.email in orig:
+            raise UserAlreadyExistsError
+
         raise ValueError
     new_user.session.commit()
     return to_model(new_user, UserDTO)

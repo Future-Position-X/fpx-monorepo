@@ -477,7 +477,7 @@ export default {
         })
         .catch((error) => {
           console.error('backend error: ', error);
-          this.addAlert({ type: 'error', message: 'Could not register!' });
+          this.addAlert({ type: 'error', message: error.message });
         });
     },
     async fetchGeoJson(ids) {
