@@ -9,4 +9,4 @@ This repository includes those primary projects:
 
 ### Architecture
 
-![Architecture](diagrams/architecture.svg)
+![Architecture](./diagrams/architecture.svg)
