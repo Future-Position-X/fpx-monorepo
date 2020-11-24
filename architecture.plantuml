@@ -23,6 +23,8 @@ database "Databases" {
 [geo-api] ==> geoApp
 geoApp ==> geoDb
 
+Bob -> Alice: Hello!
+
 @enduml
 
 ```
