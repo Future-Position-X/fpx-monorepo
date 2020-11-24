@@ -9,33 +9,4 @@ This repository includes those primary projects:
 
 ### Architecture
 
-```plantuml :architecture
-@startuml
-
-package "Frontends" {
-  [geo-editor]
-  [geo-api-docs]
-}
-
-node "Apis" {
-  [geo-api]
-}
-
-node "Backend applications" {
-  [geo-api-impl] as geoApp
-}
-
-database "Databases" {
-    [Postgis(geo)] as geoDb
-}
-
-[geo-editor] ==> [geo-api]
-[geo-api-docs] ==> [geo-api]
-[geo-api] ==> geoApp
-geoApp ==> geoDb
-
-@enduml
-
-```
-
 ![Architecture](diagrams/architecture.svg)
