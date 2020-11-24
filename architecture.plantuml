@@ -1,4 +1,4 @@
-```plantuml
+```plantuml:architecture
 @startuml
 
 package "Frontends" {
