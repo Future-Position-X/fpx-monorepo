@@ -18,7 +18,7 @@
                     color="primary"
                     v-on="on"
                     @click="onDeleteCollectionsClick"
-                    :disabled="!authenticated"
+                    :disabled="!authenticated || renderedCollections.length === 0"
                     block
                     >Delete selected collections</v-btn
                   >
