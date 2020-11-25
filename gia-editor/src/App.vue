@@ -437,6 +437,10 @@ export default {
       for (const coll of this.renderedCollections) {
         await collection.removeCollectionItems(coll.uuid);
         await collection.remove(coll.uuid);
+
+        if (this.activeId === coll.uuid)
+          this.activeId = null;
+
         this.$refs.collectionTree.removeCollection(coll);
       }
     },
