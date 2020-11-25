@@ -94,11 +94,12 @@ def delete_collection(
 @router.post("/collections/{src_collection_uuid}/copy", status_code=201)
 def copy_to_new_collection(
     src_collection_uuid: UUID,
+    collection_in: schemas.CollectionCreate,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> schemas.Collection:
     collection = schemas.Collection.from_dto(
-        services.collection.copy_collection_from(
-            current_user, src_collection_uuid, None
+        services.collection.copy_collection_to_new(
+            current_user, src_collection_uuid, collection_in.to_dto()
         )
     )
     return collection
