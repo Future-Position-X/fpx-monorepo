@@ -58,7 +58,10 @@ def test_empty_collection_deletion(client, collection_empty):
 def test_collection_can_be_copied_to_new_collection(
     client, collection, collection_empty, item
 ):
-    res = client.post(f'{settings.API_V1_STR}/collections/{collection["uuid"]}/copy')
+    res = client.post(
+        f'{settings.API_V1_STR}/collections/{collection["uuid"]}/copy',
+        json=collection_attributes(),
+    )
     assert res.status_code == 201
     collection_hash = res.json()
 
@@ -91,5 +94,8 @@ def test_collection_can_be_copied_to_other_collection(
 
 
 def test_copy_non_existent_collection(client, collection, collection_empty, item):
-    res = client.post(f"{settings.API_V1_STR}/collections/{UUID_ZERO}/copy")
+    res = client.post(
+        f"{settings.API_V1_STR}/collections/{UUID_ZERO}/copy",
+        json=collection_attributes(),
+    )
     assert res.status_code == 403
