@@ -161,6 +161,17 @@ export default {
 
     await this.validateResponse(response);
   },
+  async removeCollectionItems(collectionId) {
+    const response = await fetch(`${BASE_URL}/collections/${collectionId}/items`, {
+      method: 'DELETE',
+      mode: 'cors',
+      headers: {
+        Authorization: `Bearer ${session.token}`,
+      },
+    });
+
+    await this.validateResponse(response);
+  },
   async createFromCollection(srcCollection) {
     const response = await fetch(`${BASE_URL}/collections/${srcCollection.uuid}/copy`, {
       method: 'POST',

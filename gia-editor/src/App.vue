@@ -435,6 +435,7 @@ export default {
       this.showDeleteConfirmationDialog = false;
 
       for (const coll of this.renderedCollections) {
+        await collection.removeCollectionItems(coll.uuid);
         await collection.remove(coll.uuid);
         this.$refs.collectionTree.removeCollection(coll);
       }
