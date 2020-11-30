@@ -29,5 +29,6 @@ def get_health(
     items = services.item.get_collection_items_by_name(
         current_user, "deso", filter_params, {"simplify": 0.5}
     )
-    assert len(items) >= 1
+    # assert len(items) >= 1
+    print(len(items))
     return "healthy!"
