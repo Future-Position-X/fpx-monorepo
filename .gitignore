@@ -41,5 +41,4 @@ node_modules/
 __pycache__/
 
 #geo-api libs
-!geo-api/lib/
-!geo-api-fastapi/app/lib/
+!geo-api/app/lib/

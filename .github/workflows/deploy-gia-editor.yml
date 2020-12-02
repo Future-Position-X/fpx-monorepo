@@ -35,4 +35,4 @@ jobs:
         role-duration-seconds: 1200
     - name: Deploy
       run: |
-        aws s3 sync git-editor/dist s3://editor.dev.fpx.se
+        aws s3 sync dist s3://editor.dev.fpx.se
