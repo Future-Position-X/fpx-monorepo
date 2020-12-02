@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 
 import geopandas
 from fastapi import UploadFile
+from geojson_pydantic.features import FeatureCollection
 
 
 def save_upload_file_tmp(upload_file: UploadFile) -> Path:
@@ -56,7 +57,7 @@ other_shapefile_extensions = [
 ]
 
 
-def convert_zip_to_feature_collection(upload_file: UploadFile) -> dict:
+def convert_zip_to_feature_collection(upload_file: UploadFile) -> FeatureCollection:
     path = save_upload_file_tmp(upload_file)
     zip = zipfile.ZipFile(path, "r")
     dir = tempfile.TemporaryDirectory().name
@@ -83,4 +84,4 @@ def convert_zip_to_feature_collection(upload_file: UploadFile) -> dict:
 
     shutil.rmtree(dir)
     os.remove(path)
-    return fc
+    return FeatureCollection(**fc)

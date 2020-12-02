@@ -45,8 +45,8 @@ async def create_collection_from_zip(
         )
     )
 
-    geojson = services.zip.convert_zip_to_feature_collection(file)
-    item_dtos = map_features_to_item_dtos([Feature(**f) for f in geojson["features"]])
+    feature_collection = services.zip.convert_zip_to_feature_collection(file)
+    item_dtos = map_features_to_item_dtos(feature_collection.features)
 
     for item in item_dtos:
         item.collection_uuid = collection.uuid
