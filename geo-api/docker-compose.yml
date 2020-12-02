@@ -1,7 +1,6 @@
-version: '3.1'
-
+version: "3.3"
 services:
-  postgis:
+  db:
     command: ["postgres", "-c", "log_statement=all", "-c", "log_duration=on", "-c", "log_line_prefix=%m [%p] [s:%c] [t:%x]"]
     image: postgis/postgis:latest
     volumes:
@@ -11,17 +10,63 @@ services:
       - POSTGRES_USER=master
       - POSTGRES_PASSWORD=master
     ports:
-      - 5432:5432
-  webserver:
-    image: geo-api.dev:latest
-    build: .
-    depends_on:
-      - postgis
-    volumes:
-    - ./:/app
+      - "5432:5432"
+
+  queue:
+    image: rabbitmq:3
+    # Using the below image instead is required to enable the "Broker" tab in the flower UI:
+    # image: rabbitmq:3-management
+    #
+    # You also have to change the flower command
     ports:
-    - 80:80
+      - "5672:5672"
+
+  flower:
+    image: mher/flower
+    env_file:
+      - .env
+    command:
+      - "--broker=amqp://guest@queue:5672//"
+      # For the "Broker" tab to work in the flower UI, uncomment the following command argument,
+      # and change the queue service's image as well
+      # - "--broker_api=http://guest:guest@queue:15672/api//"
+
+  backend:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    depends_on:
+      - db
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://master:master@postgis:5432/development
-      - JWT_SECRET=mRJZQrLE6HlStXd4eEQcMLNDDIltgo1eYUzA5TbAcaRlwCX6FI2SLYKjgq19
-      - MAPBOX_TOKEN=pk.eyJ1IjoidGVmcHgiLCJhIjoiY2s3dTg3N2YzMDB2MjNvbW92b3g2dGpybyJ9.PVGtG461oWUisZPnfZx-uw
+      - SERVER_NAME=${DOMAIN?Variable not set}
+      - SERVER_HOST=https://${DOMAIN?Variable not set}
+      # Allow explicit env var override for tests
+      - SMTP_HOST=${SMTP_HOST}
+    build:
+      context: .
+      dockerfile: backend.dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
+    ports:
+      - "80:80"
+    volumes:
+    - ./app:/app
+    command: /app/start-reload.sh
+
+  celeryworker:
+    image: '${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}'
+    depends_on:
+      - db
+      - queue
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=${DOMAIN?Variable not set}
+      - SERVER_HOST=https://${DOMAIN?Variable not set}
+      # Allow explicit env var override for tests
+      - SMTP_HOST=${SMTP_HOST?Variable not set}
+    build:
+      context: .
+      dockerfile: celeryworker.dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
