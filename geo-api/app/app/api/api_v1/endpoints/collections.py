@@ -32,16 +32,12 @@ def create_collection(
 
 
 @router.post("/collections/from_file", status_code=201)
-async def create_upload_file(
+async def create_collection_from_zip(
     collection_name: str = Form(...),
     is_public: bool = Form(...),
     file: UploadFile = File(...),
     current_user: models.User = Depends(deps.get_current_user),
 ) -> schemas.Collection:
-    print("collection_name", collection_name)
-    print("is_public", is_public)
-    print("file name:", file.filename)
-    print("mime:", file.content_type)
     collection = schemas.Collection.from_dto(
         services.collection.create_collection(
             current_user,
@@ -49,8 +45,7 @@ async def create_upload_file(
         )
     )
 
-    geojson = services.shapefile.convert_zip_to_feature_collection(file)
-
+    geojson = services.zip.convert_zip_to_feature_collection(file)
     item_dtos = map_features_to_item_dtos([Feature(**f) for f in geojson["features"]])
 
     for item in item_dtos:

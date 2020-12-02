@@ -67,6 +67,7 @@ def convert_zip_to_feature_collection(upload_file: UploadFile) -> dict:
         for f in os.listdir(dir)
         if os.path.isfile(os.path.join(dir, f))
     ]
+
     fc = {"type": "FeatureCollection", "features": []}
 
     for f in files:
