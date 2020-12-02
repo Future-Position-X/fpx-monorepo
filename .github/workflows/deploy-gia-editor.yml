@@ -35,4 +35,4 @@ jobs:
         role-duration-seconds: 1200
     - name: Deploy
       run: |
-        aws s3 sync dist s3://editor.dev.fpx.se
+        echo pwd; ls; cd gia-editor; aws s3 sync dist s3://editor.dev.fpx.se
