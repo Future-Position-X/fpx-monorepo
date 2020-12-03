@@ -1,42 +1,11 @@
-### Install awscli
-`apt install awscli`
-
-### Configure aws credentials
-`aws configure`
-
-### Install serverlessframework
-`npm install -g serverless`
-
-### Install serverlessframwork plugins in package.json
-`npm install`
-
-### Install virtualenv for python
-`pip install virtualenv`
-
-### Create virtualenv
-`virtualenv venv --python=python3`
-
-### Install python requirements
-`pip install -r requirements.txt`
-
-### Run tests
-`python -m pytest tests/`
-
-### Set environment variables in .env file
-This project uses a .env file to set needed environment variables for both development 
-and deployment. There's a .env.example file in the root of this project (fpx-monorepo/geo-api/.env.example) that you can copy to fpx-monorepo/geo-api/.env and fill in the variables with
-their intended value
-
-### Run project in development (-o 0.0.0.0 makes it accessable from other hosts than localhost)
-`serverless offline -o 0.0.0.0`
-
-### Deploy
-`serverless deploy`
-
-### Invoke function
-`serverless invoke -f numpy --log`
-
-### Generate policy for serverless deploy
-`npm install -g yo`
-`npm install -y generator-serverless-policy`
-`yo serverless-policy`
+First start db
+`docker-compose up -d db`
+Then we need to create and seed the db
+`docker-compose run backend bash`
+Within the container run
+`alembic upgrade head`
+Exit the container
+`exit`
+Then start the full stack
+`docker-compose up -d`
+DONE!

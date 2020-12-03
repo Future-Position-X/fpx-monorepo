@@ -1,15 +1,16 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Test gia-editor
+name: Deploy gia-editor to prod
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  pull_request:
-    branches: [ development ]
+  push:
+    branches: [ master ]
     paths:
       - 'gia-editor/**'
       - '.github/**'
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -20,8 +21,18 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-    - name: Test with jest
-      working-directory: ./gia-editor
+    - name: Build
       run: |
-        npm i
-        npx jest
+        cd gia-editor; npm install; npm run build -- --mode production
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+        aws-region: eu-north-1
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
+        role-skip-session-tagging: true
+        role-duration-seconds: 1200
+    - name: Deploy
+      run: |
+        cd gia-editor; aws s3 sync dist s3://editor.fpx.se

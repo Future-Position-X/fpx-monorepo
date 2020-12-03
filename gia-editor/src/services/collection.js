@@ -172,14 +172,18 @@ export default {
 
     await this.validateResponse(response);
   },
-  async createFromCollection(srcCollection) {
+  async createFromCollection(srcCollection, collectionName, isPublic) {
     const response = await fetch(`${BASE_URL}/collections/${srcCollection.uuid}/copy`, {
       method: 'POST',
       mode: 'cors',
       headers: {
         Authorization: `Bearer ${session.token}`,
         'Content-Type': `application/json`,
-      }
+      },
+      body: JSON.stringify({
+        name: collectionName,
+        is_public: isPublic,
+      })
     });
 
     await this.validateResponse(response);

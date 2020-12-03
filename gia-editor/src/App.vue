@@ -457,7 +457,7 @@ export default {
           createPromise = collection.createFromFile(this.collectionName, this.isPublicCollection, this.file);
           break;
         case 2:
-          createPromise = collection.createFromCollection(this.selectedSourceCollection);
+          createPromise = collection.createFromCollection(this.selectedSourceCollection, this.collectionName, this.isPublicCollection);
           break;
         default:
           throw new Error("invalid selectedTab, should not happen");
