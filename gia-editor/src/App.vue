@@ -18,7 +18,7 @@
                     color="primary"
                     v-on="on"
                     @click="onDeleteCollectionsClick"
-                    :disabled="!authenticated"
+                    :disabled="!authenticated || renderedCollections.length === 0"
                     block
                     >Delete selected collections</v-btn
                   >
@@ -435,7 +435,12 @@ export default {
       this.showDeleteConfirmationDialog = false;
 
       for (const coll of this.renderedCollections) {
+        await collection.removeCollectionItems(coll.uuid);
         await collection.remove(coll.uuid);
+
+        if (this.activeId === coll.uuid)
+          this.activeId = null;
+
         this.$refs.collectionTree.removeCollection(coll);
       }
     },

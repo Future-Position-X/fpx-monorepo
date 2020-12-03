@@ -59,7 +59,7 @@ export default {
       this.items[0].children.push(item);
     },
     removeCollection(collection) {
-      this.items.splice(this.items.indexOf(collection), 1);
+      this.items[0].children.splice(this.items[0].children.indexOf(collection), 1);
     },
     async cacheProvider(uuid) {
       let provider = this.providerCache[uuid];
