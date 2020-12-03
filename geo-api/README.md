@@ -8,4 +8,3 @@ Exit the container
 `exit`
 Then start the full stack
 `docker-compose up -d`
-DONE!
