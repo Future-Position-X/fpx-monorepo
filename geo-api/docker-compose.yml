@@ -67,6 +67,6 @@ services:
       - SMTP_HOST=${SMTP_HOST?Variable not set}
     build:
       context: .
-      dockerfile: celeryworker.dockerfile
+      dockerfile: worker.dockerfile
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
