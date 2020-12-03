@@ -24,16 +24,14 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
         aws-region: eu-north-1
-        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
-        role-skip-session-tagging: true
-        role-duration-seconds: 1200
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-
+    - uses: satackey/action-docker-layer-caching@v0.0.8
+      continue-on-error: true
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
