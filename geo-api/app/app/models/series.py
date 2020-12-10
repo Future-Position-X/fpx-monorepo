@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from .item import Item  # noqa: F401
 
 
-class TimeSeries(BaseModel):
-    __tablename__ = "timeseries"
+class Series(BaseModel):
+    __tablename__ = "series"
     uuid = sa.Column(
         pg.UUID(as_uuid=True),
         primary_key=True,

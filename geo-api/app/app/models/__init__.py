@@ -3,5 +3,5 @@ from .collection import Collection
 from .item import Item
 from .provider import Provider
 from .user import User
-from .timeseries import TimeSeries
+from .series import Series
 from .metric import Metric

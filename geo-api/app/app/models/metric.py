@@ -18,10 +18,10 @@ class Metric(BaseModel):
     ts = sa.Column(sa.DateTime, server_default=sa.text("now()"), nullable=False)
     series_uuid = sa.Column(
         pg.UUID(as_uuid=True),
-        sa.ForeignKey("timeseries.uuid"),
+        sa.ForeignKey("series.uuid"),
         index=True,
         nullable=False,
     )
     data = sa.Column(pg.JSONB)
 
-    timeseries = relationship("timeseries")
+    series = relationship("series")
