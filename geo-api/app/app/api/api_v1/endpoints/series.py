@@ -46,3 +46,14 @@ def get_series(
 ) -> schemas.Series:
     series_dto = services.series.get_series(current_user, series_uuid)
     return schemas.Series.from_dto(series_dto)
+
+@router.put("/series/{series_uuid}", status_code=204)
+def update_series(
+    series_uuid: UUID,
+    series_in: schemas.SeriesUpdate,
+    current_user: models.User = Depends(deps.get_current_user),
+) -> None:
+    services.series.update_series_by_uuid(
+        current_user, series_uuid, series_in.to_dto()
+    )
+    return None

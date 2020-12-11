@@ -30,3 +30,14 @@ def get_series(
     series_dto = Series.find_or_fail(series_uuid)
     Item.find_readable_or_fail(user, series_dto.item_uuid)
     return to_model(series_dto, SeriesDTO)
+
+
+def update_series_by_uuid(
+    user: InternalUserDTO, series_uuid: UUID, series_update: SeriesDTO
+) -> SeriesDTO:
+    series = Series.find_or_fail(series_uuid)
+    Item.find_readable_or_fail(user, series.item_uuid)
+    series.data = series_update.data
+    series.save()
+    series.session.commit()
+    return to_model(series, SeriesDTO)
