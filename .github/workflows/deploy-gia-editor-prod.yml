@@ -32,4 +32,4 @@ jobs:
         aws-region: eu-north-1
     - name: Deploy
       run: |
-        cd gia-editor; aws s3 sync dist s3://editor.fpx.se
+        cd gia-editor; aws s3 sync dist s3://editor.fpx.se --delete
