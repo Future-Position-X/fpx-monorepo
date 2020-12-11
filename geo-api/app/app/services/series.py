@@ -41,3 +41,10 @@ def update_series_by_uuid(
     series.save()
     series.session.commit()
     return to_model(series, SeriesDTO)
+
+
+def delete_series_by_uuid(user: InternalUserDTO, series_uuid: UUID) -> None:
+    series = Series.find_or_fail(series_uuid)
+    Item.find_readable_or_fail(user, series.item_uuid)
+    series.delete()
+    series.session.commit()

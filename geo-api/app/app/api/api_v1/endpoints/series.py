@@ -57,3 +57,11 @@ def update_series(
         current_user, series_uuid, series_in.to_dto()
     )
     return None
+
+
+@router.delete("/series/{series_uuid}", status_code=204)
+def delete_series(
+    series_uuid: UUID, current_user: models.User = Depends(deps.get_current_user)
+) -> None:
+    services.series.delete_series_by_uuid(current_user, series_uuid)
+    return None
