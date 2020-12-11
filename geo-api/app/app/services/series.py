@@ -23,3 +23,10 @@ def get_item_series(
     series_dtos = Series.find_by_item_uuid(item.uuid)
     series = [Series(**s.to_dict()) for s in series_dtos]
     return to_models(series, SeriesDTO)
+
+def get_series(
+    user: InternalUserDTO, series_uuid: UUID
+) -> SeriesDTO:
+    series_dto = Series.find_or_fail(series_uuid)
+    Item.find_readable_or_fail(user, series_dto.item_uuid)
+    return to_model(series_dto, SeriesDTO)

@@ -34,3 +34,15 @@ def get_item_series(
 ) -> List[schemas.Series]:
     series = services.series.get_item_series(current_user, item_uuid)
     return [schemas.Series.from_dto(s) for s in series]
+
+
+@router.get(
+    "/series/{series_uuid}",
+    status_code=200
+)
+def get_series(
+    series_uuid,
+    current_user: models.User = Depends(deps.get_current_user_or_guest),
+) -> schemas.Series:
+    series_dto = services.series.get_series(current_user, series_uuid)
+    return schemas.Series.from_dto(series_dto)
