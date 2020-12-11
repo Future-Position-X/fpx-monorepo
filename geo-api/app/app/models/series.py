@@ -29,3 +29,12 @@ class Series(BaseModel):
 
     item = relationship("Item")
     metrics = relationship("Metric", lazy=True, viewonly=True)
+
+    @classmethod
+    def find_by_item_uuid(
+        cls,
+        item_uuid: UUID,
+    ) -> List[SeriesDTO]:
+        query = cls.query.filter(cls.item_uuid == item_uuid)
+        res = query.all()
+        return res
