@@ -6,3 +6,5 @@ from .provider import Provider, ProviderCreate, ProviderInDB, ProviderUpdate
 from .session import SessionCreate
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate
+from .series import Series, SeriesCreate, SeriesInDB, SeriesUpdate
+from .metric import Metric, MetricCreate, MetricInDB, MetricUpdate

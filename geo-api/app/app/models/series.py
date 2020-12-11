@@ -27,4 +27,5 @@ class Series(BaseModel):
     )
     data = sa.Column(pg.JSONB)
 
-    items = relationship("Item", lazy=True, viewonly=True)
+    item = relationship("Item")
+    metrics = relationship("Metric", lazy=True, viewonly=True)
