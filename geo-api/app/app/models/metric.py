@@ -26,3 +26,12 @@ class Metric(BaseModel):
     data = sa.Column(pg.JSONB)
 
     series = relationship("Series")
+
+    @classmethod
+    def find_by_series_uuid(
+        cls,
+        series_uuid: UUID,
+    ) -> List[SeriesDTO]:
+        query = cls.query.filter(cls.series_uuid == series_uuid)
+        res = query.all()
+        return res

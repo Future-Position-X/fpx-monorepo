@@ -2,7 +2,7 @@ from uuid import UUID
 
 from app.dto import InternalUserDTO, MetricDTO
 from app.models import Item, Metric, Series
-from app.models.base_model import to_model
+from app.models.base_model import to_model, to_models
 
 
 def create_series_metric(
@@ -15,3 +15,13 @@ def create_series_metric(
     metric.save()
     metric.session.commit()
     return to_model(metric, MetricDTO)
+
+
+def get_series_metrics(
+    user: InternalUserDTO, series_uuid: UUID
+) -> MetricDTO:
+    series = Series.find_or_fail(series_uuid)
+    Item.find_readable_or_fail(user, series.item_uuid)
+    metrics_dtos = Metric.find_by_series_uuid(series.uuid)
+    metrics = [Metric(**m.to_dict()) for m in metrics_dtos]
+    return to_models(metrics, MetricDTO)
