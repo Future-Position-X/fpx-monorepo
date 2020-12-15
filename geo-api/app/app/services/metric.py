@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from app.dto import InternalUserDTO, MetricDTO
@@ -19,7 +20,7 @@ def create_series_metric(
 
 def get_series_metrics(
     user: InternalUserDTO, series_uuid: UUID
-) -> MetricDTO:
+) -> List[MetricDTO]:
     series = Series.find_or_fail(series_uuid)
     Item.find_readable_or_fail(user, series.item_uuid)
     metrics_dtos = Metric.find_by_series_uuid(series.uuid)

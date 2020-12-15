@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from app.dto import InternalUserDTO, SeriesDTO
@@ -18,7 +19,7 @@ def create_item_series(
 
 def get_item_series(
     user: InternalUserDTO, item_uuid: UUID
-) -> SeriesDTO:
+) -> List[SeriesDTO]:
     item = Item.find_readable_or_fail(user, item_uuid)
     series_dtos = Series.find_by_item_uuid(item.uuid)
     series = [Series(**s.to_dict()) for s in series_dtos]
