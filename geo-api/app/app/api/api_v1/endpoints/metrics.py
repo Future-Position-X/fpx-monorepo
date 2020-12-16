@@ -1,5 +1,6 @@
 from typing import List
 from uuid import UUID
+from datetime import datetime
 
 from fastapi import APIRouter, Depends
 
@@ -34,3 +35,16 @@ def get_series_metrics(
 ) -> List[schemas.Metric]:
     metrics = services.metric.get_series_metrics(current_user, series_uuid)
     return [schemas.Metric.from_dto(m) for m in metrics]
+
+
+@router.get(
+    "/series/{series_uuid}/metrics/{ts}",
+    status_code=200
+)
+def get_metric(
+    series_uuid: UUID,
+    ts: datetime,
+    current_user: models.User = Depends(deps.get_current_user_or_guest),
+) -> schemas.Metric:
+    metric = services.metric.get_metric(current_user, series_uuid, ts)
+    return schemas.Metric.from_dto(metric)
