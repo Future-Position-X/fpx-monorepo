@@ -37,7 +37,7 @@ def update_series_by_uuid(
     user: InternalUserDTO, series_uuid: UUID, series_update: SeriesDTO
 ) -> SeriesDTO:
     series = Series.find_or_fail(series_uuid)
-    Item.find_readable_or_fail(user, series.item_uuid)
+    Item.find_writeable_or_fail(user, series.item_uuid)
     series.data = series_update.data
     series.save()
     series.session.commit()
@@ -46,6 +46,6 @@ def update_series_by_uuid(
 
 def delete_series_by_uuid(user: InternalUserDTO, series_uuid: UUID) -> None:
     series = Series.find_or_fail(series_uuid)
-    Item.find_readable_or_fail(user, series.item_uuid)
+    Item.find_writeable_or_fail(user, series.item_uuid)
     series.delete()
     series.session.commit()
