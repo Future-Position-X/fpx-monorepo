@@ -47,3 +47,10 @@ def update_metric(
     metric.save()
     metric.session.commit()
     return to_model(metric, MetricDTO)
+
+def delete_metric(user: InternalUserDTO, series_uuid: UUID, ts: datetime) -> None:
+    series = Series.find_or_fail(series_uuid)
+    Item.find_writeable_or_fail(user, series.item_uuid)
+    metric = Metric.find_or_fail((series_uuid, ts))
+    metric.delete()
+    metric.session.commit()

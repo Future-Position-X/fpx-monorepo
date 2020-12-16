@@ -61,3 +61,10 @@ def update_metric(
         current_user, series_uuid, ts, metric_in.to_dto()
     )
     return None
+
+@router.delete("/series/{series_uuid}/metrics/{ts}", status_code=204)
+def delete_metric(
+    series_uuid: UUID, ts: datetime, current_user: models.User = Depends(deps.get_current_user)
+) -> None:
+    services.metric.delete_metric(current_user, series_uuid, ts)
+    return None
