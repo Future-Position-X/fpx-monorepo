@@ -65,8 +65,6 @@ class BaseModel(
 
     __mapper_args__ = {"version_id_col": revision}
 
-    pass
-
 
 BDTO = TypeVar("BDTO", bound=BaseModelDTO)
 BM = TypeVar("BM", bound=BaseModel)

@@ -105,3 +105,20 @@ class InternalUserDTO(BaseDTO):
 
     def __init__(self, **kwargs: Any):
         super().__init__(kwargs, ["uuid", "provider_uuid"])
+
+
+class SeriesDTO(BaseModelDTO):
+    item_uuid: UUID
+    data: dict
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(kwargs, ["item_uuid", "data"])
+
+
+class MetricDTO(BaseModelDTO):
+    ts: datetime
+    series_uuid: UUID
+    data: dict
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(kwargs, ["series_uuid", "data"])
