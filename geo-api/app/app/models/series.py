@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from uuid import UUID
+from typing import TYPE_CHECKING, List
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import relationship
 
 from app.models.base_model import BaseModel
+from ..dto import SeriesDTO
 
 if TYPE_CHECKING:
     from .item import Item  # noqa: F401
+    from .metric import Metric  # noqa: F401
 
 
 class Series(BaseModel):
@@ -31,10 +34,7 @@ class Series(BaseModel):
     metrics = relationship("Metric", lazy=True, viewonly=True)
 
     @classmethod
-    def find_by_item_uuid(
-        cls,
-        item_uuid: UUID,
-    ) -> List[SeriesDTO]:
+    def find_by_item_uuid(cls, item_uuid: UUID,) -> List[SeriesDTO]:
         query = cls.query.filter(cls.item_uuid == item_uuid)
         res = query.all()
         return res

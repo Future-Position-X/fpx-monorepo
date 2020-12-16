@@ -11,7 +11,7 @@ def create_series_metric(
     user: InternalUserDTO, series_uuid: UUID, metric_dto: MetricDTO
 ) -> MetricDTO:
     series = Series.find_or_fail(series_uuid)
-    item = Item.find_writeable_or_fail(user, series.item_uuid)
+    Item.find_writeable_or_fail(user, series.item_uuid)
     metric_dto.series_uuid = series.uuid  # type: ignore
     metric = Metric(**metric_dto.to_dict())
     metric.save()
@@ -19,9 +19,7 @@ def create_series_metric(
     return to_model(metric, MetricDTO)
 
 
-def get_series_metrics(
-    user: InternalUserDTO, series_uuid: UUID
-) -> List[MetricDTO]:
+def get_series_metrics(user: InternalUserDTO, series_uuid: UUID) -> List[MetricDTO]:
     series = Series.find_or_fail(series_uuid)
     Item.find_readable_or_fail(user, series.item_uuid)
     metrics_dtos = Metric.find_by_series_uuid(series.uuid)
@@ -29,13 +27,12 @@ def get_series_metrics(
     return to_models(metrics, MetricDTO)
 
 
-def get_metric(
-    user: InternalUserDTO, series_uuid: UUID, ts: datetime
-) -> MetricDTO:
+def get_metric(user: InternalUserDTO, series_uuid: UUID, ts: datetime) -> MetricDTO:
     series = Series.find_or_fail(series_uuid)
     Item.find_readable_or_fail(user, series.item_uuid)
     metrics_dto = Metric.find_or_fail((series_uuid, ts))
     return to_model(Metric(**metrics_dto.to_dict()), MetricDTO)
+
 
 def update_metric(
     user: InternalUserDTO, series_uuid: UUID, ts: datetime, metric_update: MetricDTO
@@ -47,6 +44,7 @@ def update_metric(
     metric.save()
     metric.session.commit()
     return to_model(metric, MetricDTO)
+
 
 def delete_metric(user: InternalUserDTO, series_uuid: UUID, ts: datetime) -> None:
     series = Series.find_or_fail(series_uuid)

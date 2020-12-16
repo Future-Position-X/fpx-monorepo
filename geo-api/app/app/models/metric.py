@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, TYPE_CHECKING
 from uuid import UUID
-from datetime import datetime
 
 import sqlalchemy as sa
-import sqlalchemy_mixins
-from geoalchemy2 import Geometry
-from sqlalchemy import Column, and_, func, or_
 from sqlalchemy.dialects import postgresql as pg
-from sqlalchemy.orm import Query, relationship
+from sqlalchemy.orm import relationship
 
-from app.dto import Access, InternalUserDTO, ItemDTO
-from app.models import Collection
-from app.models.acl import ACL
+from app.dto import SeriesDTO
 from app.models.base_model import BaseModel
+
+
+if TYPE_CHECKING:
+    from .series import Series  # noqa: F401
 
 
 class Metric(BaseModel):
@@ -29,10 +27,7 @@ class Metric(BaseModel):
     series = relationship("Series")
 
     @classmethod
-    def find_by_series_uuid(
-        cls,
-        series_uuid: UUID,
-    ) -> List[SeriesDTO]:
+    def find_by_series_uuid(cls, series_uuid: UUID,) -> List[SeriesDTO]:
         query = cls.query.filter(cls.series_uuid == series_uuid)
         res = query.all()
         return res
