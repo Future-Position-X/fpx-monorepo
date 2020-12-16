@@ -6,7 +6,9 @@ from app.api.api_v1.endpoints import (
     health,
     items,
     login,
+    metrics,
     providers,
+    series,
     sessions,
     users,
     utils,
@@ -38,4 +40,10 @@ api_router.include_router(
 )
 api_router.include_router(
     health.router, prefix="", tags=["health"], dependencies=[Depends(get_db)]
+)
+api_router.include_router(
+    series.router, prefix="", tags=["series"], dependencies=[Depends(get_db)]
+)
+api_router.include_router(
+    metrics.router, prefix="", tags=["metrics"], dependencies=[Depends(get_db)]
 )
