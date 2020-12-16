@@ -48,3 +48,16 @@ def get_metric(
 ) -> schemas.Metric:
     metric = services.metric.get_metric(current_user, series_uuid, ts)
     return schemas.Metric.from_dto(metric)
+
+
+@router.put("/series/{series_uuid}/metrics/{ts}", status_code=204)
+def update_metric(
+    series_uuid: UUID,
+    ts: datetime,
+    metric_in: schemas.MetricUpdate,
+    current_user: models.User = Depends(deps.get_current_user),
+) -> None:
+    services.metric.update_metric(
+        current_user, series_uuid, ts, metric_in.to_dto()
+    )
+    return None

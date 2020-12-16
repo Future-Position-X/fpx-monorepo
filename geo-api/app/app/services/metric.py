@@ -36,3 +36,14 @@ def get_metric(
     Item.find_readable_or_fail(user, series.item_uuid)
     metrics_dto = Metric.find_or_fail((series_uuid, ts))
     return to_model(Metric(**metrics_dto.to_dict()), MetricDTO)
+
+def update_metric(
+    user: InternalUserDTO, series_uuid: UUID, ts: datetime, metric_update: MetricDTO
+) -> MetricDTO:
+    series = Series.find_or_fail(series_uuid)
+    Item.find_writeable_or_fail(user, series.item_uuid)
+    metric = Metric.find_or_fail((series_uuid, ts))
+    metric.data = metric_update.data
+    metric.save()
+    metric.session.commit()
+    return to_model(metric, MetricDTO)
