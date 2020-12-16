@@ -6,12 +6,12 @@ from app.api.api_v1.endpoints import (
     health,
     items,
     login,
+    metrics,
     providers,
+    series,
     sessions,
     users,
     utils,
-    series,
-    metrics,
 )
 from app.api.deps import get_db
 

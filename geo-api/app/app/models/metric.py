@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -9,7 +9,6 @@ from sqlalchemy.orm import relationship
 
 from app.dto import SeriesDTO
 from app.models.base_model import BaseModel
-
 
 if TYPE_CHECKING:
     from .series import Series  # noqa: F401

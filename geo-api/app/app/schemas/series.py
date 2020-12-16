@@ -5,6 +5,7 @@ from typing import Type
 from uuid import UUID
 
 from pydantic import BaseModel
+
 from app.dto import SeriesDTO
 
 

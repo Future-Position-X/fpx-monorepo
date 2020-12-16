@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from uuid import UUID
 from typing import TYPE_CHECKING, List
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import relationship
 
 from app.models.base_model import BaseModel
+
 from ..dto import SeriesDTO
 
 if TYPE_CHECKING:

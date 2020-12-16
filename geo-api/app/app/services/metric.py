@@ -1,6 +1,6 @@
+from datetime import datetime
 from typing import List
 from uuid import UUID
-from datetime import datetime
 
 from app.dto import InternalUserDTO, MetricDTO
 from app.models import Item, Metric, Series
