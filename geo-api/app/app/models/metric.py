@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+import re
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -27,7 +28,114 @@ class Metric(BaseModel):
     series = relationship("Series")
 
     @classmethod
-    def find_by_series_uuid(cls, series_uuid: UUID,) -> List[SeriesDTO]:
-        query = cls.query.filter(cls.series_uuid == series_uuid)
-        res = query.order_by(desc(Metric.ts)).limit(1000).offset(0).all()
+    def find_by_series_uuid(cls, series_uuid: UUID, filters: dict) -> List[SeriesDTO]:
+        where, exec_dict = cls.create_where(filters)
+        query = (
+            cls.query.filter(cls.series_uuid == series_uuid)
+            .filter(sa.text(where))
+            .params(exec_dict)
+        )
+        res = (
+            query.order_by(desc(Metric.ts))
+            .limit(filters["limit"])
+            .offset(filters["offset"])
+            .all()
+        )
         return res
+
+    @staticmethod
+    def create_where(filters: dict) -> Tuple[str, Dict[str, Optional[Any]]]:
+        where = """
+        (
+            1=1
+        )"""
+
+        exec_dict = {
+            "offset": filters["offset"],
+            "limit": filters["limit"],
+        }
+
+        if filters["data_filter"] is not None:
+            where += " AND "
+            where = Metric.append_data_filter_to_where_clause(
+                where, filters["data_filter"], exec_dict
+            )
+
+        if filters["filter"] is not None:
+            where += " AND "
+            where = Metric.append_filter_to_where_clause(
+                where, filters["filter"], exec_dict
+            )
+
+        return where, exec_dict
+
+    @staticmethod
+    def append_filter_to_where_clause(
+        where_clause: str, data_filter: str, execute_dict: dict
+    ) -> str:
+        params = data_filter.split(",")
+
+        for i, p in enumerate(params):
+            operator_str = "="
+            match = re.search("(<=|>=|!=|<|>|=)", p)
+            if match:
+                operator_str = match.group(0)
+            operators = {
+                "<=": "<=",
+                ">=": ">=",
+                "!=": "!=",
+                "<": "<",
+                ">": ">",
+                "=": "=",
+            }
+            tokens = p.split(operators[operator_str])
+            value = "value_" + str(i)
+
+            where_clause += (
+                " "
+                + Metric.__table__.columns[tokens[0]].__str__()
+                + " "
+                + operators[operator_str]
+                + " :"
+                + value
+            )
+            execute_dict[value] = tokens[1]
+
+            if i < (len(params) - 1):
+                where_clause += " AND"
+
+        return where_clause
+
+    @staticmethod
+    def append_data_filter_to_where_clause(
+        where_clause: str, data_filter: str, execute_dict: dict
+    ) -> str:
+        params = data_filter.split(",")
+
+        for i, p in enumerate(params):
+            operator_str = "="
+            match = re.search("(<=|>=|!=|<|>|=)", p)
+            if match:
+                operator_str = match.group(0)
+            operators = {
+                "<=": "<=",
+                ">=": ">=",
+                "!=": "!=",
+                "<": "<",
+                ">": ">",
+                "=": "=",
+            }
+            tokens = p.split(operators[operator_str])
+            name = "name_" + str(i)
+            value = "value_" + str(i)
+
+            where_clause += (
+                " data->>:" + name + " " + operators[operator_str] + " :" + value
+            )
+            execute_dict[name] = tokens[0]
+            execute_dict[value] = tokens[1]
+
+            if i < (len(params) - 1):
+                where_clause += " AND"
+
+        return where_clause
