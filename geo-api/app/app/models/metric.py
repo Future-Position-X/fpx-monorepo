@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, List
 from uuid import UUID
 
 import sqlalchemy as sa
+from sqlalchemy import desc
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import relationship
 
@@ -28,5 +29,5 @@ class Metric(BaseModel):
     @classmethod
     def find_by_series_uuid(cls, series_uuid: UUID,) -> List[SeriesDTO]:
         query = cls.query.filter(cls.series_uuid == series_uuid)
-        res = query.all()
+        res = query.order_by(desc(Metric.ts)).limit(1000).offset(0).all()
         return res
