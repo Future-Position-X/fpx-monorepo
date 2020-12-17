@@ -19,10 +19,12 @@ def create_series_metric(
     return to_model(metric, MetricDTO)
 
 
-def get_series_metrics(user: InternalUserDTO, series_uuid: UUID) -> List[MetricDTO]:
+def get_series_metrics(
+    user: InternalUserDTO, series_uuid: UUID, filter_params: dict
+) -> List[MetricDTO]:
     series = Series.find_or_fail(series_uuid)
     Item.find_readable_or_fail(user, series.item_uuid)
-    metrics_dtos = Metric.find_by_series_uuid(series.uuid)
+    metrics_dtos = Metric.find_by_series_uuid(series.uuid, filter_params)
     metrics = [Metric(**m.to_dict()) for m in metrics_dtos]
     return to_models(metrics, MetricDTO)
 
