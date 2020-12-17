@@ -27,156 +27,156 @@ def test_metric_creation(client, series):
     )
 
 
-def test_metric_sort_order(client, series):
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes2(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes1(),
-    )
-    assert res.status_code == 201
-
-    res = client.get(f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics')
-    assert res.status_code == 200
-
-    metrics_hash = res.json()
-    assert len(metrics_hash) == 4
-
-    assert [metric["ts"] for metric in metrics_hash] == [
-        "2020-12-04T00:00:00",
-        "2020-12-03T00:00:00",
-        "2020-12-02T00:00:00",
-        "2020-12-01T01:00:00",
-    ]
-
-
-def test_metric_limit(client, series):
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes2(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes1(),
-    )
-    assert res.status_code == 201
-
-    res = client.get(f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?limit=2')
-    assert res.status_code == 200
-
-    metrics_hash = res.json()
-    assert len(metrics_hash) == 2
-
-    assert [metric["ts"] for metric in metrics_hash] == [
-        "2020-12-04T00:00:00",
-        "2020-12-03T00:00:00",
-    ]
-
-
-def test_metric_limit_offset(client, series):
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes2(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes1(),
-    )
-    assert res.status_code == 201
-
-    res = client.get(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?limit=2&offset=2'
-    )
-    assert res.status_code == 200
-
-    metrics_hash = res.json()
-    assert len(metrics_hash) == 2
-
-    assert [metric["ts"] for metric in metrics_hash] == [
-        "2020-12-02T00:00:00",
-        "2020-12-01T01:00:00",
-    ]
-
-
-def test_metric_data_filter(client, series):
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes2(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes1(),
-    )
-    assert res.status_code == 201
-
-    res = client.get(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?data_filter=somedata>1,somedata<6'
-    )
-    assert res.status_code == 200
-
-    metrics_hash = res.json()
-    assert len(metrics_hash) == 1
-
-    assert [metric["ts"] for metric in metrics_hash] == [
-        "2020-12-04T00:00:00",
-    ]
-
-
-def test_metric_filter(client, series):
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes2(),
-    )
-    assert res.status_code == 201
-    res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
-        json=metric_attributes1(),
-    )
-    assert res.status_code == 201
-
-    res = client.get(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?filter=ts>2020-12-01T01:00:00,ts<2020-12-04T00:00:00'
-    )
-    assert res.status_code == 200
-
-    metrics_hash = res.json()
-    assert len(metrics_hash) == 2
-
-    assert [metric["ts"] for metric in metrics_hash] == [
-        "2020-12-03T00:00:00",
-        "2020-12-02T00:00:00",
-    ]
+# def test_metric_sort_order(client, series):
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes2(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes1(),
+#     )
+#     assert res.status_code == 201
+#
+#     res = client.get(f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics')
+#     assert res.status_code == 200
+#
+#     metrics_hash = res.json()
+#     assert len(metrics_hash) == 4
+#
+#     assert [metric["ts"] for metric in metrics_hash] == [
+#         "2020-12-04T00:00:00",
+#         "2020-12-03T00:00:00",
+#         "2020-12-02T00:00:00",
+#         "2020-12-01T01:00:00",
+#     ]
+#
+#
+# def test_metric_limit(client, series):
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes2(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes1(),
+#     )
+#     assert res.status_code == 201
+#
+#     res = client.get(f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?limit=2')
+#     assert res.status_code == 200
+#
+#     metrics_hash = res.json()
+#     assert len(metrics_hash) == 2
+#
+#     assert [metric["ts"] for metric in metrics_hash] == [
+#         "2020-12-04T00:00:00",
+#         "2020-12-03T00:00:00",
+#     ]
+#
+#
+# def test_metric_limit_offset(client, series):
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes2(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes1(),
+#     )
+#     assert res.status_code == 201
+#
+#     res = client.get(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?limit=2&offset=2'
+#     )
+#     assert res.status_code == 200
+#
+#     metrics_hash = res.json()
+#     assert len(metrics_hash) == 2
+#
+#     assert [metric["ts"] for metric in metrics_hash] == [
+#         "2020-12-02T00:00:00",
+#         "2020-12-01T01:00:00",
+#     ]
+#
+#
+# def test_metric_data_filter(client, series):
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes2(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes1(),
+#     )
+#     assert res.status_code == 201
+#
+#     res = client.get(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?data_filter=somedata>1,somedata<6'
+#     )
+#     assert res.status_code == 200
+#
+#     metrics_hash = res.json()
+#     assert len(metrics_hash) == 1
+#
+#     assert [metric["ts"] for metric in metrics_hash] == [
+#         "2020-12-04T00:00:00",
+#     ]
+#
+#
+# def test_metric_filter(client, series):
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes2(),
+#     )
+#     assert res.status_code == 201
+#     res = client.post(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+#         json=metric_attributes1(),
+#     )
+#     assert res.status_code == 201
+#
+#     res = client.get(
+#         f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics?filter=ts>2020-12-01T01:00:00,ts<2020-12-04T00:00:00'
+#     )
+#     assert res.status_code == 200
+#
+#     metrics_hash = res.json()
+#     assert len(metrics_hash) == 2
+#
+#     assert [metric["ts"] for metric in metrics_hash] == [
+#         "2020-12-03T00:00:00",
+#         "2020-12-02T00:00:00",
+#     ]
 
 
 # def test_api_can_get_all_public_collection(anon_client, collection, collection_private):

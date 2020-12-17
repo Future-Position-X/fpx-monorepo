@@ -457,6 +457,8 @@ def anon_client(
 @pytest.fixture(scope="function", autouse=True)
 def session(request):
     test_db_session.begin_nested()
+    print("start")
     yield test_db_session
+    print("end")
     test_db_session.rollback()
     test_db_session.close()
