@@ -336,6 +336,33 @@ def item_empty_geom(db, provider, collection, request):
 
 
 @pytest.fixture(scope="session")
+def series(db, item, request):
+    from app.models import Series
+
+    series = Series.create(
+        item_uuid=item["uuid"],
+        data={"name": "test-series1", "second_prop": "test-prop1"},
+    )
+    Series.session.commit()
+    return series.to_dict()
+
+
+@pytest.fixture(scope="session")
+def metric(db, series, request):
+    from datetime import datetime
+
+    from app.models import Metric
+
+    metric = Metric.create(
+        series_uuid=series["uuid"],
+        ts=datetime.fromisoformat("2020-12-01T01:00:00.000"),
+        data={"name": "test-series1", "second_prop": "test-prop1", "third_prop": 1},
+    )
+    Metric.session.commit()
+    return metric.to_dict()
+
+
+@pytest.fixture(scope="session")
 def client(
     db,
     provider,
@@ -353,6 +380,8 @@ def client(
     item_poly,
     item_empty_geom,
     item_private,
+    series,
+    metric,
     request,
 ):
     from app.core.security import create_access_token
@@ -383,6 +412,8 @@ def client2(
     item_poly,
     item_empty_geom,
     item_private,
+    series,
+    metric,
     request,
 ):
     from app.core.security import create_access_token
@@ -413,6 +444,8 @@ def anon_client(
     item_poly,
     item_empty_geom,
     item_private,
+    series,
+    metric,
     request,
 ):
     with TestClient(app) as client:

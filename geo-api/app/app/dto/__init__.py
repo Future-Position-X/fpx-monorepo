@@ -121,4 +121,4 @@ class MetricDTO(BaseModelDTO):
     data: dict
 
     def __init__(self, **kwargs: Any):
-        super().__init__(kwargs, ["series_uuid", "data"])
+        super().__init__(kwargs, ["ts", "series_uuid", "data"])

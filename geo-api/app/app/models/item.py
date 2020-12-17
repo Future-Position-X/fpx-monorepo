@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -14,6 +14,9 @@ from app.dto import Access, InternalUserDTO, ItemDTO
 from app.models import Collection
 from app.models.acl import ACL
 from app.models.base_model import BaseModel
+
+if TYPE_CHECKING:
+    from .series import Series  # noqa: F401
 
 
 class Item(BaseModel):
@@ -37,6 +40,7 @@ class Item(BaseModel):
     )
 
     collection = relationship("Collection")
+    series = relationship("Series")
 
     @staticmethod
     def append_property_filter_to_where_clause(
