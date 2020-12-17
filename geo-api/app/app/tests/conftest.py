@@ -334,6 +334,7 @@ def item_empty_geom(db, provider, collection, request):
     Item.session.commit()
     return item.to_dict()
 
+
 @pytest.fixture(scope="session")
 def series(db, item, request):
     from app.models import Series
@@ -345,10 +346,13 @@ def series(db, item, request):
     Series.session.commit()
     return series.to_dict()
 
+
 @pytest.fixture(scope="session")
 def metric(db, series, request):
-    from app.models import Metric
     from datetime import datetime
+
+    from app.models import Metric
+
     metric = Metric.create(
         series_uuid=series["uuid"],
         ts=datetime.fromisoformat("2020-12-01T01:00:00.000"),
@@ -356,6 +360,7 @@ def metric(db, series, request):
     )
     Metric.session.commit()
     return metric.to_dict()
+
 
 @pytest.fixture(scope="session")
 def client(

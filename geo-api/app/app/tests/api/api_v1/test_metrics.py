@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from app.core.config import settings
-from app.tests.conftest import UUID_ZERO
 
 
 def metric_attributes():
@@ -10,11 +9,14 @@ def metric_attributes():
 
 def test_metric_creation(client, series):
     res = client.post(
-        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics', json=metric_attributes()
+        f'{settings.API_V1_STR}/series/{series["uuid"]}/metrics',
+        json=metric_attributes(),
     )
     assert res.status_code == 201
     metric_hash = res.json()
-    assert datetime.fromisoformat(metric_attributes()['ts']) == datetime.fromisoformat(metric_hash['ts'])
+    assert datetime.fromisoformat(metric_attributes()["ts"]) == datetime.fromisoformat(
+        metric_hash["ts"]
+    )
 
 
 # def test_api_can_get_all_public_collection(anon_client, collection, collection_private):
