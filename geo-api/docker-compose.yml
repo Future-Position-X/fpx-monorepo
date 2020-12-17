@@ -4,7 +4,7 @@ services:
     command: ["postgres", "-c", "log_statement=all", "-c", "log_duration=on", "-c", "log_line_prefix=%m [%p] [s:%c] [t:%x]"]
     image: postgis/postgis:latest
     volumes:
-      - ./postgis-data:/var/lib/postgresql/data
+      - ./db/postgis-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=development
       - POSTGRES_USER=master
