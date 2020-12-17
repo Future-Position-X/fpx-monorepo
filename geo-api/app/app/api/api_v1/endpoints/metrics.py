@@ -1,13 +1,33 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app import models, schemas, services
 from app.api import deps
 
 router = APIRouter()
+
+
+def filter_parameters(
+    offset: Optional[int] = Query(0),
+    limit: Optional[int] = Query(20),
+    data_filter: Optional[str] = Query(None),
+    filter: Optional[str] = Query(None),
+    # valid: Optional[bool] = Query(False),
+    # spatial_filter: Optional[dict] = Depends(spatial_filter_parameters),
+    # collection_uuids: Optional[list] = Depends(collection_uuid_filter),
+) -> dict:
+    return {
+        "offset": offset,
+        "limit": limit,
+        "data_filter": data_filter,
+        "filter": filter,
+        # "valid": valid,
+        # "spatial_filter": spatial_filter,
+        # "collection_uuids": collection_uuids,
+    }
 
 
 @router.post(
@@ -30,9 +50,12 @@ def create_series_metric(
 @router.get("/series/{series_uuid}/metrics", status_code=200)
 def get_series_metrics(
     series_uuid: UUID,
+    filter_params: dict = Depends(filter_parameters),
     current_user: models.User = Depends(deps.get_current_user_or_guest),
 ) -> List[schemas.Metric]:
-    metrics = services.metric.get_series_metrics(current_user, series_uuid)
+    metrics = services.metric.get_series_metrics(
+        current_user, series_uuid, filter_params
+    )
     return [schemas.Metric.from_dto(m) for m in metrics]
 
 
