@@ -137,6 +137,7 @@ def test_delete_collection_item(client, item):
     assert res.status_code == 404
     assert "Not found" in str(res.content)
 
+
 @pytest.mark.skip
 def test_delete_collection_items(client, item):
     res = client.delete(
@@ -366,6 +367,7 @@ def test_item_creation_empty_geom(client, collection):
     assert res.status_code == 200
     assert "somenameempty" in str(res.content)
 
+
 @pytest.mark.skip
 def test_items_creation_geojson_replace(client, collection, item):
     res = client.post(
@@ -391,6 +393,7 @@ def test_items_creation_geojson(client, collection, item):
 
     assert len(items) == 1
     assert items[0]["uuid"] != item["uuid"]
+
 
 @pytest.mark.skip
 def test_item_delete(client, item):
