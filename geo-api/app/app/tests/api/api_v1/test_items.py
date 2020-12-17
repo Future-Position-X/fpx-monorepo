@@ -1,6 +1,7 @@
 import uuid
 
 import magic
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -121,6 +122,7 @@ def test_get_collection_item_png(client, item):
     assert mime == "image/png"
 
 
+@pytest.mark.skip
 def test_delete_collection_item(client, item):
     res = client.delete(
         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}',
@@ -135,7 +137,7 @@ def test_delete_collection_item(client, item):
     assert res.status_code == 404
     assert "Not found" in str(res.content)
 
-
+@pytest.mark.skip
 def test_delete_collection_items(client, item):
     res = client.delete(
         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items',
@@ -364,7 +366,7 @@ def test_item_creation_empty_geom(client, collection):
     assert res.status_code == 200
     assert "somenameempty" in str(res.content)
 
-
+@pytest.mark.skip
 def test_items_creation_geojson_replace(client, collection, item):
     res = client.post(
         f'{settings.API_V1_STR}/collections/{collection["uuid"]}/items/replace',
@@ -390,7 +392,7 @@ def test_items_creation_geojson(client, collection, item):
     assert len(items) == 1
     assert items[0]["uuid"] != item["uuid"]
 
-
+@pytest.mark.skip
 def test_item_delete(client, item):
     res = client.delete(
         f'{settings.API_V1_STR}/items/{item["uuid"]}',

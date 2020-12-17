@@ -37,6 +37,7 @@ class Item(BaseModel):
     )
 
     collection = relationship("Collection")
+    series = relationship("Series")
 
     @staticmethod
     def append_property_filter_to_where_clause(
