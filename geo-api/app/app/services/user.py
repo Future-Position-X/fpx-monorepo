@@ -43,7 +43,7 @@ def get_user(user_uuid: UUID) -> UserDTO:
 
 
 def get_user_by_email(email: str) -> UserDTO:
-    return to_model(User.find_or_fail(email=email), UserDTO)
+    return to_model(User.first_or_fail(email=email), UserDTO)
 
 
 def update_user(provider_uuid: UUID, user_uuid: UUID, user_update: UserDTO) -> UserDTO:
