@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 
 from app import schemas, services
 from app.api import deps
+from app.utils import send_new_account_email
 
 router = APIRouter()
 
@@ -18,6 +19,9 @@ router = APIRouter()
 @router.post("/users", status_code=201)
 def create_user(user_in: schemas.UserCreate,) -> schemas.User:
     user = schemas.User.from_dto(services.user.create_user(user_in.to_dto()))
+    assert user.email is not None
+    ident: str = user.email
+    send_new_account_email(email_to=ident, username=ident)
     return user
 
 
