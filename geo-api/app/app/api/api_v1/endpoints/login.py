@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -51,7 +51,7 @@ def test_token(current_user: models.User = Depends(deps.get_current_user)) -> An
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
 def recover_password(
-    email: str, new_password: str = Body(...), db: Session = Depends(deps.get_db)
+    email: str, new_password: str, db: Session = Depends(deps.get_db)
 ) -> Any:
     """
     Password Recovery
