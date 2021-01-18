@@ -29,7 +29,9 @@ def get_settings() -> Settings:
 settings = get_settings()
 
 app = FastAPI(
-    title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title=settings.PROJECT_NAME,
+    docs_url="/",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
 
