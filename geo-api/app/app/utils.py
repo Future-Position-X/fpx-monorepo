@@ -96,7 +96,7 @@ def generate_password_reset_token(email: str, password: str) -> str:
         password, settings.SECRET_KEY, encryption=constants.Algorithms.A256CBC_HS512
     )
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email, "password": encoded_password},
+        {"exp": exp, "nbf": now, "sub": email, "password": encoded_password.decode("utf-8")},
         settings.SECRET_KEY,
         algorithm="HS256",
     )
