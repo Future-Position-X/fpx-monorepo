@@ -28,7 +28,7 @@ Shapely = "^1.7.0"
 shapely-geojson = "^0.0.1"
 geojson-pydantic = { git = "https://github.com/Future-Position-X/geojson-pydantic.git", rev = "8b80512a131f20b1b3bcc5c690be8a0bee946c42"}
 pytest = "^5.4.1"
-python-jose = {extras = ["cryptography"], version = "^3.1.0"}
+python-jose = { git = "https://github.com/mpdavis/python-jose.git", rev = "8572088b76f7c0d31068f38aeca0d4273ae8bc8f", extras = ["cryptography"]}
 Pillow = "^7.1.2"
 python-magic = "^0.4.18"
 fastapi-utils = "^0.2.1"

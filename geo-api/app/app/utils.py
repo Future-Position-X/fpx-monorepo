@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import emails
 from emails.template import JinjaTemplate
-from jose import jwt
+from jose import constants, jwe, jwt
 
 from app.core.config import settings
 
@@ -87,20 +87,28 @@ def send_new_account_email(email_to: str, username: str) -> None:
     )
 
 
-def generate_password_reset_token(email: str) -> str:
+def generate_password_reset_token(email: str, password: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.utcnow()
     expires = now + delta
     exp = expires.timestamp()
+    encoded_password = jwe.encrypt(
+        password, settings.SECRET_KEY, encryption=constants.Algorithms.A256CBC_HS512
+    )
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email}, settings.SECRET_KEY, algorithm="HS256",
+        {"exp": exp, "nbf": now, "sub": email, "password": encoded_password},
+        settings.SECRET_KEY,
+        algorithm="HS256",
     )
     return encoded_jwt
 
 
-def verify_password_reset_token(token: str) -> Optional[str]:
+def verify_password_reset_token(token: str) -> Optional[Tuple[str, str]]:
     try:
         decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        return decoded_token["email"]
+        decoded_password = jwe.decrypt(
+            decoded_token["password"], settings.SECRET_KEY
+        ).decode("utf-8")
+        return decoded_token["sub"], decoded_password
     except jwt.JWTError:
         return None
