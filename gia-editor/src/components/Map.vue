@@ -133,6 +133,84 @@ export default {
         fillOpacity: 0.3 + Math.random() * 0.05,
       };
     },
+    hslToHex(hslText) {
+      const csv = hslText.replace(" ", "").replace("hsl(", "").replace("%", "").replace(")", "");
+      const values = csv.split(",");
+      const h = parseFloat(values[0]);
+      const s = parseInt(values[1], 10);
+      const l = parseInt(values[2], 10) / 100;
+      const a = s * Math.min(l, 1 - l) / 100;
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    },
+    invertColor(hexColor) {
+      const hex = hexColor.length === 4
+        ? hexColor[1] + hexColor[1] + hexColor[2] + hexColor[2] + hexColor[3] + hexColor[3]
+        : hexColor;
+
+      let r = (255 - parseInt(hex.slice(1, 3), 16)).toString(16);
+      let g = (255 - parseInt(hex.slice(3, 5), 16)).toString(16);
+      let b = (255 - parseInt(hex.slice(5, 7), 16)).toString(16);
+      
+      if (r.length === 1)
+        r = `0${r}`;
+
+      if (g.length === 1)
+        g = `0${g}`;
+
+      if (b.length === 1)
+        b = `0${b}`;
+
+      return `#${r}${g}${b}`;
+    },
+    onEachFeatureFunction(feature, layer) {
+      const properties = Object.entries(feature.properties).reduce((acc, [key, value])=>{
+        if(["boolean", "number", "bigint", "string"].includes(typeof value)) {
+          acc[key] = value;
+        } else {
+          acc[key] = typeof value;
+        }
+        return acc;
+      }, {});
+      let content = "<table class='tooltip-table'><tr><th>key</th><th>value</th></tr>\n";
+      Object.entries(properties).forEach(([key, value]) => {
+        content += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
+      });
+      content += "</table>";
+      layer.bindTooltip(content,
+        { permanent: false, sticky: true }
+      );
+
+      if (feature.geometry.type !== "Polygon" && feature.geometry.type !== "MultiPolygon")
+        return;
+      
+      layer.on("click", (e) => {
+        if (e.target.selectionInfo == null) {
+          e.target.selectionInfo = {
+            selected: false,
+            originalColor: e.target.options.color,
+            originalWeight: e.target.options.weight
+          };
+        }
+
+        e.target.selectionInfo.selected = !e.target.selectionInfo.selected;
+        const styleOptions = {};
+
+        if (e.target.selectionInfo.selected) {
+          styleOptions.color = this.invertColor(this.hslToHex(e.target.options.fillColor));
+          styleOptions.weight = 6;
+        } else {
+          styleOptions.color = e.target.selectionInfo.originalColor;
+          styleOptions.weight = e.target.selectionInfo.originalWeight;
+        }
+
+        e.target.setStyle(styleOptions);
+      });
+    },
     geoJsonOptions(layer, activeId) {
       console.debug("geoJsonOptions", layer);
       return {
@@ -205,43 +283,7 @@ export default {
       });
     });
   },
-  computed: {
-    onEachFeatureFunction() {
-      /*
-      if (!this.enableTooltip) {
-        return () => {};
-      }
-      return () => {};
-      */
-
-      return (feature, layer) => {
-        /*
-        layer.on('pm:update', args => {
-            console.debug("pm:update", args);
-            const geojsonData = this.$refs.geojsonChild.getGeoJSONData();
-            console.debug(geojsonData);
-            this.$emit('geojsonUpdate', geojsonData)
-        });
-        */
-        const properties = Object.entries(feature.properties).reduce((acc, [key, value])=>{
-          if(["boolean", "number", "bigint", "string"].includes(typeof value)) {
-            acc[key] = value;
-          } else {
-            acc[key] = typeof value;
-          }
-          return acc;
-        }, {});
-        let content = "<table class='tooltip-table'><tr><th>key</th><th>value</th></tr>\n";
-        Object.entries(properties).forEach(([key, value]) => {
-          content += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
-        });
-        content += "</table>";
-        layer.bindTooltip(content,
-          { permanent: false, sticky: true }
-        );
-      };
-    },
-  },
+  computed: {},
 };
 </script>
 <style>
