@@ -167,6 +167,11 @@ export default {
 
       return `#${r}${g}${b}`;
     },
+    getSelectedLayers() {
+      return Object.entries(this.$refs.theMap.mapObject._layers)
+        .map(([_, v]) => v)
+        .filter(l => l.selectionInfo != null && l.selectionInfo.selected);
+    },
     onEachFeatureFunction(feature, layer) {
       const properties = Object.entries(feature.properties).reduce((acc, [key, value])=>{
         if(["boolean", "number", "bigint", "string"].includes(typeof value)) {
