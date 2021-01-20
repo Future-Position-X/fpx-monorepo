@@ -71,11 +71,13 @@ export default {
   },
   methods: {
     onMergePolygonsClick() {
-      const selectedFeatures = this.getSelectedLayers().map((l) => l.toGeoJSON());
+      const selectedLayers = this.getSelectedLayers();
+      const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
       const feature = turf.union(...selectedFeatures);
+      feature.properties._merged_properties = selectedFeatures.map((f) => f.properties);
       console.debug(feature);
-      selectedFeatures.forEach(f => {
-        this.$emit('itemRemoved', f);
+      selectedLayers.forEach(l => {
+        this.$emit('itemRemoved', l.feature);
       });
       this.$emit('itemAdded', feature);
     },
