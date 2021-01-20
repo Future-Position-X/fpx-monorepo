@@ -206,6 +206,8 @@ export default {
         return;
       
       layer.on("click", (e) => {
+        this.$emit("itemClicked", e.target);
+
         if (e.target.options.pmLock === true)
           return;
 

@@ -162,6 +162,7 @@
               @itemModified="itemModified"
               @zoomUpdate="zoomUpdate"
               @rendered="onRendered"
+              @itemClicked="onItemClicked"
             />
           </v-col>
           <v-col
@@ -177,7 +178,7 @@
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
               <v-tab-item style="display: flex; flex-direction: column; flex: 1">
-                <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
+                <Code ref="code" v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
               </v-tab-item>
             </v-tabs>
             <div class="selectedCollectionName">
@@ -275,6 +276,11 @@ export default {
 
   },
   methods: {
+    onItemClicked(layer) {
+      if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
+        this.$refs.code.find(layer.feature.id);
+      }
+    },
     onFileSelected(file) {
       console.debug("onFileSelected: ", file);
       this.file = file;
