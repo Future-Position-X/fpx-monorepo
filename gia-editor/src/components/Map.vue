@@ -136,7 +136,7 @@ export default {
     geoJsonOptions(layer, activeId) {
       console.debug("geoJsonOptions", layer);
       return {
-        // onEachFeature: this.onEachFeatureFunction,
+        onEachFeature: this.onEachFeatureFunction,
         pointToLayer: (feature, latlng) => {
           return svgMarker(latlng, this.pointStyle(layer));
         },
@@ -211,30 +211,45 @@ export default {
       if (!this.enableTooltip) {
         return () => {};
       }
-      */
       return () => {};
+      */
 
-      /*
       return (feature, layer) => {
+        /*
         layer.on('pm:update', args => {
             console.debug("pm:update", args);
             const geojsonData = this.$refs.geojsonChild.getGeoJSONData();
             console.debug(geojsonData);
             this.$emit('geojsonUpdate', geojsonData)
         });
-        
-        layer.bindTooltip(
-          "<div>id:" +
-            feature.properties.id +
-            "</div><div>name: " +
-            feature.properties.name +
-            "</div>",
+        */
+        const properties = Object.entries(feature.properties).reduce((acc, [key, value])=>{
+          if(["boolean", "number", "bigint", "string"].includes(typeof value)) {
+            acc[key] = value;
+          } else {
+            acc[key] = typeof value;
+          }
+          return acc;
+        }, {});
+        let content = "<table class='tooltip-table'><tr><th>key</th><th>value</th></tr>\n";
+        Object.entries(properties).forEach(([key, value]) => {
+          content += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
+        });
+        content += "</table>";
+        layer.bindTooltip(content,
           { permanent: false, sticky: true }
         );
-        
       };
-      */
     },
   },
 };
 </script>
+<style>
+  table.tooltip-table {
+    border-collapse: collapse;
+  }
+  table.tooltip-table th, table.tooltip-table td {
+    border: 1px solid #acacac;
+    padding: 5px;
+  }
+</style>
