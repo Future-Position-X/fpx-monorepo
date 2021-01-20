@@ -132,6 +132,10 @@ export default {
         l.options.pmLock = !_newVal.active
       });
 
+      if (_newVal.active) {
+        this.mapObject.bringToFront();
+      }
+
       /*
       this.mapObject.clearLayers();
       console.debug("setOptions layers cleared")
