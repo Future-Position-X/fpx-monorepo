@@ -194,6 +194,9 @@ export default {
         return;
       
       layer.on("click", (e) => {
+        if (e.target.options.pmLock === true)
+          return;
+
         if (e.target.selectionInfo == null) {
           e.target.selectionInfo = {
             selected: false,
