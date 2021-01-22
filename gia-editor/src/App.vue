@@ -112,6 +112,48 @@
                 </v-card>
               </v-dialog>
             </div>
+
+            <!-- properties dialog start -->
+
+            <div class="mx-3 my-3 pa-0">
+              <v-dialog v-model="showPropEditDialog" width="400">
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="showPropEditDialog = true"
+                    small
+                    color="primary"
+                    :disabled="!authenticated || selectedItems.length === 0"
+                    v-on="on"
+                    >Edit properties...</v-btn>
+                </template>
+
+                <v-card>
+                  <v-card-text>
+                    <v-card-title class="headline">Edit properties</v-card-title>
+                    
+                    <v-treeview :items="selectedItems" item-key="id" item-text="name" return-object activatable @update:active="onPropertyTreeActiveChanged" item-children="children" />
+                    <v-text-field
+                      label="Name"
+                      v-model="selectedPropertyName"
+                      :readonly="selectedPropertyIsArrayIndex"
+                      @change="onPropertyNameChanged"
+                    ></v-text-field>
+                    <v-textarea
+                      solo
+                      name="input-7-4"
+                      label="Value"
+                      v-model="selectedPropertyValue"
+                      :readonly="!selectedPropertyIsEditable"
+                      @change="onPropertyValueChanged"
+                    ></v-textarea>
+                    <v-btn @click="onSavePropertiesClick" small color="primary">Save</v-btn>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </div>
+
+            <!-- properties dialog end -->
+
             <div v-show="!authenticated">
               <div class="ma-3">
                 <v-text-field v-model="email" label="Email"></v-text-field>
@@ -151,7 +193,7 @@
               style="position: absolute; top: 4px; right: 4px; z-index: 999"
             ></v-progress-circular>
             <Map
-              v-show="!showDeleteConfirmationDialog && !showCreateCollectionDialog"
+              v-show="!showDeleteConfirmationDialog && !showCreateCollectionDialog && !showPropEditDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               v-bind:activeId="activeId"
@@ -269,16 +311,78 @@ export default {
       file: null,
       showCreateCollectionDialog: false,
       selectedTab: null,
-      selectedSourceCollection: null
+      selectedSourceCollection: null,
+      selectedItems: [],
+      showPropEditDialog: false,
+      selectedProperty: {},
+      selectedPropertyName: "",
+      selectedPropertyValue: "",
+      selectedPropertyIsArrayIndex: false,
+      selectedPropertyIsEditable: true
     };
   },
   watch: {
 
   },
   methods: {
+    async onSavePropertiesClick() {
+      const x = await collection.updateItems([this.selectedItems[0].feature]);
+      console.debug(x);
+    },
+    onPropertyNameChanged() {
+      console.debug("onPropertyNameChanged");
+      
+      if (this.selectedProperty.name !== this.selectedPropertyName) {
+          console.debug(this.selectedProperty.name, " changed to ", this.selectedPropertyName);
+          Object.defineProperty(this.selectedProperty.parent, this.selectedPropertyName, Object.getOwnPropertyDescriptor(this.selectedProperty.parent, this.selectedProperty.name));
+          delete this.selectedProperty.parent[this.selectedProperty.name];
+          console.debug(this.selectedProperty.parent);
+      }
+    },
+    onPropertyValueChanged() {
+      console.debug("onPropertyValueChanged");
+      
+      if (this.selectedProperty.value !== this.selectedPropertyValue) {
+        console.debug(this.selectedProperty.value, " changed to ", this.selectedPropertyValue);
+        this.selectedProperty.parent[this.selectedProperty.name] = this.selectedPropertyValue;
+      }
+    },
+    onPropertyTreeActiveChanged(items) {
+      if (items.length < 1)
+        return;
+      
+      [this.selectedProperty] = items;
+      this.selectedPropertyName = items[0].name;
+      this.selectedPropertyValue = items[0].value;
+      this.selectedPropertyIsArrayIndex = Array.isArray(items[0].parent);
+      this.selectedPropertyIsEditable = items[0].value !== "(object)";
+    },
+    populatePropertyTree(feature, properties, treeItems) {
+      for (const propName in properties) {
+        if (Object.prototype.hasOwnProperty.call(properties, propName)) {
+          const treeItem = {
+            feature,
+            id: propName,
+            name: propName,
+            value: typeof properties[propName] === "object" ? "(object)" : properties[propName],
+            parent: properties,
+            children: []
+          };
+
+          treeItems.push(treeItem);
+
+          if (typeof properties[propName] === "object") {
+            this.populatePropertyTree(feature, properties[propName], treeItem.children);
+          }
+        }
+      }
+    },
     onItemClicked(layer) {
       if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
+        this.populatePropertyTree(layer.feature, layer.feature.properties, this.selectedItems);
+      } else {
+        this.selectedItems = this.selectedItems.filter(i => i.feature.id !== layer.feature.id);
       }
     },
     onFileSelected(file) {
