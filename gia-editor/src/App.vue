@@ -146,6 +146,7 @@
                       :readonly="!selectedPropertyIsEditable"
                       @change="onPropertyValueChanged"
                     ></v-textarea>
+                    <v-btn @click="onAddPropertyClick" small color="primary">Add property</v-btn>
                     <v-btn @click="onSavePropertiesClick" small color="primary">Save</v-btn>
                   </v-card-text>
                 </v-card>
@@ -329,6 +330,20 @@ export default {
       const x = await collection.updateItems([this.selectedItems[0].feature]);
       console.debug(x);
     },
+    onAddPropertyClick() {
+      this.selectedProperty.parent.newprop = "";
+
+      const treeItem = {
+        feature: this.selectedProperty.feature,
+        id: "newprop",
+        name: "newprop",
+        value: "",
+        parent: this.selectedProperty.parent,
+        children: []
+      };
+
+      this.selectedProperty.children.push(treeItem);
+    },
     onPropertyNameChanged() {
       console.debug("onPropertyNameChanged");
       
@@ -348,6 +363,8 @@ export default {
       }
     },
     onPropertyTreeActiveChanged(items) {
+      console.debug("onPropertyTreeActiveChanged: ", items);
+
       if (items.length < 1)
         return;
       
