@@ -331,14 +331,14 @@ export default {
       console.debug(x);
     },
     onAddPropertyClick() {
-      this.selectedProperty.parent.newprop = "";
+      this.selectedProperty.children[0].properties.newprop = "";
 
       const treeItem = {
         feature: this.selectedProperty.feature,
         id: "newprop",
         name: "newprop",
         value: "",
-        parent: this.selectedProperty.parent,
+        properties: this.selectedProperty.children[0].properties,
         children: []
       };
 
@@ -349,17 +349,19 @@ export default {
       
       if (this.selectedProperty.name !== this.selectedPropertyName) {
           console.debug(this.selectedProperty.name, " changed to ", this.selectedPropertyName);
-          Object.defineProperty(this.selectedProperty.parent, this.selectedPropertyName, Object.getOwnPropertyDescriptor(this.selectedProperty.parent, this.selectedProperty.name));
-          delete this.selectedProperty.parent[this.selectedProperty.name];
-          console.debug(this.selectedProperty.parent);
+          Object.defineProperty(this.selectedProperty.properties, this.selectedPropertyName, Object.getOwnPropertyDescriptor(this.selectedProperty.properties, this.selectedProperty.name));
+          delete this.selectedProperty.properties[this.selectedProperty.name];
+          console.debug(this.selectedProperty.properties);
+          this.selectedProperty.name = this.selectedPropertyName;
       }
     },
     onPropertyValueChanged() {
-      console.debug("onPropertyValueChanged");
+      console.debug("onPropertyValueChanged ");
       
       if (this.selectedProperty.value !== this.selectedPropertyValue) {
         console.debug(this.selectedProperty.value, " changed to ", this.selectedPropertyValue);
-        this.selectedProperty.parent[this.selectedProperty.name] = this.selectedPropertyValue;
+        this.selectedProperty.properties[this.selectedProperty.name] = this.selectedPropertyValue;
+        this.selectedProperty.value = this.selectedPropertyValue;
       }
     },
     onPropertyTreeActiveChanged(items) {
@@ -371,7 +373,7 @@ export default {
       [this.selectedProperty] = items;
       this.selectedPropertyName = items[0].name;
       this.selectedPropertyValue = items[0].value;
-      this.selectedPropertyIsArrayIndex = Array.isArray(items[0].parent);
+      this.selectedPropertyIsArrayIndex = Array.isArray(items[0].properties);
       this.selectedPropertyIsEditable = items[0].value !== "(object)";
     },
     populatePropertyTree(feature, properties, treeItems) {
@@ -382,7 +384,7 @@ export default {
             id: propName,
             name: propName,
             value: typeof properties[propName] === "object" ? "(object)" : properties[propName],
-            parent: properties,
+            properties,
             children: []
           };
 
@@ -397,6 +399,7 @@ export default {
     onItemClicked(layer) {
       if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
+        this.selectedItems = [];
         this.populatePropertyTree(layer.feature, layer.feature.properties, this.selectedItems);
       } else {
         this.selectedItems = this.selectedItems.filter(i => i.feature.id !== layer.feature.id);
