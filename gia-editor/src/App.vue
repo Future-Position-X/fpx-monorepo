@@ -131,7 +131,7 @@
                   <v-card-text>
                     <v-card-title class="headline">Edit properties</v-card-title>
                     
-                    <v-treeview :items="selectedItems" item-key="id" item-text="name" return-object activatable @update:active="onPropertyTreeActiveChanged" item-children="children" />
+                    <v-treeview :items="selectedItems" item-key="id" item-text="displayName" return-object activatable @update:active="onPropertyTreeActiveChanged" item-children="children" />
                     <v-text-field
                       label="Name"
                       v-model="selectedPropertyName"
@@ -147,6 +147,7 @@
                       @change="onPropertyValueChanged"
                     ></v-textarea>
                     <v-btn @click="onAddPropertyClick" small color="primary">Add property</v-btn>
+                    <v-btn @click="onDeletePropertyClick" small color="primary">Delete property</v-btn>
                     <v-btn @click="onSavePropertiesClick" small color="primary">Save</v-btn>
                   </v-card-text>
                 </v-card>
@@ -326,6 +327,13 @@ export default {
 
   },
   methods: {
+    async onDeletePropertyClick() {
+      delete this.selectedProperty.properties[this.selectedProperty.name];
+      this.selectedProperty.parent.children.splice(this.selectedProperty.parent.children.indexOf(this.selectedProperty), 1);
+      this.selectedProperty = null;
+      this.selectedPropertyName = "";
+      this.selectedPropertyValue = "";
+    },
     async onSavePropertiesClick() {
       const x = await collection.updateItems([this.selectedItems[0].feature]);
       console.debug(x);
@@ -376,22 +384,24 @@ export default {
       this.selectedPropertyIsArrayIndex = Array.isArray(items[0].properties);
       this.selectedPropertyIsEditable = items[0].value !== "(object)";
     },
-    populatePropertyTree(feature, properties, treeItems) {
+    populatePropertyTree(feature, properties, treeItems, parent) {
       for (const propName in properties) {
         if (Object.prototype.hasOwnProperty.call(properties, propName)) {
           const treeItem = {
             feature,
             id: propName,
             name: propName,
+            displayName: `${propName}: ${typeof properties[propName] === "object" ? "(object)" : properties[propName].toString().substr(0, 50)}`,
             value: typeof properties[propName] === "object" ? "(object)" : properties[propName],
             properties,
-            children: []
+            children: [],
+            parent
           };
 
           treeItems.push(treeItem);
 
           if (typeof properties[propName] === "object") {
-            this.populatePropertyTree(feature, properties[propName], treeItem.children);
+            this.populatePropertyTree(feature, properties[propName], treeItem.children, treeItem);
           }
         }
       }
@@ -400,7 +410,7 @@ export default {
       if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
         this.selectedItems = [];
-        this.populatePropertyTree(layer.feature, layer.feature.properties, this.selectedItems);
+        this.populatePropertyTree(layer.feature, layer.feature.properties, this.selectedItems, null);
       } else {
         this.selectedItems = this.selectedItems.filter(i => i.feature.id !== layer.feature.id);
       }
