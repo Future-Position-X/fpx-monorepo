@@ -122,7 +122,7 @@
                     @click="showPropEditDialog = true"
                     small
                     color="primary"
-                    :disabled="!authenticated || selectedItems.length === 0"
+                    :disabled="!authenticated"
                     v-on="on"
                     >Edit properties...</v-btn>
                 </template>
@@ -131,7 +131,7 @@
                   <v-card-text>
                     <v-card-title class="headline">Edit properties</v-card-title>
                     
-                    <v-treeview :items="selectedItems" item-key="id" item-text="displayName" return-object activatable @update:active="onPropertyTreeActiveChanged" item-children="children" />
+                    <v-treeview :items="selectedItemProperties" item-key="id" item-text="displayName" return-object activatable @update:active="onPropertyTreeActiveChanged" item-children="children" />
                     <v-text-field
                       label="Name"
                       v-model="selectedPropertyName"
@@ -148,7 +148,7 @@
                     ></v-textarea>
                     <v-btn @click="onAddPropertyClick" small color="primary">Add property</v-btn>
                     <v-btn @click="onDeletePropertyClick" small color="primary">Delete property</v-btn>
-                    <v-btn @click="onSavePropertiesClick" small color="primary">Save</v-btn>
+                    <v-btn @click="onUpdatePropertiesClick" small color="primary">Update</v-btn>
                   </v-card-text>
                 </v-card>
               </v-dialog>
@@ -314,9 +314,9 @@ export default {
       showCreateCollectionDialog: false,
       selectedTab: null,
       selectedSourceCollection: null,
-      selectedItems: [],
+      selectedItemProperties: [],
       showPropEditDialog: false,
-      selectedProperty: {},
+      selectedProperty: null,
       selectedPropertyName: "",
       selectedPropertyValue: "",
       selectedPropertyIsArrayIndex: false,
@@ -334,23 +334,36 @@ export default {
       this.selectedPropertyName = "";
       this.selectedPropertyValue = "";
     },
-    async onSavePropertiesClick() {
-      const x = await collection.updateItems([this.selectedItems[0].feature]);
-      console.debug(x);
+    onUpdatePropertiesClick() {
+      this.selectedItemProperties[0].feature.properties = this.selectedProperty.properties;
+      this.itemModified(this.selectedItemProperties[0].feature);
     },
     onAddPropertyClick() {
-      this.selectedProperty.children[0].properties.newprop = "";
-
       const treeItem = {
-        feature: this.selectedProperty.feature,
+        feature: this.selectedProperty !== null ? this.selectedProperty.feature : this.$refs.leafletMap.getSelectedLayers()[0].feature,
         id: "newprop",
         name: "newprop",
+        displayName: "newprop: ",
         value: "",
-        properties: this.selectedProperty.children[0].properties,
+        // properties: this.selectedProperty.children[0].properties,
         children: []
       };
 
-      this.selectedProperty.children.push(treeItem);
+      if (this.selectedProperty !== null) {
+        if (this.selectedProperty.children.length > 0) {
+          treeItem.properties = this.selectedProperty.children[0].properties;
+          this.selectedProperty.children[0].properties.newprop = "";
+          this.selectedProperty.children.push(treeItem);
+        } else {
+          treeItem.properties = this.selectedProperty.properties;
+          this.selectedProperty.properties.newprop = "";
+          this.selectedItemProperties.push(treeItem);
+        }
+      } else {
+          treeItem.properties = treeItem.feature.properties;
+          treeItem.properties.newprop = "";
+          this.selectedItemProperties.push(treeItem);
+      }
     },
     onPropertyNameChanged() {
       console.debug("onPropertyNameChanged");
@@ -409,10 +422,11 @@ export default {
     onItemClicked(layer) {
       if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
-        this.selectedItems = [];
-        this.populatePropertyTree(layer.feature, layer.feature.properties, this.selectedItems, null);
+        this.selectedItemProperties = [];
+        const properties = cloneDeep(layer.feature.properties);
+        this.populatePropertyTree(layer.feature, properties, this.selectedItemProperties, null);
       } else {
-        this.selectedItems = this.selectedItems.filter(i => i.feature.id !== layer.feature.id);
+        this.selectedItemProperties = this.selectedItemProperties.filter(i => i.feature.id !== layer.feature.id);
       }
     },
     onFileSelected(file) {
