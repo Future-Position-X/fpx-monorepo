@@ -131,7 +131,7 @@
                   <v-card-text>
                     <v-card-title class="headline">Edit properties</v-card-title>
                     
-                    <v-treeview :items="selectedItemProperties" item-key="id" item-text="displayName" return-object activatable @update:active="onPropertyTreeActiveChanged" item-children="children" />
+                    <v-treeview ref="proptertyTreeview" :items="selectedItemProperties" item-key="id" item-text="displayName" return-object activatable :active="activeProperty" @update:active="onPropertyTreeActiveChanged" item-children="children" />
                     <v-text-field
                       label="Name"
                       v-model="selectedPropertyName"
@@ -317,6 +317,7 @@ export default {
       selectedItemProperties: [],
       showPropEditDialog: false,
       selectedProperty: null,
+      activeProperty: [],
       selectedPropertyName: "",
       selectedPropertyValue: "",
       selectedPropertyIsArrayIndex: false,
@@ -327,7 +328,8 @@ export default {
 
   },
   methods: {
-    async onDeletePropertyClick() {
+    onDeletePropertyClick() {
+      console.error(this.selectedProperty);
       delete this.selectedProperty.properties[this.selectedProperty.name];
       this.selectedProperty.parent.children.splice(this.selectedProperty.parent.children.indexOf(this.selectedProperty), 1);
       this.selectedProperty = null;
@@ -335,18 +337,18 @@ export default {
       this.selectedPropertyValue = "";
     },
     onUpdatePropertiesClick() {
-      this.selectedItemProperties[0].feature.properties = this.selectedProperty.properties;
+      this.selectedItemProperties[0].feature.properties = cloneDeep(this.selectedProperty.properties);
       this.itemModified(this.selectedItemProperties[0].feature);
     },
     onAddPropertyClick() {
       const treeItem = {
         feature: this.selectedProperty !== null ? this.selectedProperty.feature : this.$refs.leafletMap.getSelectedLayers()[0].feature,
-        id: "newprop",
+        id: uuidv4(),
         name: "newprop",
         displayName: "newprop: ",
         value: "",
         // properties: this.selectedProperty.children[0].properties,
-        children: []
+        children: [],
       };
 
       if (this.selectedProperty !== null) {
@@ -364,6 +366,7 @@ export default {
           treeItem.properties.newprop = "";
           this.selectedItemProperties.push(treeItem);
       }
+      this.activeProperty = [treeItem]
     },
     onPropertyNameChanged() {
       console.debug("onPropertyNameChanged");
@@ -374,6 +377,8 @@ export default {
           delete this.selectedProperty.properties[this.selectedProperty.name];
           console.debug(this.selectedProperty.properties);
           this.selectedProperty.name = this.selectedPropertyName;
+          this.selectedProperty.displayName = `${this.selectedProperty.name}: ${this.selectedProperty.properties[this.selectedProperty.name].toString().substr(0, 50)}`;
+          this.activeProperty = [this.selectedProperty]
       }
     },
     onPropertyValueChanged() {
@@ -383,6 +388,7 @@ export default {
         console.debug(this.selectedProperty.value, " changed to ", this.selectedPropertyValue);
         this.selectedProperty.properties[this.selectedProperty.name] = this.selectedPropertyValue;
         this.selectedProperty.value = this.selectedPropertyValue;
+        this.selectedProperty.displayName = `${this.selectedProperty.name}: ${this.selectedProperty.properties[this.selectedProperty.name].toString().substr(0, 50)}`;
       }
     },
     onPropertyTreeActiveChanged(items) {
@@ -392,6 +398,7 @@ export default {
         return;
       
       [this.selectedProperty] = items;
+      this.activeProperty = [this.selectedProperty]
       this.selectedPropertyName = items[0].name;
       this.selectedPropertyValue = items[0].value;
       this.selectedPropertyIsArrayIndex = Array.isArray(items[0].properties);
@@ -402,9 +409,9 @@ export default {
         if (Object.prototype.hasOwnProperty.call(properties, propName)) {
           const treeItem = {
             feature,
-            id: propName,
+            id: uuidv4(),
             name: propName,
-            displayName: `${propName}: ${typeof properties[propName] === "object" ? "(object)" : properties[propName].toString().substr(0, 50)}`,
+            displayName: `${propName}: ${properties[propName].toString().substr(0, 50)}`,
             value: typeof properties[propName] === "object" ? "(object)" : properties[propName],
             properties,
             children: [],
