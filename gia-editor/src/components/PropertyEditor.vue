@@ -18,8 +18,10 @@ export default {
   watch: {
     properties: {
       handler(val) {
-        console.debug('propertyeditor.set');
-        this.editor.set(val);
+        if (JSON.stringify(val) !== JSON.stringify(this.editor.get())) {
+          console.debug('propertyeditor.set');
+          this.editor.set(val);
+        }
       },
       deep: true,
     },

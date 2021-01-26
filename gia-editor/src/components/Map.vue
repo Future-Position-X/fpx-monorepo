@@ -25,7 +25,7 @@
 
 <script>
 /* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
-import * as turf from '@turf/turf';
+// import * as turf from '@turf/turf';
 import * as L from 'leaflet';
 import { LMap, LTileLayer } from 'vue2-leaflet';
 import svgMarker from '../vendor/svg-icon';
@@ -73,9 +73,34 @@ export default {
     onMergePolygonsClick() {
       const selectedLayers = this.getSelectedLayers();
       const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
-      const feature = turf.union(...selectedFeatures);
-      feature.properties._merged_properties = selectedFeatures.map((f) => f.properties);
-      console.debug(feature);
+      const coordinates = [[]];
+      let properties = [];
+      for(const feature of selectedFeatures) {
+        if(feature.geometry.type === "Polygon") {
+          coordinates[0].push(feature.geometry.coordinates[0])
+          properties.push(feature.properties);
+        } else if(feature.geometry.type === "MultiPolygon") {
+          for (const polygon of feature.geometry.coordinates[0]) {
+            coordinates[0].push(polygon)
+          }
+          if(feature.properties._merged_properties) {
+            properties = properties.concat(feature.properties._merged_properties)
+          } else {
+            properties.push(feature.properties)
+          }
+        }
+      }
+      const feature = {
+        type: "Feature",
+        properties: {
+          _merged_properties: properties
+        },
+        geometry: {
+          type: "MultiPolygon",
+          coordinates
+        }
+      }
+      console.debug("merged", feature);
       selectedLayers.forEach(l => {
         this.$emit('itemRemoved', l.feature);
       });
