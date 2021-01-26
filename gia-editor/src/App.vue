@@ -3,14 +3,14 @@
     <v-content>
       <v-container :fluid="true" class="pa-0">
         <v-row no-gutter>
-          <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden">
+          <v-col sm="2" class="firstCol" style="height: 100vh; overflow-y: scroll; overflow-x: hidden">
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
               @activeUpdate="activeUpdate"
               ref="collectionTree"
             />
-            <div class="my-2 export-image-button ma-3 flex-grow-0 flex-shrink-0">
+            <div class="my-3 export-image-button ma-3 flex-grow-0 flex-shrink-0">
               <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290">
                 <template v-slot:activator="{ on }">
                   <v-btn
@@ -122,7 +122,7 @@
                     @click="showPropEditDialog = true"
                     small
                     color="primary"
-                    :disabled="!authenticated"
+                    :disabled="!selectedItem"
                     v-on="on"
                     >Edit properties...</v-btn>
                 </template>
@@ -130,25 +130,10 @@
                 <v-card>
                   <v-card-text>
                     <v-card-title class="headline">Edit properties</v-card-title>
-                    
-                    <v-treeview ref="proptertyTreeview" :items="selectedItemProperties" item-key="id" item-text="displayName" return-object activatable :active="activeProperty" @update:active="onPropertyTreeActiveChanged" item-children="children" />
-                    <v-text-field
-                      label="Name"
-                      v-model="selectedPropertyName"
-                      :readonly="selectedPropertyIsArrayIndex"
-                      @change="onPropertyNameChanged"
-                    ></v-text-field>
-                    <v-textarea
-                      solo
-                      name="input-7-4"
-                      label="Value"
-                      v-model="selectedPropertyValue"
-                      :readonly="!selectedPropertyIsEditable"
-                      @change="onPropertyValueChanged"
-                    ></v-textarea>
-                    <v-btn @click="onAddPropertyClick" small color="primary">Add property</v-btn>
-                    <v-btn @click="onDeletePropertyClick" small color="primary">Delete property</v-btn>
+
+                    <PropertyEditor :properties="selectedItemProperties" @propertiesUpdate="onPropertiesUpdate"></PropertyEditor>
                     <v-btn @click="onUpdatePropertiesClick" small color="primary">Update</v-btn>
+                    <v-btn @click="showPropEditDialog=false" small color="primary">Cancel</v-btn>
                   </v-card-text>
                 </v-card>
               </v-dialog>
@@ -188,7 +173,7 @@
               </v-alert>
             </div>
           </v-col>
-          <v-col sm="7" style="padding: 0px; position: relative">
+          <v-col sm="7" class="mapCol" style="padding: 0px; position: relative">
             <v-progress-circular
               :indeterminate="isLoading"
               color="light-blue"
@@ -211,6 +196,7 @@
           </v-col>
           <v-col
             sm="3"
+            class="codeCol"
             style="
               display: flex;
               flex-direction: column;
@@ -251,6 +237,7 @@ import leafletImage from 'leaflet-image';
 import debounce from 'debounce-async';
 import cloneDeep from 'lodash.clonedeep';
 import { v4 as uuidv4 } from 'uuid';
+import PropertyEditor from "./components/PropertyEditor.vue";
 import Map from './components/Map.vue';
 import Code from './components/Code.vue';
 import Tree from './components/Tree.vue';
@@ -278,6 +265,7 @@ function selectColor(colorNum, colors) {
 export default {
   name: 'App',
   components: {
+    PropertyEditor,
     // Table,
     Map,
     Code,
@@ -314,126 +302,30 @@ export default {
       showCreateCollectionDialog: false,
       selectedTab: null,
       selectedSourceCollection: null,
-      selectedItemProperties: [],
+      selectedItem: null,
+      selectedItemProperties: null,
       showPropEditDialog: false,
-      selectedProperty: null,
-      activeProperty: [],
-      selectedPropertyName: "",
-      selectedPropertyValue: "",
-      selectedPropertyIsArrayIndex: false,
-      selectedPropertyIsEditable: true
     };
   },
   watch: {
 
   },
   methods: {
-    onDeletePropertyClick() {
-      console.error(this.selectedProperty);
-      delete this.selectedProperty.properties[this.selectedProperty.name];
-      this.selectedProperty.parent.children.splice(this.selectedProperty.parent.children.indexOf(this.selectedProperty), 1);
-      this.selectedProperty = null;
-      this.selectedPropertyName = "";
-      this.selectedPropertyValue = "";
+    onPropertiesUpdate(properties) {
+      this.selectedItemProperties = properties
     },
     onUpdatePropertiesClick() {
-      this.selectedItemProperties[0].feature.properties = cloneDeep(this.selectedProperty.properties);
-      this.itemModified(this.selectedItemProperties[0].feature);
-    },
-    onAddPropertyClick() {
-      const treeItem = {
-        feature: this.selectedProperty !== null ? this.selectedProperty.feature : this.$refs.leafletMap.getSelectedLayers()[0].feature,
-        id: uuidv4(),
-        name: "newprop",
-        displayName: "newprop: ",
-        value: "",
-        // properties: this.selectedProperty.children[0].properties,
-        children: [],
-      };
-
-      if (this.selectedProperty !== null) {
-        if (this.selectedProperty.children.length > 0) {
-          treeItem.properties = this.selectedProperty.children[0].properties;
-          this.selectedProperty.children[0].properties.newprop = "";
-          this.selectedProperty.children.push(treeItem);
-        } else {
-          treeItem.properties = this.selectedProperty.properties;
-          this.selectedProperty.properties.newprop = "";
-          this.selectedItemProperties.push(treeItem);
-        }
-      } else {
-          treeItem.properties = treeItem.feature.properties;
-          treeItem.properties.newprop = "";
-          this.selectedItemProperties.push(treeItem);
-      }
-      this.activeProperty = [treeItem]
-    },
-    onPropertyNameChanged() {
-      console.debug("onPropertyNameChanged");
-      
-      if (this.selectedProperty.name !== this.selectedPropertyName) {
-          console.debug(this.selectedProperty.name, " changed to ", this.selectedPropertyName);
-          Object.defineProperty(this.selectedProperty.properties, this.selectedPropertyName, Object.getOwnPropertyDescriptor(this.selectedProperty.properties, this.selectedProperty.name));
-          delete this.selectedProperty.properties[this.selectedProperty.name];
-          console.debug(this.selectedProperty.properties);
-          this.selectedProperty.name = this.selectedPropertyName;
-          this.selectedProperty.displayName = `${this.selectedProperty.name}: ${this.selectedProperty.properties[this.selectedProperty.name].toString().substr(0, 50)}`;
-          this.activeProperty = [this.selectedProperty]
-      }
-    },
-    onPropertyValueChanged() {
-      console.debug("onPropertyValueChanged ");
-      
-      if (this.selectedProperty.value !== this.selectedPropertyValue) {
-        console.debug(this.selectedProperty.value, " changed to ", this.selectedPropertyValue);
-        this.selectedProperty.properties[this.selectedProperty.name] = this.selectedPropertyValue;
-        this.selectedProperty.value = this.selectedPropertyValue;
-        this.selectedProperty.displayName = `${this.selectedProperty.name}: ${this.selectedProperty.properties[this.selectedProperty.name].toString().substr(0, 50)}`;
-      }
-    },
-    onPropertyTreeActiveChanged(items) {
-      console.debug("onPropertyTreeActiveChanged: ", items);
-
-      if (items.length < 1)
-        return;
-      
-      [this.selectedProperty] = items;
-      this.activeProperty = [this.selectedProperty]
-      this.selectedPropertyName = items[0].name;
-      this.selectedPropertyValue = items[0].value;
-      this.selectedPropertyIsArrayIndex = Array.isArray(items[0].properties);
-      this.selectedPropertyIsEditable = items[0].value !== "(object)";
-    },
-    populatePropertyTree(feature, properties, treeItems, parent) {
-      for (const propName in properties) {
-        if (Object.prototype.hasOwnProperty.call(properties, propName)) {
-          const treeItem = {
-            feature,
-            id: uuidv4(),
-            name: propName,
-            displayName: `${propName}: ${properties[propName].toString().substr(0, 50)}`,
-            value: typeof properties[propName] === "object" ? "(object)" : properties[propName],
-            properties,
-            children: [],
-            parent
-          };
-
-          treeItems.push(treeItem);
-
-          if (typeof properties[propName] === "object") {
-            this.populatePropertyTree(feature, properties[propName], treeItem.children, treeItem);
-          }
-        }
-      }
+      this.selectedItem.properties = cloneDeep(this.selectedItemProperties);
+      this.itemModified(this.selectedItem);
     },
     onItemClicked(layer) {
       if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
-        this.selectedItemProperties = [];
-        const properties = cloneDeep(layer.feature.properties);
-        this.populatePropertyTree(layer.feature, properties, this.selectedItemProperties, null);
+        this.selectedItem = layer.feature;
+        this.selectedItemProperties = layer.feature.properties;
       } else {
-        this.selectedItemProperties = this.selectedItemProperties.filter(i => i.feature.id !== layer.feature.id);
+        this.selectedItem = null;
+        this.selectedItemProperties = null;
       }
     },
     onFileSelected(file) {
@@ -768,8 +660,7 @@ export default {
   color: #2c3e50;
 }
 
-.save-button button,
-.export-image-button button {
+.firstCol .v-btn, .codeCol .v-btn {
   padding: 0;
   width: 100%;
 }
