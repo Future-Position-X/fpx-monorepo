@@ -210,6 +210,10 @@ export default {
         .filter(l => l.selectionInfo != null && l.selectionInfo.selected && l.options.pmLock !== true);
     },
     onEachFeatureFunction(feature, layer) {
+      if (feature.properties.color !== undefined) {
+        layer.setStyle({fillColor: feature.properties.color});
+      }
+
       const properties = Object.entries(feature.properties).reduce((acc, [key, value])=>{
         if(["boolean", "number", "bigint", "string"].includes(typeof value)) {
           acc[key] = value;
