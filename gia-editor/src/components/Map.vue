@@ -319,7 +319,7 @@ export default {
         actions: [
           { text: 'Merge selected polygons', onClick: that.onMergePolygonsClick}
         ],
-        className: "leaflet-pm-icon-polygon-merge"
+        className: "leaflet-pm-icon-polygon-merge",
       });
       map.pm.removeControls();
 
