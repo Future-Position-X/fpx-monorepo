@@ -116,7 +116,7 @@
             <!-- properties dialog start -->
 
             <div class="mx-3 my-3 pa-0">
-              <v-dialog v-model="showPropEditDialog" width="400">
+              <v-dialog v-model="showPropEditDialog" width="600">
                 <template v-slot:activator="{ on }">
                   <v-btn
                     @click="showPropEditDialog = true"

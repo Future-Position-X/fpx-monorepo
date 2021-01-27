@@ -49,7 +49,7 @@ export default {
 
 <style>
 .propertyContainer {
-  min-width: 300px;
-  min-height: 300px;
+  /* min-width: 400px; */
+  min-height: 400px;
 }
 </style>
