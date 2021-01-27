@@ -117,23 +117,20 @@
 
             <div class="mx-3 my-3 pa-0">
               <v-dialog v-model="showPropEditDialog" width="600">
-                <template v-slot:activator="{ on }">
-                  <v-btn
-                    @click="showPropEditDialog = true"
-                    small
-                    color="primary"
-                    :disabled="!selectedItem"
-                    v-on="on"
-                    >Edit properties...</v-btn>
-                </template>
 
                 <v-card>
                   <v-card-text>
                     <v-card-title class="headline">Edit properties</v-card-title>
 
                     <PropertyEditor :properties="selectedItemProperties" @propertiesUpdate="onPropertiesUpdate"></PropertyEditor>
-                    <v-btn @click="onUpdatePropertiesClick" small color="primary">Update</v-btn>
-                    <v-btn @click="showPropEditDialog=false" small color="primary">Cancel</v-btn>
+                    <v-row>
+                      <v-col class="text-left">
+                        <v-btn @click="onUpdatePropertiesClick" small color="primary">Update</v-btn>
+                      </v-col>
+                      <v-col class="text-right">
+                        <v-btn @click="showPropEditDialog=false" small color="primary">Close</v-btn>
+                      </v-col>
+                    </v-row>
                   </v-card-text>
                 </v-card>
               </v-dialog>
@@ -193,6 +190,14 @@
               @rendered="onRendered"
               @itemClicked="onItemClicked"
             />
+            <v-btn
+              @click="showPropEditDialog = true"
+              small
+              color="primary"
+              :disabled="!selectedItem"
+              v-on="on"
+              style="position: absolute; bottom: 4px; left: 4px; z-index: 999"
+            >Edit properties...</v-btn>
           </v-col>
           <v-col
             sm="3"

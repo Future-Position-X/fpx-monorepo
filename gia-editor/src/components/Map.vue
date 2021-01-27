@@ -72,6 +72,10 @@ export default {
   methods: {
     onMergePolygonsClick() {
       const selectedLayers = this.getSelectedLayers();
+
+      if (selectedLayers.length < 2)
+        return;
+
       const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
       const coordinates = [[]];
       let properties = [];
