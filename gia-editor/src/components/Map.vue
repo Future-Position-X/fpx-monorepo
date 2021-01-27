@@ -111,7 +111,7 @@ export default {
     },
     onEdit(e) {
       console.debug(e);
-      this.$emit('itemModified', e.sourceTarget.toGeoJSON());
+      this.$emit('itemModified', e.layer.toGeoJSON());
     },
     boundsUpdate(bounds) {
       this.$emit('boundsUpdate', bounds);
