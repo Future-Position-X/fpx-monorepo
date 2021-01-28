@@ -195,7 +195,6 @@
               small
               color="primary"
               :disabled="!selectedItem"
-              v-on="on"
               style="position: absolute; bottom: 4px; left: 4px; z-index: 999"
             >Edit properties...</v-btn>
           </v-col>

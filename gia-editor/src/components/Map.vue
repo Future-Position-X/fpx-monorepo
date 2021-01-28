@@ -289,14 +289,13 @@ export default {
   mounted() {
     console.debug('Map mounted');
     this.$nextTick(() => {
-      const that = this;
       const map = this.$refs.theMap.mapObject;
       map.pm.Toolbar.createCustomControl({
         name: "Merge",
         block: "custom",
         title: "Merge selected polygons",
         actions: [
-          { text: 'Merge selected polygons', onClick: that.onMergePolygonsClick}
+          { text: 'Merge selected polygons', onClick: this.onMergePolygonsClick}
         ],
         className: "leaflet-pm-icon-polygon-merge",
       });

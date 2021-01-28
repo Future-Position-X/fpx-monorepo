@@ -3,9 +3,7 @@
 </template>
 
 <script>
-// import gjv from "geojson-validation";
 import JSONEditor from 'jsoneditor/dist/jsoneditor';
-// import 'jsoneditor/dist/jsoneditor.min.css';
 
 export default {
   name: 'PropertyEditor',
@@ -49,7 +47,6 @@ export default {
 
 <style>
 .propertyContainer {
-  /* min-width: 400px; */
   min-height: 400px;
 }
 </style>
