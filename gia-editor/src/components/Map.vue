@@ -26,6 +26,7 @@
 <script>
 /* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
 // import * as turf from '@turf/turf';
+import chroma from 'chroma-js';
 import * as L from 'leaflet';
 import { LMap, LTileLayer } from 'vue2-leaflet';
 import svgMarker from '../vendor/svg-icon';
@@ -38,6 +39,7 @@ import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
 import '../vendor/pmLock';
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -174,39 +176,12 @@ export default {
         fillOpacity: 0.3 + Math.random() * 0.05,
       };
     },
-    hslToHex(hslText) {
-      const csv = hslText.replace(" ", "").replace("hsl(", "").replace("%", "").replace(")", "");
-      const values = csv.split(",");
-      const h = parseFloat(values[0]);
-      const s = parseInt(values[1], 10);
-      const l = parseInt(values[2], 10) / 100;
-      const a = s * Math.min(l, 1 - l) / 100;
-      const f = n => {
-        const k = (n + h / 30) % 12;
-        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
-      };
-      return `#${f(0)}${f(8)}${f(4)}`;
-    },
-    invertColor(hexColor) {
-      const hex = hexColor.length === 4
-        ? hexColor[1] + hexColor[1] + hexColor[2] + hexColor[2] + hexColor[3] + hexColor[3]
-        : hexColor;
-
-      let r = (255 - parseInt(hex.slice(1, 3), 16)).toString(16);
-      let g = (255 - parseInt(hex.slice(3, 5), 16)).toString(16);
-      let b = (255 - parseInt(hex.slice(5, 7), 16)).toString(16);
-      
-      if (r.length === 1)
-        r = `0${r}`;
-
-      if (g.length === 1)
-        g = `0${g}`;
-
-      if (b.length === 1)
-        b = `0${b}`;
-
-      return `#${r}${g}${b}`;
+    invertColor(color) {
+      const rgb = chroma(color).rgb();
+      rgb[0] = 255 - rgb[0];
+      rgb[1] = 255 - rgb[1];
+      rgb[2] = 255 - rgb[2];
+      return chroma(rgb).hex();
     },
     getSelectedLayers() {
       return Object.entries(this.$refs.theMap.mapObject._layers)
@@ -256,7 +231,7 @@ export default {
         const styleOptions = {};
 
         if (e.target.selectionInfo.selected) {
-          styleOptions.color = this.invertColor(this.hslToHex(e.target.options.fillColor));
+          styleOptions.color = this.invertColor(e.target.options.fillColor);
           styleOptions.weight = 6;
         } else {
           styleOptions.color = e.target.selectionInfo.originalColor;

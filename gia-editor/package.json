@@ -11,6 +11,7 @@
     "@geoman-io/leaflet-geoman-free": "^2.9.0",
     "@mdi/font": "^5.2.45",
     "@turf/turf": "^6.2.0",
+    "chroma-js": "^2.1.0",
     "core-js": "^3.6.4",
     "debounce-async": "0.0.2",
     "geojson-validation": "^1.0.1",
