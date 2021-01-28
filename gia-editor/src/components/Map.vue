@@ -25,7 +25,7 @@
 
 <script>
 /* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
-// import * as turf from '@turf/turf';
+import * as turf from '@turf/turf';
 import chroma from 'chroma-js';
 import * as L from 'leaflet';
 import { LMap, LTileLayer } from 'vue2-leaflet';
@@ -72,6 +72,28 @@ export default {
     };
   },
   methods: {
+    onSplitPolygonClick() {
+      const selectedLayers = this.getSelectedLayers();
+      const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
+
+      const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon");
+      const line = selectedFeatures.find((f) => f.geometry.type === "LineString");
+      console.debug("poly, line", poly, line);
+      const polyAsLine = turf.polygonToLine(poly);
+      console.debug("polyAsLine", polyAsLine)
+      const unionedLines = turf.union(polyAsLine, line);
+      console.debug("unionedLines", unionedLines)
+      const polygonized = turf.polygonize(unionedLines);
+      console.debug("polygonized", polygonized)
+      const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), poly));
+      console.debug(keepFromPolygonized);
+      // eslint-disable-next-line no-param-reassign
+      keepFromPolygonized.forEach((f) => {f.properties = poly.properties});
+      selectedLayers.forEach(l => {
+        this.$emit('itemRemoved', l.feature);
+      });
+      keepFromPolygonized.forEach((f) => {this.$emit('itemAdded', f);});
+    },
     onMergePolygonsClick() {
       const selectedLayers = this.getSelectedLayers();
 
@@ -210,7 +232,8 @@ export default {
         { permanent: false, sticky: true }
       );
 
-      if (feature.geometry.type !== "Polygon" && feature.geometry.type !== "MultiPolygon")
+
+      if (!['Polygon', 'MultiPolygon', 'LineString'].includes(feature.geometry.type))
         return;
       
       layer.on("click", (e) => {
@@ -298,6 +321,13 @@ export default {
           { text: 'Merge selected polygons', onClick: this.onMergePolygonsClick}
         ],
         className: "leaflet-pm-icon-polygon-merge",
+      });
+      map.pm.Toolbar.createCustomControl({
+        name: "split",
+        block: "custom",
+        title: "Split",
+        onClick: this.onSplitPolygonClick,
+        className: "leaflet-pm-icon-polygon-split",
       });
       map.pm.removeControls();
 
