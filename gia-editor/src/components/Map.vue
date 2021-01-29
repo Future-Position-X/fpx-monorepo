@@ -72,12 +72,17 @@ export default {
     };
   },
   methods: {
-    onSplitPolygonClick() {
+    splitPolygonClick(layerEvent) {
       const selectedLayers = this.getSelectedLayers();
+
       const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
 
       const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon");
-      const line = selectedFeatures.find((f) => f.geometry.type === "LineString");
+      const line = layerEvent.layer.toGeoJSON();
+      this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
+
+      if(turf.lineIntersect(poly, line).features < 2) return;
+
       console.debug("poly, line", poly, line);
       const polyAsLine = turf.polygonToLine(poly);
       console.debug("polyAsLine", polyAsLine)
@@ -233,7 +238,7 @@ export default {
       );
 
 
-      if (!['Polygon', 'MultiPolygon', 'LineString'].includes(feature.geometry.type))
+      if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type))
         return;
       
       layer.on("click", (e) => {
@@ -322,12 +327,22 @@ export default {
         ],
         className: "leaflet-pm-icon-polygon-merge",
       });
-      map.pm.Toolbar.createCustomControl({
+      map.pm.Toolbar.copyDrawControl('Line',{
         name: "split",
         block: "custom",
         title: "Split",
-        onClick: this.onSplitPolygonClick,
         className: "leaflet-pm-icon-polygon-split",
+        doToggle: false,
+        onClick: () => {},
+        afterClick: (e, ctx) => {
+          if(this.getSelectedLayers().length === 1) {
+            ctx.button.toggle(true);
+            map.pm.Draw.split.toggle()
+          } else {
+            ctx.button.toggle(false);
+          }
+        },
+        actions: [],
       });
       map.pm.removeControls();
 
@@ -344,6 +359,11 @@ export default {
       });
 
       map.on('pm:create', (layerEvent) => {
+        console.debug(layerEvent)
+        if(layerEvent.shape === 'split') {
+          this.splitPolygonClick(layerEvent)
+          return;
+        }
         const feature = layerEvent.layer.toGeoJSON();
 
         if (feature != null) {
