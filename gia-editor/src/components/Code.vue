@@ -39,6 +39,10 @@ export default {
         console.debug(e.name);
       }
     },
+    find(str) {
+      this.editor.aceEditor.find(str);
+      this.editor.aceEditor.clearSelection();
+    }
   },
   mounted() {
     const container = this.$refs.jsoneditor;

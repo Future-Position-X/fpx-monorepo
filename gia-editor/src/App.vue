@@ -3,15 +3,15 @@
     <v-content>
       <v-container :fluid="true" class="pa-0">
         <v-row no-gutter>
-          <v-col sm="2" style="height: 100vh; overflow-y: scroll; overflow-x: hidden">
+          <v-col sm="2" class="firstCol" style="height: 100vh; overflow-y: scroll; overflow-x: hidden">
             <Tree
               v-bind:sortedCollections="sortedCollections"
               @selectionUpdate="selectionUpdate"
               @activeUpdate="activeUpdate"
               ref="collectionTree"
             />
-            <div class="my-2 export-image-button ma-3 flex-grow-0 flex-shrink-0">
-              <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290">
+            <div class="my-3 export-image-button ma-3 flex-grow-0 flex-shrink-0">
+              <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290" style="z-index: 999">
                 <template v-slot:activator="{ on }">
                   <v-btn
                     small
@@ -37,7 +37,7 @@
               </v-dialog>
             </div>
             <div class="mx-3 pa-0">
-              <v-dialog v-model="showCreateCollectionDialog" width="400">
+              <v-dialog v-model="showCreateCollectionDialog" width="400" style="z-index: 999">
                 <template v-slot:activator="{ on }">
                   <v-btn
                     @click="showCreateCollectionDialog = true"
@@ -112,6 +112,32 @@
                 </v-card>
               </v-dialog>
             </div>
+
+            <!-- properties dialog start -->
+
+            <div class="mx-3 my-3 pa-0" style="z-index: 999">
+              <v-dialog v-model="showPropEditDialog" width="600">
+
+                <v-card>
+                  <v-card-text>
+                    <v-card-title class="headline">Edit properties</v-card-title>
+
+                    <PropertyEditor :properties="selectedItemProperties" @propertiesUpdate="onPropertiesUpdate"></PropertyEditor>
+                    <v-row>
+                      <v-col class="text-left">
+                        <v-btn @click="onUpdatePropertiesClick" small color="primary">Update</v-btn>
+                      </v-col>
+                      <v-col class="text-right">
+                        <v-btn @click="showPropEditDialog=false" small color="primary">Close</v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </div>
+
+            <!-- properties dialog end -->
+
             <div v-show="!authenticated">
               <div class="ma-3">
                 <v-text-field v-model="email" label="Email"></v-text-field>
@@ -144,14 +170,13 @@
               </v-alert>
             </div>
           </v-col>
-          <v-col sm="7" style="padding: 0px; position: relative">
+          <v-col sm="7" class="mapCol" style="padding: 0px; position: relative">
             <v-progress-circular
               :indeterminate="isLoading"
               color="light-blue"
               style="position: absolute; top: 4px; right: 4px; z-index: 999"
             ></v-progress-circular>
             <Map
-              v-show="!showDeleteConfirmationDialog && !showCreateCollectionDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               v-bind:activeId="activeId"
@@ -162,10 +187,19 @@
               @itemModified="itemModified"
               @zoomUpdate="zoomUpdate"
               @rendered="onRendered"
+              @itemClicked="onItemClicked"
             />
+            <v-btn
+              @click="showPropEditDialog = true"
+              small
+              color="primary"
+              :disabled="!selectedItem"
+              style="position: absolute; bottom: 4px; left: 4px; z-index: 999"
+            >Edit properties...</v-btn>
           </v-col>
           <v-col
             sm="3"
+            class="codeCol"
             style="
               display: flex;
               flex-direction: column;
@@ -177,7 +211,7 @@
             <v-tabs class="mytabs code-column">
               <v-tab>Code</v-tab>
               <v-tab-item style="display: flex; flex-direction: column; flex: 1">
-                <Code v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
+                <Code ref="code" v-bind:code="code" @geojsonUpdate="geojsonUpdateFromCode" style="display: flex; flex-direction: column; flex: 1" />
               </v-tab-item>
             </v-tabs>
             <div class="selectedCollectionName">
@@ -206,6 +240,7 @@ import leafletImage from 'leaflet-image';
 import debounce from 'debounce-async';
 import cloneDeep from 'lodash.clonedeep';
 import { v4 as uuidv4 } from 'uuid';
+import PropertyEditor from "./components/PropertyEditor.vue";
 import Map from './components/Map.vue';
 import Code from './components/Code.vue';
 import Tree from './components/Tree.vue';
@@ -233,6 +268,7 @@ function selectColor(colorNum, colors) {
 export default {
   name: 'App',
   components: {
+    PropertyEditor,
     // Table,
     Map,
     Code,
@@ -268,13 +304,33 @@ export default {
       file: null,
       showCreateCollectionDialog: false,
       selectedTab: null,
-      selectedSourceCollection: null
+      selectedSourceCollection: null,
+      selectedItem: null,
+      selectedItemProperties: null,
+      showPropEditDialog: false,
     };
   },
   watch: {
 
   },
   methods: {
+    onPropertiesUpdate(properties) {
+      this.selectedItemProperties = properties
+    },
+    onUpdatePropertiesClick() {
+      this.selectedItem.properties = cloneDeep(this.selectedItemProperties);
+      this.itemModified(this.selectedItem);
+    },
+    onItemClicked(layer) {
+      if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
+        this.$refs.code.find(layer.feature.id);
+        this.selectedItem = layer.feature;
+        this.selectedItemProperties = layer.feature.properties;
+      } else {
+        this.selectedItem = null;
+        this.selectedItemProperties = null;
+      }
+    },
     onFileSelected(file) {
       console.debug("onFileSelected: ", file);
       this.file = file;
@@ -607,8 +663,7 @@ export default {
   color: #2c3e50;
 }
 
-.save-button button,
-.export-image-button button {
+.firstCol .v-btn, .codeCol .v-btn {
   padding: 0;
   width: 100%;
 }

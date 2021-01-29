@@ -83,8 +83,6 @@ export default {
     },
     setGeojson(_newVal) {
       console.debug('setGeojson');
-      // this.switchLayers(newVal)
-      // this.clearLayers(newVal)
     },
     switchLayers(newVal) {
       console.debug('switchLayers');
@@ -132,21 +130,12 @@ export default {
         l.options.pmLock = !_newVal.active
       });
 
-      /*
-      this.mapObject.clearLayers();
-      console.debug("setOptions layers cleared")
-      setOptions(this.mapObject, this.mergedOptions);
-      console.debug("setOptions options set")
-      this.mapObject.addData(this.geojson);
-      console.debug("setOptions data added")
-      */
-    },
+      if (_newVal.active) {
+        this.mapObject.bringToFront();
+      }
+      },
     setOptionsStyle(_newVal, _oldVal) {
       console.debug('setOptionsStyle');
-      /*
-      this.mapObject.setStyle(newVal);
-      console.debug("setOptionsStyle style set")
-      */
       this.$emit('rendered', this.options.layer.id);
     },
   },
