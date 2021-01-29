@@ -150,8 +150,14 @@
                 ></v-text-field>
               </div>
               <div class="d-flex justify-space-between ma-3">
-                <v-btn @click="onLoginClick" small color="primary" class="">Login</v-btn>
-                <v-btn @click="onRegisterClick" small color="primary" class="">Register</v-btn>
+                <v-row>
+                  <v-col cols="12">
+                    <v-btn @click="onLoginClick" small color="primary" class="">Login</v-btn>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-btn @click="onRegisterClick" small color="primary" class="">Register</v-btn>
+                  </v-col>
+                </v-row>
               </div>
             </div>
             <div v-show="authenticated">
