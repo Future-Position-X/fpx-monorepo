@@ -11,7 +11,7 @@
               ref="collectionTree"
             />
             <div class="my-3 export-image-button ma-3 flex-grow-0 flex-shrink-0">
-              <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290">
+              <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290" style="z-index: 999">
                 <template v-slot:activator="{ on }">
                   <v-btn
                     small
@@ -37,7 +37,7 @@
               </v-dialog>
             </div>
             <div class="mx-3 pa-0">
-              <v-dialog v-model="showCreateCollectionDialog" width="400">
+              <v-dialog v-model="showCreateCollectionDialog" width="400" style="z-index: 999">
                 <template v-slot:activator="{ on }">
                   <v-btn
                     @click="showCreateCollectionDialog = true"
@@ -115,7 +115,7 @@
 
             <!-- properties dialog start -->
 
-            <div class="mx-3 my-3 pa-0">
+            <div class="mx-3 my-3 pa-0" style="z-index: 999">
               <v-dialog v-model="showPropEditDialog" width="600">
 
                 <v-card>
@@ -177,7 +177,6 @@
               style="position: absolute; top: 4px; right: 4px; z-index: 999"
             ></v-progress-circular>
             <Map
-              v-show="!showDeleteConfirmationDialog && !showCreateCollectionDialog && !showPropEditDialog"
               ref="leafletMap"
               v-bind:geojson="geojson"
               v-bind:activeId="activeId"
