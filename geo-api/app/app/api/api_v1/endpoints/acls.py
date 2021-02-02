@@ -8,7 +8,6 @@ from app.api import deps
 
 router = APIRouter()
 
-
 @router.get("/acls")
 def get_acls(
     current_user: models.User = Depends(deps.get_current_user),
