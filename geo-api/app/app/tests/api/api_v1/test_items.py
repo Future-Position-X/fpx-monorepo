@@ -122,7 +122,6 @@ def test_get_collection_item_png(client, item):
     assert mime == "image/png"
 
 
-@pytest.mark.skip
 def test_delete_collection_item(client, item):
     res = client.delete(
         f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}/items/{item["uuid"]}',
@@ -137,6 +136,11 @@ def test_delete_collection_item(client, item):
     assert res.status_code == 404
     assert "Not found" in str(res.content)
 
+    res = client.get(
+        f'{settings.API_V1_STR}/collections/{item["collection_uuid"]}',
+        headers={"accept": "application/json"},
+    )
+    assert res.status_code == 200
 
 def test_delete_collection_items(client, item):
     res = client.delete(
