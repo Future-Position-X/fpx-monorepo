@@ -11,18 +11,18 @@ repos:
 repos:
 -   repo: local
     hooks:
-    -   id: gia-api
-        name: git-api run lint
+    -   id: geo-api
+        name: geo-api run lint
         language: system
-        entry: bash -c 'cd gia-api/app && exec poetry run scripts/lint.sh'
+        entry: bash -c 'cd geo-api/app && exec poetry run scripts/lint.sh'
         pass_filenames: false
         types: [text]
-        files: ^gia-api/.*
+        files: ^geo-api/
 # editor
 -   repo: local
     hooks:
     -   id: gia-editor
-        name: git-editor run eslint and prettier
+        name: gia-editor run eslint and prettier
         language: system
         entry: bash -c 'cd gia-editor && exec npx eslint src --fix --ext .js,.vue && exec npx prettier --write --list-different --ignore-unknown src'
         pass_filenames: false
