@@ -1,7 +1,6 @@
 import uuid
 
 import magic
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -141,6 +140,7 @@ def test_delete_collection_item(client, item):
         headers={"accept": "application/json"},
     )
     assert res.status_code == 200
+
 
 def test_delete_collection_items(client, item):
     res = client.delete(

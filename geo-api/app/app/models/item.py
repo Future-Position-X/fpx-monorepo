@@ -40,9 +40,9 @@ class Item(BaseModel):
     )
 
     collection = relationship("Collection", back_populates="items")
-    series = relationship("Series", back_populates="item",
-        cascade="all, delete",
-        passive_deletes=True)
+    series = relationship(
+        "Series", back_populates="item", cascade="all, delete", passive_deletes=True
+    )
 
     @staticmethod
     def append_property_filter_to_where_clause(

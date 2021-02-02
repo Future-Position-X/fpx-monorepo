@@ -27,14 +27,17 @@ class Series(BaseModel):
         nullable=False,
     )
     item_uuid = sa.Column(
-        pg.UUID(as_uuid=True), sa.ForeignKey("items.uuid", ondelete="CASCADE"), index=True, nullable=False,
+        pg.UUID(as_uuid=True),
+        sa.ForeignKey("items.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
     )
     data = sa.Column(pg.JSONB)
 
     item = relationship("Item", back_populates="series")
-    metrics = relationship("Metric", back_populates="series",
-        cascade="all, delete",
-        passive_deletes=True)
+    metrics = relationship(
+        "Metric", back_populates="series", cascade="all, delete", passive_deletes=True
+    )
 
     @classmethod
     def find_by_item_uuid(cls, item_uuid: UUID,) -> List[SeriesDTO]:
