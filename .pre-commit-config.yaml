@@ -17,7 +17,7 @@ repos:
         entry: bash -c 'cd gia-api/app && exec poetry run scripts/lint.sh'
         pass_filenames: false
         types: [text]
-        files: ^gia-api/
+        files: ^gia-api/.*
 # editor
 -   repo: local
     hooks:
