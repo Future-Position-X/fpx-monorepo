@@ -31,7 +31,9 @@ class Collection(BaseModel):
     name = sa.Column(sa.Text())
     is_public = sa.Column(sa.Boolean, default=False)
 
-    items = relationship("Item", lazy=True, viewonly=True)
+    items = relationship(
+        "Item", back_populates="collection", cascade="all, delete", passive_deletes=True
+    )
 
     provider_uuid = sa.Column(
         pg.UUID(as_uuid=True),

@@ -34,13 +34,15 @@ class Item(BaseModel):
 
     collection_uuid = sa.Column(
         pg.UUID(as_uuid=True),
-        sa.ForeignKey("collections.uuid"),
+        sa.ForeignKey("collections.uuid", ondelete="CASCADE"),
         index=True,
         nullable=False,
     )
 
-    collection = relationship("Collection")
-    series = relationship("Series")
+    collection = relationship("Collection", back_populates="items")
+    series = relationship(
+        "Series", back_populates="item", cascade="all, delete", passive_deletes=True
+    )
 
     @staticmethod
     def append_property_filter_to_where_clause(

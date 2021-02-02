@@ -21,11 +21,14 @@ class Metric(BaseModel):
     __table_args__ = (sa.PrimaryKeyConstraint("series_uuid", "ts"),)
     ts = sa.Column(sa.DateTime, server_default=sa.text("now()"), nullable=False)
     series_uuid = sa.Column(
-        pg.UUID(as_uuid=True), sa.ForeignKey("series.uuid"), index=True, nullable=False,
+        pg.UUID(as_uuid=True),
+        sa.ForeignKey("series.uuid", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
     )
     data = sa.Column(pg.JSONB)
 
-    series = relationship("Series")
+    series = relationship("Series", back_populates="metrics")
 
     @classmethod
     def find_by_series_uuid(cls, series_uuid: UUID, filters: dict) -> List[SeriesDTO]:
