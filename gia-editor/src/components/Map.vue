@@ -74,9 +74,9 @@ export default {
   methods: {
     splitPolygonClick(layerEvent) {
       const selectedLayers = this.getSelectedLayers();
-
+      console.debug("selectedLayers: ", selectedLayers);
       const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
-
+      console.debug("selectedFeatures: ", selectedFeatures);
       const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon");
       const line = layerEvent.layer.toGeoJSON();
       this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
