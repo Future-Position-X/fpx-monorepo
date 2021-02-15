@@ -80,6 +80,7 @@ export default {
       const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon");
       const line = layerEvent.layer.toGeoJSON();
       this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
+      console.debug("poly, line", poly, line);
 
       if(turf.lineIntersect(poly, line).features < 2) return;
 
