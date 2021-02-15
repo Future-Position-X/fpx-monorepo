@@ -243,6 +243,11 @@ export default {
         return;
       
       layer.on("click", (e) => {
+        const map = this.$refs.theMap.mapObject;
+        if (map.pm.Draw.split._enabled) {
+          return;
+        }
+
         this.$emit("itemClicked", e.target);
 
         if (e.target.options.pmLock === true)
