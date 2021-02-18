@@ -119,21 +119,7 @@ export default {
 
       this.$emit('itemAdded', result);
     },
-    splitPolygonClick(layerEvent) {
-      const selectedLayers = this.getSelectedLayers();
-      console.debug("selectedLayers: ", selectedLayers);
-      const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
-      console.debug("selectedFeatures: ", selectedFeatures);
-      const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon");
-      const line = layerEvent.layer.toGeoJSON();
-      this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
-      console.debug("poly, line", poly, line);
-
-      if (poly.geometry.type === "MultiPolygon") {
-        this.splitMultiPolygon(poly, line, selectedLayers);
-        return;
-      }
-
+    splitPolygon(poly, line, selectedLayers) {
       if(turf.lineIntersect(poly, line).features < 2) return;
 
       console.debug("poly, line", poly, line);
@@ -151,6 +137,22 @@ export default {
         this.$emit('itemRemoved', l.feature);
       });
       keepFromPolygonized.forEach((f) => {this.$emit('itemAdded', f);});
+    },
+    splitPolygonClick(layerEvent) {
+      const selectedLayers = this.getSelectedLayers();
+      console.debug("selectedLayers: ", selectedLayers);
+      const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
+      console.debug("selectedFeatures: ", selectedFeatures);
+      const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon");
+      const line = layerEvent.layer.toGeoJSON();
+      this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
+      console.debug("poly, line", poly, line);
+
+      if (poly.geometry.type === "MultiPolygon") {
+        this.splitMultiPolygon(poly, line, selectedLayers);
+      } else {
+        this.splitPolygon(poly, line, selectedLayers);
+      }
     },
     onMergePolygonsClick() {
       const selectedLayers = this.getSelectedLayers();
