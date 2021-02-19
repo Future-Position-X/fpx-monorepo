@@ -74,6 +74,8 @@ export default {
   methods: {
     splitMultiPolygon(poly, line, selectedLayers) {
       const coordinates = [[]];
+      let cut = false;
+      console.debug("splitMultiPolygon: ", poly, line);
 
       for (const polygon of poly.geometry.coordinates[0]) {
         const tempPoly = {
@@ -84,10 +86,16 @@ export default {
           }
         };
 
+        console.debug("tempPoly: ", tempPoly);
+
         if (turf.lineIntersect(tempPoly, line).features < 2) {
-          coordinates.push(tempPoly.geometry.coordinates);
+          console.debug("skipping");
+          // coordinates.push(tempPoly.geometry.coordinates);
+          coordinates[0].push(tempPoly.geometry.coordinates[0]);
           // eslint-disable-next-line no-continue
           continue;
+        } else {
+          cut = true;
         }
 
         console.debug("poly, line", tempPoly, line);
@@ -102,6 +110,11 @@ export default {
         keepFromPolygonized.forEach((f) => {
           coordinates[0].push(f.geometry.coordinates[0]);
         });
+      }
+
+      console.debug("cut: ", cut);
+      if (!cut) {
+        return;
       }
 
       const result = {
