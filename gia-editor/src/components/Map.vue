@@ -72,10 +72,15 @@ export default {
     };
   },
   methods: {
+    splitPolygonByLine(polygon, line) {
+      const polyAsLine = turf.polygonToLine(polygon);
+      const unionedLines = turf.union(polyAsLine, line);
+      const polygonized = turf.polygonize(unionedLines);
+      return polygonized;
+    },
     splitMultiPolygon(poly, line, selectedLayers) {
       const coordinates = [[]];
       let cut = false;
-      console.debug("splitMultiPolygon: ", poly, line);
 
       for (const polygon of poly.geometry.coordinates[0]) {
         const tempPoly = {
@@ -86,11 +91,7 @@ export default {
           }
         };
 
-        console.debug("tempPoly: ", tempPoly);
-
         if (turf.lineIntersect(tempPoly, line).features < 2) {
-          console.debug("skipping");
-          // coordinates.push(tempPoly.geometry.coordinates);
           coordinates[0].push(tempPoly.geometry.coordinates[0]);
           // eslint-disable-next-line no-continue
           continue;
@@ -98,21 +99,13 @@ export default {
           cut = true;
         }
 
-        console.debug("poly, line", tempPoly, line);
-        const polyAsLine = turf.polygonToLine(tempPoly);
-        console.debug("polyAsLine", polyAsLine)
-        const unionedLines = turf.union(polyAsLine, line);
-        console.debug("unionedLines", unionedLines)
-        const polygonized = turf.polygonize(unionedLines);
-        console.debug("polygonized", polygonized)
+        const polygonized = this.splitPolygonByLine(tempPoly, line);
         const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), tempPoly));
-        console.debug(keepFromPolygonized);
         keepFromPolygonized.forEach((f) => {
           coordinates[0].push(f.geometry.coordinates[0]);
         });
       }
 
-      console.debug("cut: ", cut);
       if (!cut) {
         return;
       }
@@ -135,15 +128,8 @@ export default {
     splitPolygon(poly, line, selectedLayers) {
       if(turf.lineIntersect(poly, line).features < 2) return;
 
-      console.debug("poly, line", poly, line);
-      const polyAsLine = turf.polygonToLine(poly);
-      console.debug("polyAsLine", polyAsLine)
-      const unionedLines = turf.union(polyAsLine, line);
-      console.debug("unionedLines", unionedLines)
-      const polygonized = turf.polygonize(unionedLines);
-      console.debug("polygonized", polygonized)
+      const polygonized = this.splitPolygonByLine(poly, line);
       const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), poly));
-      console.debug(keepFromPolygonized);
       // eslint-disable-next-line no-param-reassign
       keepFromPolygonized.forEach((f) => {f.properties = poly.properties});
       selectedLayers.forEach(l => {
