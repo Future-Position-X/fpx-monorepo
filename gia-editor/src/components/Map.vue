@@ -72,33 +72,86 @@ export default {
     };
   },
   methods: {
-    splitPolygonClick(layerEvent) {
-      const selectedLayers = this.getSelectedLayers();
-      console.debug("selectedLayers: ", selectedLayers);
-      const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
-      console.debug("selectedFeatures: ", selectedFeatures);
-      const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon");
-      const line = layerEvent.layer.toGeoJSON();
-      this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
-      console.debug("poly, line", poly, line);
+    splitPolygonByLine(polygon, line) {
+      const polyAsLine = turf.polygonToLine(polygon);
+      const unionedLines = turf.union(polyAsLine, line);
+      const polygonized = turf.polygonize(unionedLines);
+      return polygonized;
+    },
+    splitMultiPolygon(poly, line, selectedLayers) {
+      const coordinates = [[]];
+      let cut = false;
 
+      for (const polygon of poly.geometry.coordinates[0]) {
+        const tempPoly = {
+          "type": "Feature",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [polygon]
+          }
+        };
+
+        if (turf.lineIntersect(tempPoly, line).features < 2) {
+          coordinates[0].push(tempPoly.geometry.coordinates[0]);
+          // eslint-disable-next-line no-continue
+          continue;
+        } else {
+          cut = true;
+        }
+
+        const polygonized = this.splitPolygonByLine(tempPoly, line);
+        const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), tempPoly));
+        keepFromPolygonized.forEach((f) => {
+          coordinates[0].push(f.geometry.coordinates[0]);
+        });
+      }
+
+      if (!cut) {
+        return;
+      }
+
+      const result = {
+        type: "Feature",
+        properties: poly.properties,
+        geometry: {
+          type: "MultiPolygon",
+          coordinates
+        }
+      };
+
+      selectedLayers.forEach(l => {
+          this.$emit('itemRemoved', l.feature);
+      });
+
+      this.$emit('itemAdded', result);
+    },
+    splitPolygon(poly, line, selectedLayers) {
       if(turf.lineIntersect(poly, line).features < 2) return;
 
-      console.debug("poly, line", poly, line);
-      const polyAsLine = turf.polygonToLine(poly);
-      console.debug("polyAsLine", polyAsLine)
-      const unionedLines = turf.union(polyAsLine, line);
-      console.debug("unionedLines", unionedLines)
-      const polygonized = turf.polygonize(unionedLines);
-      console.debug("polygonized", polygonized)
+      const polygonized = this.splitPolygonByLine(poly, line);
       const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), poly));
-      console.debug(keepFromPolygonized);
       // eslint-disable-next-line no-param-reassign
       keepFromPolygonized.forEach((f) => {f.properties = poly.properties});
       selectedLayers.forEach(l => {
         this.$emit('itemRemoved', l.feature);
       });
       keepFromPolygonized.forEach((f) => {this.$emit('itemAdded', f);});
+    },
+    splitPolygonClick(layerEvent) {
+      const selectedLayers = this.getSelectedLayers();
+      console.debug("selectedLayers: ", selectedLayers);
+      const selectedFeatures = selectedLayers.map((l) => l.toGeoJSON());
+      console.debug("selectedFeatures: ", selectedFeatures);
+      const poly = selectedFeatures.find((f) => f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon");
+      const line = layerEvent.layer.toGeoJSON();
+      this.$refs.theMap.mapObject.removeLayer(layerEvent.layer);
+      console.debug("poly, line", poly, line);
+
+      if (poly.geometry.type === "MultiPolygon") {
+        this.splitMultiPolygon(poly, line, selectedLayers);
+      } else {
+        this.splitPolygon(poly, line, selectedLayers);
+      }
     },
     onMergePolygonsClick() {
       const selectedLayers = this.getSelectedLayers();
