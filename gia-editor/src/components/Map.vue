@@ -81,49 +81,61 @@ export default {
     splitMultiPolygon(poly, line, selectedLayers) {
       const coordinates = [[]];
       let cut = false;
+      let untouched = 0;
 
-      for (const polygon of poly.geometry.coordinates[0]) {
-        const tempPoly = {
-          "type": "Feature",
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [polygon]
+      for (const test of poly.geometry.coordinates) {
+        for (const polygon of test) {
+          const tempPoly = {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [polygon]
+            }
+          };
+
+          if (turf.lineIntersect(tempPoly, line).features.length < 2) {
+            untouched += 1;
+            coordinates[0].push(tempPoly.geometry.coordinates[0]);
+            // eslint-disable-next-line no-continue
+            continue;
+          } else {
+            cut = true;
           }
-        };
 
-        if (turf.lineIntersect(tempPoly, line).features < 2) {
-          coordinates[0].push(tempPoly.geometry.coordinates[0]);
-          // eslint-disable-next-line no-continue
-          continue;
-        } else {
-          cut = true;
+          const polygonized = this.splitPolygonByLine(tempPoly, line);
+          const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), tempPoly));
+          keepFromPolygonized.forEach((f) => {
+            this.$emit('itemAdded', f);
+          });
         }
-
-        const polygonized = this.splitPolygonByLine(tempPoly, line);
-        const keepFromPolygonized = polygonized.features.filter(ea => turf.booleanPointInPolygon(turf.pointOnFeature(ea), tempPoly));
-        keepFromPolygonized.forEach((f) => {
-          coordinates[0].push(f.geometry.coordinates[0]);
-        });
       }
 
       if (!cut) {
         return;
       }
-
-      const result = {
+      
+      const untouchedPolygons = {
         type: "Feature",
-        properties: poly.properties,
-        geometry: {
+        properties: poly.properties
+      };
+
+      if (untouched > 1) {
+        untouchedPolygons.geometry = {
           type: "MultiPolygon",
           coordinates
-        }
-      };
+        };
+      } else {
+        untouchedPolygons.geometry = {
+          type: "Polygon",
+          coordinates: coordinates[0]
+        };
+      }
 
       selectedLayers.forEach(l => {
           this.$emit('itemRemoved', l.feature);
       });
 
-      this.$emit('itemAdded', result);
+      this.$emit('itemAdded', untouchedPolygons);
     },
     splitPolygon(poly, line, selectedLayers) {
       if(turf.lineIntersect(poly, line).features < 2) return;
