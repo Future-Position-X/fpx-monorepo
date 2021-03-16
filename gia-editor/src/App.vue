@@ -182,6 +182,10 @@
               color="light-blue"
               style="position: absolute; top: 4px; right: 4px; z-index: 999"
             ></v-progress-circular>
+            <v-btn @click="onManualDataFetchClick" small color="primary" style="position: absolute; top: 4px; right: 48px; z-index: 999">
+              <v-icon>mdi-reload</v-icon>
+            </v-btn>
+            <v-checkbox label="Auto fetch" v-model="autoFetchEnabled" class="ma-0" style="position: absolute; top: 4px; right: 110px; z-index: 999"/>
             <Map
               ref="leafletMap"
               v-bind:geojson="geojson"
@@ -314,12 +318,16 @@ export default {
       selectedItem: null,
       selectedItemProperties: null,
       showPropEditDialog: false,
+      autoFetchEnabled: true,
     };
   },
   watch: {
 
   },
   methods: {
+    onManualDataFetchClick() {
+      this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+    },
     onPropertiesUpdate(properties) {
       this.selectedItemProperties = properties
     },
@@ -411,7 +419,9 @@ export default {
     zoomUpdate(zoom) {
       if (this.zoom !== zoom) {
         console.debug('zoomUpdate');
-        this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+        if (this.autoFetchEnabled) {
+          this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+        }
       }
       this.zoom = zoom;
       /*
@@ -440,7 +450,9 @@ export default {
 
           if (boundsExceeded) {
             console.debug('data bounds exceeded');
-            this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+            if (this.autoFetchEnabled) {
+              this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+            }
           } else {
             console.debug('still within fetched bounds');
           }
