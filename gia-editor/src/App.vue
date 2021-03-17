@@ -10,6 +10,30 @@
               @activeUpdate="activeUpdate"
               ref="collectionTree"
             />
+
+            <!-- unsaved changes dialog start -->
+
+            <div class="my-3 export-image-button ma-3 flex-grow-0 flex-shrink-0">
+              <v-dialog v-model="showUnsavedChangesDialog" persistent max-width="290" style="z-index: 999">
+                <v-card>
+                  <v-card-title class="headline">Unsaved changes</v-card-title>
+                  <v-card-text>
+                    You have unsaved changes that are about to be lost due to panning or zooming the map with auto fetch enabled.
+                    Do you want to save your changes first?
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" text @click="onDenySaveChanges"
+                      >No</v-btn
+                    >
+                    <v-btn color="primary" text @click="onConfirmSaveChanges">Yes</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </div>
+
+            <!-- unsaved changes dialog end -->
+
             <div class="my-3 export-image-button ma-3 flex-grow-0 flex-shrink-0">
               <v-dialog v-model="showDeleteConfirmationDialog" persistent max-width="290" style="z-index: 999">
                 <template v-slot:activator="{ on }">
@@ -319,12 +343,22 @@ export default {
       selectedItemProperties: null,
       showPropEditDialog: false,
       autoFetchEnabled: true,
+      showUnsavedChangesDialog: false,
     };
   },
   watch: {
 
   },
   methods: {
+    async onConfirmSaveChanges() {
+      this.showUnsavedChangesDialog = false;
+      await this.saveChanges();
+      this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+    },
+    onDenySaveChanges() {
+      this.showUnsavedChangesDialog = false;
+      this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+    },
     onManualDataFetchClick() {
       this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
     },
@@ -451,7 +485,11 @@ export default {
           if (boundsExceeded) {
             console.debug('data bounds exceeded');
             if (this.autoFetchEnabled) {
-              this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+              if (this.dirty) {
+                this.showUnsavedChangesDialog = true;
+              } else {
+                this.fetchGeoJson(this.renderedCollections.map((c) => c.uuid));
+              }
             }
           } else {
             console.debug('still within fetched bounds');
@@ -485,9 +523,14 @@ export default {
       }
       this.dirty = true;
     },
+    async saveChanges() {
+      if (this.authenticated && this.zoom >= 16 && this.dirty) {
+        await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));
+        await this.fetchGeoJson([this.activeId]);
+      }
+    },
     async onSaveClick() {
-      await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));
-      await this.fetchGeoJson([this.activeId]);
+      await this.saveChanges();
     },
     onExportImageClick() {
       const map = this.$refs.leafletMap.$refs.theMap.mapObject;
