@@ -24,7 +24,7 @@
 </template>
 
 <script>
-/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
+/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require, no-param-reassign */
 import * as turf from '@turf/turf';
 import chroma from 'chroma-js';
 import * as L from 'leaflet';
@@ -40,6 +40,7 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
 import '../vendor/pmLock';
 
+import '../DelayedLeafletTooltip';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -299,9 +300,9 @@ export default {
         content += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
       });
       content += "</table>";
-      layer.bindTooltip(content,
-        { permanent: false, sticky: true }
-      );
+      layer.showDelay = 800;
+      layer.hideDelay = 0;
+      layer.bindTooltipDelayed(content, { permanent: false, sticky: true });
 
 
       if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type))
