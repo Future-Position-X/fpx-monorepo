@@ -393,15 +393,24 @@ export default {
       this.itemModified(this.selectedItem);
     },
     onItemClicked(layer) {
-      if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
+      if (layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
         this.selectedItem = layer.feature;
         this.selectedItemProperties = layer.feature.properties;
         this.selectedItemLayerColor = layer.options.fillColor;
       } else {
-        this.selectedItem = null;
-        this.selectedItemProperties = null;
-        this.selectedItemLayerColor = null;
+        const l = this.$refs.leafletMap.getSelectedLayer();
+        
+        if (l === null) {
+          this.selectedItem = null;
+          this.selectedItemProperties = null;
+          this.selectedItemLayerColor = null;
+        } else {
+          this.$refs.code.find(l.feature.id);
+          this.selectedItem = l.feature;
+          this.selectedItemProperties = l.feature.properties;
+          this.selectedItemLayerColor = l.options.fillColor;
+        }
       }
     },
     onFileSelected(file) {

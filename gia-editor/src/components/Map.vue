@@ -24,7 +24,7 @@
 </template>
 
 <script>
-/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require, no-param-reassign */
+/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require, no-param-reassign, no-plusplus */
 import * as turf from '@turf/turf';
 import chroma from 'chroma-js';
 import * as L from 'leaflet';
@@ -69,7 +69,8 @@ export default {
       toolbarOptions: {
         drawCircle: false,
         drawCircleMarker: false,
-      }
+      },
+      selectionId: 0,
     };
   },
   methods: {
@@ -282,6 +283,14 @@ export default {
         .map(([_, v]) => v)
         .filter(l => l.selectionInfo != null && l.selectionInfo.selected && l.options.pmLock !== true);
     },
+    getSelectedLayer() {
+      const selectedLayers = this.getSelectedLayers();
+
+      if (selectedLayers.length === 0)
+        return null;
+
+      return selectedLayers.reduce((prev, curr) => prev.id > curr.id ? prev : curr);
+    },
     onEachFeatureFunction(feature, layer) {
       if (feature.properties.color !== undefined) {
         layer.setStyle({fillColor: feature.properties.color});
@@ -314,8 +323,6 @@ export default {
           return;
         }
 
-        this.$emit("itemClicked", e.target);
-
         if (e.target.options.pmLock === true)
           return;
 
@@ -331,6 +338,7 @@ export default {
         const styleOptions = {};
 
         if (e.target.selectionInfo.selected) {
+          e.target.selectionInfo.id = this.selectionId++;
           styleOptions.color = this.invertColor(e.target.options.fillColor);
           styleOptions.weight = 6;
         } else {
@@ -339,6 +347,7 @@ export default {
         }
 
         e.target.setStyle(styleOptions);
+        this.$emit("itemClicked", e.target);
       });
     },
     geoJsonOptions(layer, activeId) {
