@@ -222,6 +222,7 @@
               @zoomUpdate="zoomUpdate"
               @rendered="onRendered"
               @itemClicked="onItemClicked"
+              :autoFetchEnabled="autoFetchEnabled"
             />
             <v-btn
               @click="onEditPropertiesClick"

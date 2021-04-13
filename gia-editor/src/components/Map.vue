@@ -56,7 +56,7 @@ export default {
     LTileLayer,
     GiaGeoJson,
   },
-  props: ['geojson', 'activeId'],
+  props: ['geojson', 'activeId', 'autoFetchEnabled'],
   data() {
     return {
       zoom: 16,
@@ -219,7 +219,7 @@ export default {
     },
     zoomUpdate(zoom) {
       console.debug("zoomUpdate");
-      if (this.$refs.theMap.mapObject.pm !== undefined) {
+      if (this.$refs.theMap.mapObject.pm !== undefined && this.autoFetchEnabled) {
         if (zoom >= 16 && (this.layers && this.layers.length >= 1)) {
           this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
         } else {
@@ -384,7 +384,7 @@ export default {
         const layers = Object.values(this.geojson);
         this.layers = layers;
         if (this.$refs.theMap.mapObject.pm !== undefined) {
-          if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1)) {
+          if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1) && this.autoFetchEnabled) {
             this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
           } else {
             this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
