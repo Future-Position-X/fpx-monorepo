@@ -152,7 +152,7 @@
                         <v-btn @click="onUpdatePropertiesClick" small color="primary">Update</v-btn>
                       </v-col>
                       <v-col class="text-right">
-                        <v-btn @click="showPropEditDialog=false" small color="primary">Close</v-btn>
+                        <v-btn @click="onClosePropertiesDialog" small color="primary">Close</v-btn>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -222,9 +222,10 @@
               @zoomUpdate="zoomUpdate"
               @rendered="onRendered"
               @itemClicked="onItemClicked"
+              :autoFetchEnabled="autoFetchEnabled"
             />
             <v-btn
-              @click="showPropEditDialog = true"
+              @click="onEditPropertiesClick"
               small
               color="primary"
               :disabled="!selectedItem"
@@ -341,6 +342,8 @@ export default {
       selectedSourceCollection: null,
       selectedItem: null,
       selectedItemProperties: null,
+      selectedItemLayerColor: null,
+      selectedPropertiesHasTempColor: false,
       showPropEditDialog: false,
       autoFetchEnabled: true,
       showUnsavedChangesDialog: false,
@@ -350,6 +353,23 @@ export default {
 
   },
   methods: {
+    onClosePropertiesDialog() {
+      this.showPropEditDialog = false;
+      
+      if (this.selectedItemProperties.color === this.selectedItemLayerColor) {
+        delete this.selectedItemProperties.color;
+      }
+    },
+    onEditPropertiesClick() {
+      if (this.selectedItemProperties.color === undefined) {
+        this.selectedItemProperties.color = this.selectedItemLayerColor;
+        this.selectedItemHasTempColor = true;
+      } else {
+        this.selectedItemHasTempColor = false;
+      }
+
+      this.showPropEditDialog = true;
+    },
     async onConfirmSaveChanges() {
       this.showUnsavedChangesDialog = false;
       await this.saveChanges();
@@ -366,17 +386,32 @@ export default {
       this.selectedItemProperties = properties
     },
     onUpdatePropertiesClick() {
+      if (this.selectedItemHasTempColor && this.selectedItemProperties.color === this.selectedItemLayerColor) {
+        delete this.selectedItemProperties.color;
+      }
+
       this.selectedItem.properties = cloneDeep(this.selectedItemProperties);
       this.itemModified(this.selectedItem);
     },
     onItemClicked(layer) {
-      if (layer.selectionInfo == null || !layer.selectionInfo.selected) {
+      if (layer.selectionInfo.selected) {
         this.$refs.code.find(layer.feature.id);
         this.selectedItem = layer.feature;
         this.selectedItemProperties = layer.feature.properties;
+        this.selectedItemLayerColor = layer.options.fillColor;
       } else {
-        this.selectedItem = null;
-        this.selectedItemProperties = null;
+        const l = this.$refs.leafletMap.getSelectedLayer();
+        
+        if (l === null) {
+          this.selectedItem = null;
+          this.selectedItemProperties = null;
+          this.selectedItemLayerColor = null;
+        } else {
+          this.$refs.code.find(l.feature.id);
+          this.selectedItem = l.feature;
+          this.selectedItemProperties = l.feature.properties;
+          this.selectedItemLayerColor = l.options.fillColor;
+        }
       }
     },
     onFileSelected(file) {

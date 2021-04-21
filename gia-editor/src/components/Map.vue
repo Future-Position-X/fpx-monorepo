@@ -24,7 +24,7 @@
 </template>
 
 <script>
-/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require */
+/* eslint-disable no-underscore-dangle, guard-for-in, no-restricted-syntax,global-require, no-param-reassign, no-plusplus */
 import * as turf from '@turf/turf';
 import chroma from 'chroma-js';
 import * as L from 'leaflet';
@@ -40,6 +40,7 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
 import '../vendor/pmLock';
 
+import '../DelayedLeafletTooltip';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -55,7 +56,7 @@ export default {
     LTileLayer,
     GiaGeoJson,
   },
-  props: ['geojson', 'activeId'],
+  props: ['geojson', 'activeId', 'autoFetchEnabled'],
   data() {
     return {
       zoom: 16,
@@ -68,7 +69,8 @@ export default {
       toolbarOptions: {
         drawCircle: false,
         drawCircleMarker: false,
-      }
+      },
+      selectionId: 0,
     };
   },
   methods: {
@@ -217,7 +219,7 @@ export default {
     },
     zoomUpdate(zoom) {
       console.debug("zoomUpdate");
-      if (this.$refs.theMap.mapObject.pm !== undefined) {
+      if (this.$refs.theMap.mapObject.pm !== undefined && this.autoFetchEnabled) {
         if (zoom >= 16 && (this.layers && this.layers.length >= 1)) {
           this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
         } else {
@@ -281,6 +283,14 @@ export default {
         .map(([_, v]) => v)
         .filter(l => l.selectionInfo != null && l.selectionInfo.selected && l.options.pmLock !== true);
     },
+    getSelectedLayer() {
+      const selectedLayers = this.getSelectedLayers();
+
+      if (selectedLayers.length === 0)
+        return null;
+
+      return selectedLayers.reduce((prev, curr) => prev.id > curr.id ? prev : curr);
+    },
     onEachFeatureFunction(feature, layer) {
       if (feature.properties.color !== undefined) {
         layer.setStyle({fillColor: feature.properties.color});
@@ -299,9 +309,9 @@ export default {
         content += `<tr><td>${key}</td><td>${value}</td></tr>\n`;
       });
       content += "</table>";
-      layer.bindTooltip(content,
-        { permanent: false, sticky: true }
-      );
+      layer.showDelay = 800;
+      layer.hideDelay = 0;
+      layer.bindTooltipDelayed(content, { permanent: false, sticky: true });
 
 
       if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type))
@@ -312,8 +322,6 @@ export default {
         if (map.pm.Draw.split._enabled) {
           return;
         }
-
-        this.$emit("itemClicked", e.target);
 
         if (e.target.options.pmLock === true)
           return;
@@ -330,6 +338,7 @@ export default {
         const styleOptions = {};
 
         if (e.target.selectionInfo.selected) {
+          e.target.selectionInfo.id = this.selectionId++;
           styleOptions.color = this.invertColor(e.target.options.fillColor);
           styleOptions.weight = 6;
         } else {
@@ -338,6 +347,7 @@ export default {
         }
 
         e.target.setStyle(styleOptions);
+        this.$emit("itemClicked", e.target);
       });
     },
     geoJsonOptions(layer, activeId) {
@@ -374,7 +384,7 @@ export default {
         const layers = Object.values(this.geojson);
         this.layers = layers;
         if (this.$refs.theMap.mapObject.pm !== undefined) {
-          if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1)) {
+          if (this.$refs.theMap.mapObject.getZoom() >= 16 && (this.layers && this.layers.length >= 1) && this.autoFetchEnabled) {
             this.$refs.theMap.mapObject.pm.addControls(this.toolbarOptions);
           } else {
             this.$refs.theMap.mapObject.pm.Toolbar.triggerClickOnToggledButtons();
