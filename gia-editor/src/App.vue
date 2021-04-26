@@ -210,6 +210,7 @@
               <v-icon>mdi-reload</v-icon>
             </v-btn>
             <v-checkbox label="Auto fetch" v-model="autoFetchEnabled" class="ma-0" style="position: absolute; top: 4px; right: 110px; z-index: 999"/>
+            <v-checkbox label="Simplify geometry" v-model="simplifyEnabled" class="ma-0" style="position: absolute; top: 4px; right: 220px; z-index: 999"/>
             <Map
               ref="leafletMap"
               v-bind:geojson="geojson"
@@ -347,6 +348,7 @@ export default {
       showPropEditDialog: false,
       autoFetchEnabled: true,
       showUnsavedChangesDialog: false,
+      simplifyEnabled: false,
     };
   },
   watch: {
@@ -718,7 +720,12 @@ export default {
       this.fetchController = new AbortController();
       const { signal } = this.fetchController;
       const dataBounds = this.$refs.leafletMap.getDataBounds();
-      const simplify = this.zoom >= 16 ? 0.0 : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
+      let simplify = 0;
+
+      if (this.simplifyEnabled) {
+        simplify = this.zoom >= 16 ? 0.0 : Math.abs(dataBounds.maxX - dataBounds.minX) / 2500;
+      }
+      console.debug("simplify: ", simplify);
 
       for (const id of ids) {
         try {
