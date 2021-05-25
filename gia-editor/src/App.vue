@@ -254,7 +254,7 @@
               Collection name: <span>{{ activeCollection && activeCollection.name }}</span>
             </div>
             <div class="my-2 save-button">
-              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated || !(zoom >= 16) || !dirty"
+              <v-btn small color="primary" @click="onSaveClick" :disabled="!authenticated || !(zoom >= -1) || !dirty"
                 >Save modifications</v-btn
               >
             </div>
@@ -561,7 +561,7 @@ export default {
       this.dirty = true;
     },
     async saveChanges() {
-      if (this.authenticated && this.zoom >= 16 && this.dirty) {
+      if (this.authenticated && this.zoom >= -1 && this.dirty) {
         await modify.commit(this.orgGeojson[this.activeId], this.geojson[this.activeId].geojson, this.activeId).catch((error) => console.error('backend error: ', error));
         await this.fetchGeoJson([this.activeId]);
       }
